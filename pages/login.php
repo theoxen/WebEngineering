@@ -22,8 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt->fetch();
                 
                 // Verify the password against the hashed password in the database
-                // if (password_verify($password, $hashedPassword)) {
-                if ($password == $hashedPassword) {
+                if (password_verify($password, $hashedPassword)) {
                     // Successful login: set session variables
                     $_SESSION['user_id'] = $userId;
                     $_SESSION['email'] = $userEmail;
