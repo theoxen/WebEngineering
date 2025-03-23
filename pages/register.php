@@ -22,21 +22,31 @@ if (isset($_SESSION['message'])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Save form data
     $formData = [
-        'email' => isset($_POST['email']) ? trim($_POST['email']) : ''
+        'username' => isset($_POST['username']) ? trim($_POST['username']) : '',
+        'email' => isset($_POST['email']) ? trim($_POST['email']) : '',
+        'phone' => isset($_POST['phone']) ? trim($_POST['phone']) : '',
+        'dob' => isset($_POST['dob']) ? trim($_POST['dob']) : ''
     ];
 
     // Store in session for after redirect
     $_SESSION['formData'] = $formData;
 
     // Validate required fields
-    if (empty($_POST['email']) || empty($_POST['password'])) {
-        $_SESSION['message'] = "Email and password are required";
+    if (
+        empty($_POST['username']) || empty($_POST['email']) ||
+        empty($_POST['phone']) || empty($_POST['dob']) ||
+        empty($_POST['password'])
+    ) {
+        $_SESSION['message'] = "All fields are required";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
     }
 
+    $username = $formData['username'];
     $email = $formData['email'];
+    $phone = $formData['phone'];
+    $dob = $formData['dob'];
     $password = $_POST['password'];
 
     // Validate email format
@@ -47,46 +57,96 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Prepare a statement to avoid SQL injection
-    $stmt = $mysqli->prepare("SELECT userId, username, email, password, role FROM users WHERE email = ?");
-    if ($stmt) {
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $stmt->store_result();
-
-        // Check if a user exists with that email
-        if ($stmt->num_rows == 1) {
-            $stmt->bind_result($userId, $username, $userEmail, $hashedPassword, $userRole);
-            $stmt->fetch();
-
-            // Verify the password against the hashed password in the database
-            if (password_verify($password, $hashedPassword)) {
-                // Successful login: set session variables
-                $_SESSION['user_id'] = $userId;
-                $_SESSION['email'] = $userEmail;
-                $_SESSION['username'] = $username;
-                $_SESSION['role'] = $userRole;
-                
-                // Redirect to homepage
-                header("Location: homepage.php");
-                exit();
-            } else {
-                $_SESSION['message'] = "Invalid email or password";
-                $_SESSION['toastClass'] = "warning";
-            }
-        } else {
-            $_SESSION['message'] = "Invalid email or password";
-            $_SESSION['toastClass'] = "warning";
-        }
-        $stmt->close();
-    } else {
-        $_SESSION['message'] = "Database query error";
-        $_SESSION['toastClass'] = "danger";
+    // Validate phone number (backend validation)
+    if (!ctype_digit($phone)) {
+        $_SESSION['message'] = "Phone number must contain only digits";
+        $_SESSION['toastClass'] = "warning";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
     }
-    
+
+    // Validate date of birth
+    $dateObj = DateTime::createFromFormat('Y-m-d', $dob);
+    if (!$dateObj || $dateObj->format('Y-m-d') !== $dob) {
+        $_SESSION['message'] = "Invalid date format";
+        $_SESSION['toastClass'] = "warning";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+
+    // Check if date of birth is in the past
+    $today = new DateTime('today');
+    if ($dateObj >= $today) {
+        $_SESSION['message'] = "Date of birth must be in the past";
+        $_SESSION['toastClass'] = "warning";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+
+    // Hash the password only after all validations pass
+    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
+    // Check if email already exists
+    $checkEmailStmt = $mysqli->prepare("SELECT email FROM users WHERE email = ?");
+    $checkEmailStmt->bind_param("s", $email);
+    $checkEmailStmt->execute();
+    $checkEmailStmt->store_result();
+
+    $checkPhoneStmt = $mysqli->prepare("SELECT phoneNumber FROM users WHERE phoneNumber = ?");
+    $checkPhoneStmt->bind_param("s", $phone);
+    $checkPhoneStmt->execute();
+    $checkPhoneStmt->store_result();
+
+    $checkUsernameStmt = $mysqli->prepare("SELECT username FROM users WHERE username = ?");
+    $checkUsernameStmt->bind_param("s", $username);
+    $checkUsernameStmt->execute();
+    $checkUsernameStmt->store_result();
+
+    if ($checkEmailStmt->num_rows > 0) {
+        $_SESSION['message'] = "Email address already exists";
+        $_SESSION['toastClass'] = "warning";
+    } else if ($checkPhoneStmt->num_rows > 0) {
+        $_SESSION['message'] = "Phone number already exists";
+        $_SESSION['toastClass'] = "warning";
+    } else if ($checkUsernameStmt->num_rows > 0) {
+        $_SESSION['message'] = "Username already exists";
+        $_SESSION['toastClass'] = "warning";
+    } else {
+        // Prepare and bind
+        $stmt = $mysqli->prepare("INSERT INTO users (username, email, phoneNumber, dateOfBirth, password, role) VALUES (?, ?, ?, ?, ?, 'user')");
+        $stmt->bind_param("sssss", $username, $email, $phone, $dob, $passwordHash);
+
+        if ($stmt->execute()) {
+            $stmt->close(); // Close the statement before exiting
+            
+            $_SESSION['message'] = "Account created successfully";
+            $_SESSION['toastClass'] = "success";
+            
+            // Log the user in automatically
+            $_SESSION['user_id'] = $mysqli->insert_id;
+            $_SESSION['email'] = $email;
+            $_SESSION['username'] = $username;
+            $_SESSION['role'] = 'user';
+            
+            // Redirect to homepage instead of back to registration page
+            header("Location: homepage.php");
+            exit();
+        } else {
+            $stmt->close(); // Close the statement before exiting
+            
+            $_SESSION['message'] = "Error: " . $stmt->error;
+            $_SESSION['toastClass'] = "danger";
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
+        }
+    }
+
+    $checkEmailStmt->close();
+    $checkPhoneStmt->close();
+    $checkUsernameStmt->close();
     $mysqli->close();
-    
-    // Redirect to prevent form resubmission
+
+    // Redirect to same page to prevent form resubmission
     header("Location: " . $_SERVER['PHP_SELF']);
     exit();
 }
@@ -103,7 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/295/295128.png">
     <link rel="stylesheet" href="../components/sidebar/sidebar.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <title>Login</title>
+    <title>Create Account</title>
     <style>
         :root {
             --primary-color: #4e73df;
@@ -274,9 +334,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <div class="p-5">
                                     <div class="text-center">
                                         <i class="fas fa-user-circle auth-icon fa-4x"></i>
-                                        <h1 class="h4 text-gray-900 mb-4">Sign In</h1>
+                                        <h1 class="h4 text-gray-900 mb-4">Create Your Account</h1>
                                     </div>
-                                    <form class="user" method="post" id="loginForm">
+                                    <form class="user" method="post" id="registerForm">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                            <input type="text" class="form-control" id="username" name="username"
+                                                placeholder="Username" required
+                                                value="<?php echo isset($formData['username']) ? htmlspecialchars($formData['username']) : ''; ?>">
+                                        </div>
+
                                         <div class="input-group mb-3">
                                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                             <input type="email" class="form-control" id="email" name="email"
@@ -285,6 +352,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                 value="<?php echo isset($formData['email']) ? htmlspecialchars($formData['email']) : ''; ?>">
                                         </div>
 
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                            <input type="tel" class="form-control" id="phone" name="phone"
+                                                placeholder="Phone Number" required pattern="[0-9]+"
+                                                title="Please enter numbers only"
+                                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                                value="<?php echo isset($formData['phone']) ? htmlspecialchars($formData['phone']) : ''; ?>">
+                                        </div>
+
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                            <input type="date" class="form-control" id="dob" name="dob"
+                                                placeholder="Date of Birth" required
+                                                value="<?php echo isset($formData['dob']) ? htmlspecialchars($formData['dob']) : ''; ?>">
+                                        </div>
                                         <div class="input-group mb-3 password-container">
                                             <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                             <input type="password" class="form-control" id="password" name="password"
@@ -292,15 +374,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             <i class="fas fa-eye password-toggle" id="togglePassword"></i>
                                         </div>
 
+                                        <div class="progress mb-3" style="height: 5px;">
+                                            <div id="password-strength" class="progress-bar" role="progressbar"
+                                                style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <small id="passwordHelpBlock" class="form-text text-muted mb-3">
+                                            Password strength: <span id="password-strength-text">No password</span>
+                                        </small>
+
                                         <button type="submit" class="btn btn-primary btn-block w-100 mt-3">
-                                            Login
+                                            Create Account
                                         </button>
                                     </form>
                                     <div class="divider">
                                         <span>OR</span>
                                     </div>
                                     <div class="text-center">
-                                        <p>Don't have an account? <a class="link-secondary" href="./register.php">Create Account</a></p>
+                                        <p>Already have an account? <a class="link-secondary" href="./login.php">Sign In</a></p>
                                     </div>
                                 </div>
                             </div>
@@ -328,6 +419,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             password.setAttribute('type', type);
             this.classList.toggle('fa-eye');
             this.classList.toggle('fa-eye-slash');
+        });
+
+        // Phone number validation - only allow digits
+        const phoneInput = document.getElementById('phone');
+        phoneInput.addEventListener('keypress', function (e) {
+            // Get the character code of the pressed key
+            const charCode = (e.which) ? e.which : e.keyCode;
+            // If the character is not a digit (0-9), prevent the input
+            if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                e.preventDefault();
+            }
+        });
+
+        // Password strength meter
+        const passwordInput = document.getElementById('password');
+        const strengthBar = document.getElementById('password-strength');
+        const strengthText = document.getElementById('password-strength-text');
+
+        passwordInput.addEventListener('input', function () {
+            const value = passwordInput.value;
+            let strength = 0;
+            let status = '';
+            let color = '';
+
+            if (value.length >= 8) strength += 20;
+            if (/[A-Z]/.test(value)) strength += 20;
+            if (/[a-z]/.test(value)) strength += 20;
+            if (/[0-9]/.test(value)) strength += 20;
+            if (/[^A-Za-z0-9]/.test(value)) strength += 20;
+
+            if (strength <= 20) {
+                status = 'Very weak';
+                color = '#dc3545'; // danger
+            } else if (strength <= 40) {
+                status = 'Weak';
+                color = '#fd7e14'; // warning
+            } else if (strength <= 60) {
+                status = 'Medium';
+                color = '#ffc107'; // warning lighter
+            } else if (strength <= 80) {
+                status = 'Strong';
+                color = '#20c997'; // success lighter
+            } else {
+                status = 'Very strong';
+                color = '#28a745'; // success
+            }
+
+            strengthBar.style.width = strength + '%';
+            strengthBar.style.backgroundColor = color;
+            strengthText.textContent = status;
+            strengthText.style.color = color;
         });
         
         // // Add sidebar toggle functionality
