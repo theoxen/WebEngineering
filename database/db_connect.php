@@ -1,9 +1,9 @@
 <?php
 // Database configuration
 $dbHost = "127.0.0.1";
-$dbUsername = "root";
-$dbPassword = "";
-$dbName = "dioristeoidb";
+$dbUsername = "cei326omada1user";
+$dbPassword = "UPJ!AqeNu3i1!kE";
+$dbName = "cei326omada1";
 
 // Create database connection
 $mysqli = new mysqli($dbHost, $dbUsername, $dbPassword, $dbName);
