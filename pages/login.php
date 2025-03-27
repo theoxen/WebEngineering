@@ -224,7 +224,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .link-secondary {
-            color: var(--primary-color);
+            color: var(--primary-color) !important;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.2s;

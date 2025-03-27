@@ -1,5 +1,5 @@
 <?php
-// Database configuration
+// Database configuration FOR DEPLOYMENT AND DEVELOPMENT
 $dbHost = "127.0.0.1";
 $dbUsername = "cei326omada1user";
 $dbPassword = "UPJ!AqeNu3i1!kE";
