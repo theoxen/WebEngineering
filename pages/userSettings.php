@@ -29,7 +29,8 @@ $stmt->execute();
 $result = $stmt->get_result();
 $userData = $result->fetch_assoc();
 
-// Get current notification settings
+// Get current notification settings 
+// TODO: MAYBE PUT NOTIFICATION SETTINGS IN THE SAME TABLE AS THE USERS?
 $sql = "SELECT newCatalogNotify, reminderNotify, updateNotify FROM user_settings WHERE userId = ?";
 $stmt = $mysqli->prepare($sql);
 $stmt->bind_param("i", $userId);
