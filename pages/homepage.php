@@ -39,8 +39,6 @@ $startYear = 2016;
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Custom site CSS -->
-    <link rel="stylesheet" href="../assets/css/style.css">
 
     <style>
         /* Additional homepage styles */

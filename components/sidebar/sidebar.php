@@ -41,7 +41,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="settings.php" class="nav-link <?php echo $currentPage == 'settings.php' ? 'active' : ''; ?>">
+                        <a href="user-settings.php" class="nav-link <?php echo $currentPage == 'user-settings.php' ? 'active' : ''; ?>">
                             <i class="fas fa-cog me-2"></i> Settings
                         </a>
                     </li>

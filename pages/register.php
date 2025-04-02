@@ -12,6 +12,7 @@ $toastClass = isset($_SESSION['toastClass']) ? $_SESSION['toastClass'] : "";
 // Store form data in variables
 $formData = isset($_SESSION['formData']) ? $_SESSION['formData'] : array();
 
+
 // Clear session variables after retrieving them
 if (isset($_SESSION['message'])) {
     unset($_SESSION['message']);
@@ -38,6 +39,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         empty($_POST['password'])
     ) {
         $_SESSION['message'] = "All fields are required";
+        $_SESSION['toastClass'] = "warning";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+
+
+    if (strlen($_POST['password']) < 8) {
+        $_SESSION['message'] = "Password must be at least 8 characters long";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -115,25 +124,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Prepare and bind
         $stmt = $mysqli->prepare("INSERT INTO users (username, email, phoneNumber, dateOfBirth, password, role) VALUES (?, ?, ?, ?, ?, 'user')");
         $stmt->bind_param("sssss", $username, $email, $phone, $dob, $passwordHash);
+        
 
         if ($stmt->execute()) {
+            // Get the newly created user ID
+            $newUserId = $mysqli->insert_id;
             $stmt->close(); // Close the statement before exiting
             
+            // Create default notification settings for the new user
+            $settingsStmt = $mysqli->prepare("INSERT INTO user_notification_settings (userId, newCatalogNotify, catalogUpdateNotify, positionChangeNotify) VALUES (?, 0, 0, 0)");
+            $settingsStmt->bind_param("i", $newUserId);
+            $settingsStmt->execute();
+            $settingsStmt->close();
+
             $_SESSION['message'] = "Account created successfully";
             $_SESSION['toastClass'] = "success";
-            
+
             // Log the user in automatically
-            $_SESSION['user_id'] = $mysqli->insert_id;
+            $_SESSION['user_id'] = $newUserId;
             $_SESSION['email'] = $email;
             $_SESSION['username'] = $username;
             $_SESSION['role'] = 'user';
-            
+
             // Redirect to homepage instead of back to registration page
             header("Location: homepage.php");
             exit();
         } else {
             $stmt->close(); // Close the statement before exiting
-            
+
             $_SESSION['message'] = "Error: " . $stmt->error;
             $_SESSION['toastClass'] = "danger";
             header("Location: " . $_SERVER['PHP_SELF']);
@@ -310,20 +328,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="main-content">
             <!-- Toast container -->
             <?php if ($message): ?>
-                <div class="toast-container">
-                    <div class="toast align-items-center text-white bg-<?php echo $toastClass; ?> border-0 show" role="alert"
-                        aria-live="assertive" aria-atomic="true">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <i
-                                    class="fas fa-<?php echo $toastClass == 'success' ? 'check-circle' : ($toastClass == 'warning' ? 'exclamation-circle' : 'times-circle'); ?> me-2"></i>
-                                <?php echo $message; ?>
+                            <div class="toast-container">
+                                <div class="toast align-items-center text-white bg-<?php echo $toastClass; ?> border-0 show" role="alert"
+                                    aria-live="assertive" aria-atomic="true">
+                                    <div class="d-flex">
+                                        <div class="toast-body">
+                                            <i
+                                                class="fas fa-<?php echo $toastClass == 'success' ? 'check-circle' : ($toastClass == 'warning' ? 'exclamation-circle' : 'times-circle'); ?> me-2"></i>
+                                            <?php echo $message; ?>
+                                        </div>
+                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                            aria-label="Close"></button>
+                                    </div>
+                                </div>
                             </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                                aria-label="Close"></button>
-                        </div>
-                    </div>
-                </div>
             <?php endif; ?>
 
             <div class="container">
@@ -372,6 +390,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             <input type="password" class="form-control" id="password" name="password"
                                                 placeholder="Password" required>
                                             <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+                                        </div>
+                                        <div class="form-text text-muted mb-2">
+                                            Password must be at least 8 characters long
                                         </div>
 
                                         <div class="progress mb-3" style="height: 5px;">
