@@ -306,7 +306,7 @@ $startYear = 2016;
     <div class="container content-wrapper">
         <div class="page-header">
             <h1 class="page-title"><?php echo $pageTitle; ?></h1>
-            <p class="page-description">Πρόσβαση στους καταλόγους διοριστέων εκπαιδευτικών ανά εξεταστική περίοδο και έτος. Επιλέξτε τον κατάλογο που επιθυμείτε.</p>
+            <p class="page-description">Πρόσβαση στους καταλόγους διοριστέων εκπαιδευτικών ανά περίοδο και έτος. Επιλέξτε τον κατάλογο που επιθυμείτε.</p>
         </div>
         
         <div class="catalogs-container">

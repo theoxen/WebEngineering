@@ -54,16 +54,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                 <i class="fas fa-tachometer-alt me-2"></i> Admin Dashboard
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="admin/users.php" class="nav-link <?php echo $currentPage == 'admin/users.php' ? 'active' : ''; ?>">
-                                <i class="fas fa-users me-2"></i> Manage Users
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="admin/settings.php" class="nav-link <?php echo $currentPage == 'admin/settings.php' ? 'active' : ''; ?>">
-                                <i class="fas fa-cogs me-2"></i> System Settings
-                            </a>
-                        </li>
                     <?php endif; ?>
                     
                     <li class="nav-item mt-3">
