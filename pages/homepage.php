@@ -330,7 +330,7 @@ $startYear = 2016;
             if ($hasFebruary) {
                 $monthNum = 2;
                 $monthName = $monthNames[$monthNum];
-                $cardUrl = "details.php?year=" . $year . "&month=" . $monthNum;
+                $cardUrl = "year-season-details.php?year=" . $year . "&month=" . $monthNum; // TODO: CHANGE THE FILENAME TO SOMETHING BETTER AND MORE DESCRIPTIVE
                 
                 echo '<a href="' . $cardUrl . '" class="card-link">
                     <div class="catalog-card">
