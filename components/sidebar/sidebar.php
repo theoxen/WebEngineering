@@ -18,7 +18,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 <div class="sidebar-wrapper">
     <nav id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <a href="homepage.php" class="d-flex align-items-center text-decoration-none">
+            <a href="/WebEngineering/pages/homepage.php" class="d-flex align-items-center text-decoration-none">
                 <span class="fs-5 fw-bold">WebEngineering</span>
             </a>
         </div>
@@ -27,7 +27,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <ul class="nav flex-column">
                 <!-- Available to all users -->
                 <li class="nav-item">
-                    <a href="homepage.php" class="nav-link <?php echo $currentPage == 'homepage.php' ? 'active' : ''; ?>">
+                    <a href="/WebEngineering/pages/homepage.php" class="nav-link <?php echo $currentPage == 'homepage.php' ? 'active' : ''; ?>">
                         <i class="fas fa-home me-2"></i> Home
                     </a>
                 </li>
@@ -35,13 +35,14 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 
                 <?php if ($isLoggedIn): ?>
                     <!-- Logged in user options -->
-                    <li class="nav-item">
-                        <a href="profile.php" class="nav-link <?php echo $currentPage == 'profile.php' ? 'active' : ''; ?>">
+                     <!-- TODO USER PROFILE THAT WILL DISPLAY THE PROFILE + THE CANDIDATES THAT ARE BEING TRACKED (?) -->
+                    <li class="nav-item"> 
+                        <a href="/WebEngineering/pages/myprofile.php" class="nav-link <?php echo $currentPage == 'profile.php' ? 'active' : ''; ?>">
                             <i class="fas fa-user me-2"></i> Profile
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="user-settings.php" class="nav-link <?php echo $currentPage == 'user-settings.php' ? 'active' : ''; ?>">
+                        <a href="/WebEngineering/pages/user-settings.php" class="nav-link <?php echo $currentPage == 'user-settings.php' ? 'active' : ''; ?>">
                             <i class="fas fa-cog me-2"></i> Settings
                         </a>
                     </li>
@@ -50,26 +51,26 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                         <!-- Admin only options -->
                         <li class="nav-heading mt-3 mb-1 text-uppercase ps-3 small fw-bold text-muted">Admin</li>
                         <li class="nav-item">
-                            <a href="admin/dashboard.php" class="nav-link <?php echo strpos($currentPage, 'admin/') !== false ? 'active' : ''; ?>">
+                            <a href="/WebEngineering/pages/admin/dashboard.php" class="nav-link <?php echo strpos($currentPage, 'admin/') !== false ? 'active' : ''; ?>">
                                 <i class="fas fa-tachometer-alt me-2"></i> Admin Dashboard
                             </a>
                         </li>
                     <?php endif; ?>
                     
                     <li class="nav-item mt-3">
-                        <a href="logout.php" class="nav-link text-danger">
+                        <a href="/WebEngineering/pages/logout.php" class="nav-link text-danger">
                             <i class="fas fa-sign-out-alt me-2"></i> Logout
                         </a>
                     </li>
                 <?php else: ?>
                     <!-- Not logged in options -->
                     <li class="nav-item mt-3">
-                        <a href="login.php" class="nav-link <?php echo $currentPage == 'login.php' ? 'active' : ''; ?>">
+                        <a href="/WebEngineering/pages/login.php" class="nav-link <?php echo $currentPage == 'login.php' ? 'active' : ''; ?>">
                             <i class="fas fa-sign-in-alt me-2"></i> Login
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="register.php" class="nav-link <?php echo $currentPage == 'register.php' ? 'active' : ''; ?>">
+                        <a href="/WebEngineering/pages/register.php" class="nav-link <?php echo $currentPage == 'register.php' ? 'active' : ''; ?>">
                             <i class="fas fa-user-plus me-2"></i> Register
                         </a>
                     </li>
