@@ -3,15 +3,19 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Require Composer's autoloader
-require __DIR__ . '/../vendor/autoload.php';
 
+require_once __DIR__ . '/../libraries/PHPMailer/src/Exception.php';
+require_once __DIR__ . '/../libraries/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/../libraries/PHPMailer/src/SMTP.php';
 function sendVerificationEmail($to, $username, $token)
 {
     // Gets the current hostname and protocol
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'];
     $baseUrl = $protocol . '://' . $host;
+
+
+    echo "<h1> $host  </h1>";
 
     // For localhost development, append the project folder to the base URL
     if ($host === 'localhost' || strpos($host, '127.0.0.1') !== false) {
@@ -26,7 +30,7 @@ function sendVerificationEmail($to, $username, $token)
 
     try {
         // Server settings
-        $mail->isSMTP();
+        // $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com'; // SMTP server
         $mail->SMTPAuth = true;  // Enable SMTP authentication
         $mail->Username = 'theodosisx874@gmail.com';  // SMTP username
@@ -99,7 +103,7 @@ function sendPasswordResetEmail($to, $username, $token)
 
     try {
         // Server settings
-        $mail->isSMTP(); // TODO: Put the smtp settings in a config file (?)
+        // $mail->isSMTP(); // TODO: Put the smtp settings in a config file (?)
         $mail->Host = 'smtp.gmail.com'; // SMTP server
         $mail->SMTPAuth = true;  // Enable SMTP authentication
         $mail->Username = 'theodosisx874@gmail.com';  // SMTP username
