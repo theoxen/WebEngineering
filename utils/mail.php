@@ -30,8 +30,8 @@ function sendVerificationEmail($to, $username, $token)
         $mail->SMTPAuth = true;  // Enable SMTP authentication
         $mail->Username = 'theodosisx874@gmail.com';  // SMTP username
         $mail->Password = 'ltlw jknw zdfk bysf'; // SMTP password (app password)
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Enable TLS encryption
-        $mail->Port = 465; // TCP port to connect to (587 for TLS)
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Enable TLS encryption
+        $mail->Port = 587; // TCP port to connect to (587 for TLS)
 
         // Recipients
         $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering');
