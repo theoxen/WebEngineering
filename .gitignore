@@ -1,0 +1,21 @@
+# Composer packages
+/vendor/
+composer.lock
+
+# Environment files
+.env
+.env.backup
+
+# PHPUnit
+.phpunit.result.cache
+
+# IDE & OS specific files
+.idea/
+.vscode/
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+error_log
