@@ -1,10 +1,17 @@
 <?php
 // Email functions
+// Try to load PHPMailer classes directly if autoload fails
+if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+    require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/Exception.php';
+    require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/PHPMailer.php';
+    require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/SMTP.php';
+} else {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-
-require_once __DIR__ . '/../vendor/autoload.php';
 function sendVerificationEmail($to, $username, $token)
 {
     // Gets the current hostname and protocol
@@ -19,23 +26,30 @@ function sendVerificationEmail($to, $username, $token)
 
     $verificationLink = $baseUrl . '/pages/verify-email.php?token=' . $token;
 
-
     // Create a new PHPMailer instance
     $mail = new PHPMailer(true);
 
     try {
-        // Server settings
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com'; // SMTP server
-        $mail->SMTPAuth = true;  // Enable SMTP authentication
-        $mail->Username = 'theodosisx874@gmail.com';  // SMTP username
-        $mail->Password = 'ltlw jknw zdfk bysf'; // SMTP password (app password)
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Enable TLS encryption
-        $mail->Port = 587; // TCP port to connect to (587 for TLS)
+        // Detect if we're on the production server
+        $isProduction = ($host !== 'localhost' && strpos($host, '127.0.0.1') === false);
+        
+        if ($isProduction) {
+            // Use different settings on production server
+            $mail->isMail(); // Use PHP's mail() function instead of SMTP
+        } else {
+            // For local development, use SMTP
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com'; 
+            $mail->SMTPAuth = true;
+            $mail->Username = 'theodosisx874@gmail.com';
+            $mail->Password = 'ltlw jknw zdfk bysf';
+            $mail->SMTPSecure = 'tls';
+            $mail->Port = 587;
+        }
 
         // Recipients
         $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering');
-        $mail->addAddress($to); // Add recipient
+        $mail->addAddress($to);
 
         // Content
         $mail->isHTML(true);
@@ -85,34 +99,41 @@ function sendPasswordResetEmail($to, $username, $token)
     $host = $_SERVER['HTTP_HOST'];
     $baseUrl = $protocol . '://' . $host;
 
-    // For localhost development, append the project folder to the base URL
     if ($host === 'localhost' || strpos($host, '127.0.0.1') !== false) {
         $baseUrl .= '/WebEngineering';
     }
 
     $resetLink = $baseUrl . '/pages/reset-password.php?token=' . $token;
 
-
-    // Create a new PHPMailer instance
     $mail = new PHPMailer(true);
 
     try {
-        // Server settings
-        $mail->isSMTP(); // TODO: Put the smtp settings in a config file (?)
-        $mail->Host = 'smtp.gmail.com'; // SMTP server
-        $mail->SMTPAuth = true;  // Enable SMTP authentication
-        $mail->Username = 'theodosisx874@gmail.com';  // SMTP username
-        $mail->Password = 'ltlw jknw zdfk bysf'; // SMTP password (app password)
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Enable TLS encryption
-        $mail->Port = 587; // TCP port to connect to (587 for TLS)
+        // Detect if we're on the production server
+        $isProduction = ($host !== 'localhost' && strpos($host, '127.0.0.1') === false);
+        
+        if ($isProduction) {
+            // Use different settings on production server
+            $mail->isMail(); // Use PHP's mail() function instead of SMTP
+        } else {
+            // For local development, use SMTP
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com'; 
+            $mail->SMTPAuth = true;
+            $mail->Username = 'theodosisx874@gmail.com';
+            $mail->Password = 'ltlw jknw zdfk bysf';
+            $mail->SMTPSecure = 'tls';
+            $mail->Port = 587;
+        }
         
         // Recipients
         $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering');
-        $mail->addAddress($to); // Add recipient
-
+        $mail->addAddress($to);
+        
         // Content
         $mail->isHTML(true);
-        $mail->Subject = 'Verify Your Email Address';
+        $mail->Subject = 'Reset Your Password';
+        
+        // Keep your existing email HTML
         $mail->Body = "
         <html>
         <head>
@@ -145,11 +166,9 @@ function sendPasswordResetEmail($to, $username, $token)
                 </div>
             </div>
         </body>
-        </html>
-        ";
+        </html>";
 
         return $mail->send();
-
     } catch (Exception $e) {
         error_log("Email could not be sent. Mailer Error: {$mail->ErrorInfo}");
         return false;
