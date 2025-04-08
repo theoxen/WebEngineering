@@ -1,17 +1,13 @@
 <?php
-// Ensure session is started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Set page title
 $pageTitle = "Κατάλογοι Διοριστέων";
 
-// Get current year and month
 $currentYear = date("Y");
 $currentMonth = date("n"); // Numeric representation of the month (1-12)
 
-// Define the two months with their Greek names (February and June)
 $monthNames = [
     2 => "Φεβρουάριος",
     6 => "Ιούνιος"
@@ -78,14 +74,12 @@ $startYear = 2016;
             margin: 0 auto;
         }
         
-        /* Catalog container */
         .catalogs-container {
             display: flex;
             flex-direction: column;
             gap: 2rem;
         }
         
-        /* Year section */
         .year-section {
             margin-bottom: 1rem;
         }
@@ -116,7 +110,6 @@ $startYear = 2016;
             width: 100%;
         }
         
-        /* Card header with colored background */
         .card-header-custom {
             background-color: #4e73df;
             color: white;
@@ -130,7 +123,6 @@ $startYear = 2016;
             align-items: center;
         }
         
-        /* Decorative elements */
         .card-header-custom::before {
             content: '';
             position: absolute;

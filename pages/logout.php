@@ -1,5 +1,4 @@
 <?php
-// Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -19,12 +18,10 @@ if (ini_get("session.use_cookies")) {
 // Destroy the session
 session_destroy();
 
-// Set a logout message (optional)
 session_start();
 $_SESSION['message'] = "You have been successfully logged out";
 $_SESSION['toastClass'] = "success";
 
-// Redirect to login page
 header("Location: login.php");
 exit();
 ?>

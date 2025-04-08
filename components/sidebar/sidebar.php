@@ -1,5 +1,5 @@
 <?php
-// Ensure session is started
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -101,7 +101,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
 <script>
 // This is an IIFE (Immediately Invoked Function Expression) that runs as soon as it's defined
 (function() {
-    // Variables
+    
     const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
     const sidebar = document.querySelector('.sidebar-wrapper');
     
@@ -124,7 +124,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
         }
     }
     
-    // Check window width and update UI accordingly
+    // Checking window width and update UI accordingly
     function handleResponsiveness() {
         if (window.innerWidth < 768) {
             // Mobile view
@@ -141,7 +141,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
         }
     }
     
-    // Add click event listener to button
+    // Adding click event listener to button
     if (sidebarCollapseBtn) {
         sidebarCollapseBtn.addEventListener('click', function(e) {
             e.stopPropagation(); // Prevent event from bubbling
@@ -149,7 +149,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
         });
     }
     
-    // Add click event listener to close sidebar when clicking outside
+    // Adding click event listener to close sidebar when clicking outside
     document.addEventListener('click', function(event) {
         if (sidebar && 
             sidebar.classList.contains('active') &&
@@ -172,7 +172,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
     // Listen for window resize
     window.addEventListener('resize', handleResponsiveness);
 })();
-// Toggle function
+
 function toggleSidebar() {
     if (sidebar) {
         console.log('Toggle function called');

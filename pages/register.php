@@ -1,15 +1,15 @@
 <?php
 include '../database/db_connect.php';
+include '../utils/mail.php';
 
-// Start session if not already started
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Initialize variables
 $message = isset($_SESSION['message']) ? $_SESSION['message'] : "";
 $toastClass = isset($_SESSION['toastClass']) ? $_SESSION['toastClass'] : "";
-// Store form data in variables
+
 $formData = isset($_SESSION['formData']) ? $_SESSION['formData'] : array();
 
 
@@ -21,7 +21,6 @@ if (isset($_SESSION['message'])) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Save form data
     $formData = [
         'username' => isset($_POST['username']) ? trim($_POST['username']) : '',
         'email' => isset($_POST['email']) ? trim($_POST['email']) : '',
@@ -36,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (
         empty($_POST['username']) || empty($_POST['email']) ||
         empty($_POST['phone']) || empty($_POST['dob']) ||
-        empty($_POST['password'])
+        empty($_POST['password']) || empty($_POST['confirm_password'])
     ) {
         $_SESSION['message'] = "All fields are required";
         $_SESSION['toastClass'] = "warning";
@@ -44,9 +43,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-
+    // Validate password length
     if (strlen($_POST['password']) < 8) {
         $_SESSION['message'] = "Password must be at least 8 characters long";
+        $_SESSION['toastClass'] = "warning";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+
+    // Check if passwords match
+    if ($_POST['password'] !== $_POST['confirm_password']) {
+        $_SESSION['message'] = "Passwords do not match";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -121,34 +128,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['message'] = "Username already exists";
         $_SESSION['toastClass'] = "warning";
     } else {
+
+        $verificationToken = bin2hex(random_bytes(32));
+
         // Prepare and bind
-        $stmt = $mysqli->prepare("INSERT INTO users (username, email, phoneNumber, dateOfBirth, password, role) VALUES (?, ?, ?, ?, ?, 'user')");
-        $stmt->bind_param("sssss", $username, $email, $phone, $dob, $passwordHash);
-        
+        $stmt = $mysqli->prepare("INSERT INTO users (username, email, phoneNumber, dateOfBirth, password, role, email_verified, verification_token) VALUES (?, ?, ?, ?, ?, 'user', 0, ?)");
+        $stmt->bind_param("ssssss", $username, $email, $phone, $dob, $passwordHash, $verificationToken);
+
 
         if ($stmt->execute()) {
-            // Get the newly created user ID
+            // Getting the newly created user ID
             $newUserId = $mysqli->insert_id;
-            $stmt->close(); // Close the statement before exiting
-            
+            $stmt->close();
+
             // Create default notification settings for the new user
             $settingsStmt = $mysqli->prepare("INSERT INTO user_notification_settings (userId, newCatalogNotify, catalogUpdateNotify, positionChangeNotify) VALUES (?, 0, 0, 0)");
             $settingsStmt->bind_param("i", $newUserId);
             $settingsStmt->execute();
             $settingsStmt->close();
 
-            $_SESSION['message'] = "Account created successfully";
-            $_SESSION['toastClass'] = "success";
+            // Send verification email
+            if (sendVerificationEmail($email, $username, $verificationToken)) {
+                $_SESSION['message'] = "Account created successfully! Please check your email to verify your account.";
+                $_SESSION['toastClass'] = "success";
 
-            // Log the user in automatically
-            $_SESSION['user_id'] = $newUserId;
-            $_SESSION['email'] = $email;
-            $_SESSION['username'] = $username;
-            $_SESSION['role'] = 'user';
+                header("Location: login.php");
+                exit();
+            } else {
+                $_SESSION['message'] = "Account created but unable to send verification email. Please contact support.";
+                $_SESSION['toastClass'] = "warning";
 
-            // Redirect to homepage instead of back to registration page
-            header("Location: homepage.php");
-            exit();
+                header("Location: login.php");
+                exit();
+            }
         } else {
             $stmt->close(); // Close the statement before exiting
 
@@ -324,24 +336,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body class="auth-page">
     <div class="content-wrapper">
         <?php include '../components/sidebar/sidebar.php'; ?>
-        
+
         <div class="main-content">
             <!-- Toast container -->
             <?php if ($message): ?>
-                            <div class="toast-container">
-                                <div class="toast align-items-center text-white bg-<?php echo $toastClass; ?> border-0 show" role="alert"
-                                    aria-live="assertive" aria-atomic="true">
-                                    <div class="d-flex">
-                                        <div class="toast-body">
-                                            <i
-                                                class="fas fa-<?php echo $toastClass == 'success' ? 'check-circle' : ($toastClass == 'warning' ? 'exclamation-circle' : 'times-circle'); ?> me-2"></i>
-                                            <?php echo $message; ?>
-                                        </div>
-                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                                            aria-label="Close"></button>
-                                    </div>
-                                </div>
+                <div class="toast-container">
+                    <div class="toast align-items-center text-white bg-<?php echo $toastClass; ?> border-0 show"
+                        role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i
+                                    class="fas fa-<?php echo $toastClass == 'success' ? 'check-circle' : ($toastClass == 'warning' ? 'exclamation-circle' : 'times-circle'); ?> me-2"></i>
+                                <?php echo $message; ?>
                             </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                aria-label="Close"></button>
+                        </div>
+                    </div>
+                </div>
             <?php endif; ?>
 
             <div class="container">
@@ -397,12 +409,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                                         <div class="progress mb-3" style="height: 5px;">
                                             <div id="password-strength" class="progress-bar" role="progressbar"
-                                                style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                                style="width: 0%;" aria-valuenow="0" aria-valuemin="0"
+                                                aria-valuemax="100">
                                             </div>
                                         </div>
                                         <small id="passwordHelpBlock" class="form-text text-muted mb-3">
                                             Password strength: <span id="password-strength-text">No password</span>
                                         </small>
+
+                                        <div class="input-group mb-3 password-container">
+                                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            <input type="password" class="form-control" id="confirm_password"
+                                                name="confirm_password" placeholder="Confirm Password" required>
+                                            <i class="fas fa-eye password-toggle" id="toggleConfirmPassword"></i>
+                                        </div>
+                                        <div id="password-match-message" class="form-text text-muted mb-3"></div>
 
                                         <button type="submit" class="btn btn-primary btn-block w-100 mt-3">
                                             Create Account
@@ -412,7 +433,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <span>OR</span>
                                     </div>
                                     <div class="text-center">
-                                        <p>Already have an account? <a class="link-secondary" href="./login.php">Sign In</a></p>
+                                        <p>Already have an account? <a class="link-secondary" href="./login.php">Sign
+                                                In</a></p>
                                     </div>
                                 </div>
                             </div>
@@ -431,13 +453,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         });
         toastList.forEach(toast => toast.show());
 
-        // Toggle password visibility
+        // Toggle password visibility for main password
         const togglePassword = document.querySelector('#togglePassword');
         const password = document.querySelector('#password');
 
         togglePassword.addEventListener('click', function () {
             const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
             password.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // Toggle password visibility for confirm password
+        const toggleConfirmPassword = document.querySelector('#toggleConfirmPassword');
+        const confirmPassword = document.querySelector('#confirm_password');
+
+        toggleConfirmPassword.addEventListener('click', function () {
+            const type = confirmPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+            confirmPassword.setAttribute('type', type);
             this.classList.toggle('fa-eye');
             this.classList.toggle('fa-eye-slash');
         });
@@ -491,21 +524,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             strengthBar.style.backgroundColor = color;
             strengthText.textContent = status;
             strengthText.style.color = color;
+
+            // Check if passwords match when typing in main password
+            checkPasswordsMatch();
         });
-        
-        // // Add sidebar toggle functionality
-        // document.addEventListener('DOMContentLoaded', function() {
-        //     const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
-        //     const sidebar = document.querySelector('.sidebar-wrapper');
-            
-        //     if (sidebarCollapseBtn) {
-        //         sidebarCollapseBtn.addEventListener('click', function() {
-        //             sidebar.classList.toggle('active');
-        //         });
-        //     }
-        // });
+
+        // Check if passwords match
+        const passwordMatchMessage = document.getElementById('password-match-message');
+
+        confirmPassword.addEventListener('input', checkPasswordsMatch);
+
+        function checkPasswordsMatch() {
+            const passwordValue = password.value;
+            const confirmValue = confirmPassword.value;
+
+            if (confirmValue === '') {
+                passwordMatchMessage.textContent = '';
+                return;
+            }
+
+            if (passwordValue === confirmValue) {
+                passwordMatchMessage.textContent = 'Passwords match';
+                passwordMatchMessage.style.setProperty('color', '#28a745', 'important');
+            } else {
+                passwordMatchMessage.textContent = 'Passwords do not match';
+                passwordMatchMessage.style.setProperty('color', '#dc3545', 'important');
+            }
+        }
+
+        // Form validation before submit
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
+            const passwordValue = password.value;
+            const confirmValue = confirmPassword.value;
+
+            if (passwordValue !== confirmValue) {
+                e.preventDefault();
+                passwordMatchMessage.textContent = 'Passwords do not match';
+                passwordMatchMessage.style.color = '#dc3545';
+            }
+        });
     </script>
-    
 </body>
 
 </html>

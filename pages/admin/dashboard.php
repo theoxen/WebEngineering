@@ -1,10 +1,9 @@
 <?php
-// Ensure session is started
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Redirect if not logged in or not an admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit();
@@ -359,7 +358,7 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
                                 </div>
                                 <h3 class="action-title">TITLE</h3>
                                 <p class="action-description">DESCRIPTION</p>
-                                <a href="maintenance.php" class="btn btn-warning">
+                                <a href="file.php" class="btn btn-warning">
                                     <i class="fas fa-arrow-right"></i> LINK NAME
                                 </a>
                             </div>

@@ -1,16 +1,14 @@
 <?php
-// Ensure session is started
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Redirect if not logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Include database connection
 include_once('../database/db_connect.php');
 
 // Get the user ID from session

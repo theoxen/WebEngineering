@@ -1,22 +1,17 @@
 <?php
-// Ensure session is started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Redirect if not logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Include database connection
 include_once('../database/db_connect.php');
 
-// Set page title
 $pageTitle = "User Settings";
 
-// Initialize toast message variables - Check for flash messages
 $message = '';
 $toastClass = '';
 
@@ -49,7 +44,7 @@ $result = $stmt->get_result();
 if ($result->num_rows > 0) {
     $settingsData = $result->fetch_assoc();
 } else {
-    // Create default settings if not exist
+    // Create default settings if not exist (they should always exist)
     $sql = "INSERT INTO user_notification_settings (userId, newCatalogNotify, catalogUpdateNotify, positionChangeNotify) VALUES (?, 0, 0, 0)";
     $stmt = $mysqli->prepare($sql);
     $stmt->bind_param("i", $userId);
@@ -384,7 +379,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <body>
     <?php
-    // Include sidebar
     include_once('../components/sidebar/sidebar.php');
     ?>
     <div class="page">

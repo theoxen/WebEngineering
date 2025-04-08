@@ -1,5 +1,4 @@
 <?php
-// Ensure session is started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -10,10 +9,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-// Include database connection
 include_once('../../database/db_connect.php');
 
-// Initialize message variables
 $message = "";
 $messageClass = "";
 
