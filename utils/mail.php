@@ -4,9 +4,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 
-require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/Exception.php';
-require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/PHPMailer.php';
-require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/SMTP.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 function sendVerificationEmail($to, $username, $token)
 {
     // Gets the current hostname and protocol
@@ -34,7 +32,7 @@ function sendVerificationEmail($to, $username, $token)
         $mail->Password = 'ltlw jknw zdfk bysf'; // SMTP password (app password)
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Enable TLS encryption
         $mail->Port = 587; // TCP port to connect to (587 for TLS)
-        
+
         // Recipients
         $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering');
         $mail->addAddress($to); // Add recipient
