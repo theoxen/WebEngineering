@@ -1,18 +1,17 @@
 <?php
 include '../database/db_connect.php';
 
-// Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Initialize variables
+
 $message = isset($_SESSION['message']) ? $_SESSION['message'] : "";
 $toastClass = isset($_SESSION['toastClass']) ? $_SESSION['toastClass'] : "";
-// Store form data in variables
+
 $formData = isset($_SESSION['formData']) ? $_SESSION['formData'] : array();
 
-// Clear session variables after retrieving them
+// Clearing session variables after retrieving them
 if (isset($_SESSION['message'])) {
     unset($_SESSION['message']);
     unset($_SESSION['toastClass']);
@@ -48,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Prepare a statement to avoid SQL injection
-    $stmt = $mysqli->prepare("SELECT userId, username, email, password, role FROM users WHERE email = ?");
+    $stmt = $mysqli->prepare("SELECT userId, username, email, password, role, email_verified FROM users WHERE email = ?");
     if ($stmt) {
         $stmt->bind_param("s", $email);
         $stmt->execute();
@@ -56,20 +55,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Check if a user exists with that email
         if ($stmt->num_rows == 1) {
-            $stmt->bind_result($userId, $username, $userEmail, $hashedPassword, $userRole);
+            $stmt->bind_result($userId, $username, $userEmail, $hashedPassword, $userRole, $emailVerified);
             $stmt->fetch();
 
             // Verify the password against the hashed password in the database
             if (password_verify($password, $hashedPassword)) {
                 // Successful login: set session variables
-                $_SESSION['user_id'] = $userId;
-                $_SESSION['email'] = $userEmail;
-                $_SESSION['username'] = $username;
-                $_SESSION['role'] = $userRole;
-                
-                // Redirect to homepage
-                header("Location: homepage.php");
-                exit();
+                if ($emailVerified) {
+                    $_SESSION['user_id'] = $userId;
+                    $_SESSION['email'] = $userEmail;
+                    $_SESSION['username'] = $username;
+                    $_SESSION['role'] = $userRole;
+
+                    // Redirect to homepage
+                    header("Location: homepage.php");
+                    exit();
+                } else {
+                    $_SESSION['message'] = "Please verify your email before logging in. Check your inbox for the verification link.";
+                    $_SESSION['toastClass'] = "warning";
+                }
             } else {
                 $_SESSION['message'] = "Invalid email or password";
                 $_SESSION['toastClass'] = "warning";
@@ -83,9 +87,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['message'] = "Database query error";
         $_SESSION['toastClass'] = "danger";
     }
-    
+
     $mysqli->close();
-    
+
     // Redirect to prevent form resubmission
     header("Location: " . $_SERVER['PHP_SELF']);
     exit();
@@ -250,20 +254,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="main-content">
             <!-- Toast container -->
             <?php if ($message): ?>
-                <div class="toast-container">
-                    <div class="toast align-items-center text-white bg-<?php echo $toastClass; ?> border-0 show" role="alert"
-                        aria-live="assertive" aria-atomic="true">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <i
-                                    class="fas fa-<?php echo $toastClass == 'success' ? 'check-circle' : ($toastClass == 'warning' ? 'exclamation-circle' : 'times-circle'); ?> me-2"></i>
-                                <?php echo $message; ?>
+                    <div class="toast-container">
+                        <div class="toast align-items-center text-white bg-<?php echo $toastClass; ?> border-0 show" role="alert"
+                            aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <i
+                                        class="fas fa-<?php echo $toastClass == 'success' ? 'check-circle' : ($toastClass == 'warning' ? 'exclamation-circle' : 'times-circle'); ?> me-2"></i>
+                                    <?php echo $message; ?>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                    aria-label="Close"></button>
                             </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                                aria-label="Close"></button>
                         </div>
                     </div>
-                </div>
             <?php endif; ?>
 
             <div class="container">
@@ -296,6 +300,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             Login
                                         </button>
                                     </form>
+                                    <div class="text-center mb-3" style="margin-top: 5px;">
+                                        <a href="forgot-password.php" class="link-secondary">Forgot Password?</a>
+                                    </div>
                                     <div class="divider">
                                         <span>OR</span>
                                     </div>

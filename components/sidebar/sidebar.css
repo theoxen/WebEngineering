@@ -64,7 +64,6 @@
     padding: 1rem 0;
 }
 
-/* Sidebar Footer */
 .sidebar-footer {
     padding: 1rem;
     border-top: 1px solid #e3e6f0;
@@ -116,7 +115,7 @@
     position: fixed;
     top: 15px;
     left: 15px;
-    z-index: 1300; /* Make sure it's above the sidebar and overlay */
+    z-index: 1300;
     background: var(--primary-color);
     color: white;
     border: none;
@@ -127,7 +126,6 @@
     display: block !important; /* Force display for all screen sizes */
 }
 
-/* Overlay for when sidebar is active */
 body::after {
     content: '';
     position: fixed;
@@ -148,7 +146,6 @@ body.sidebar-active::after {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-/* Mobile Responsiveness - adjust specific mobile styles if needed */
 @media (max-width: 768px) {
     .main-content,
     .auth-page .main-content {
@@ -156,13 +153,11 @@ body.sidebar-active::after {
     }
 }
 
-/* Override any media queries that might hide the button */
 @media (min-width: 769px) {
     .sidebar-toggle-btn {
         display: block !important;
     }
     
-    /* Ensure content has padding for the button even on larger screens */
     .content-wrapper {
         padding-top: 60px;
     }
