@@ -1,4 +1,8 @@
 {
+    "config": {
+        "preferred-install": "dist"
+    },
+    
     "require": {
         "firebase/php-jwt": "^6.11",
         "sendgrid/sendgrid": "^8.1",
