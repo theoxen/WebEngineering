@@ -84,7 +84,7 @@ function sendPasswordResetEmail($to, $username, $token)
         $sendgrid = new \SendGrid('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');
         $email = new \SendGrid\Mail\Mail();
         $email->setFrom('theodosisx874@gmail.com', 'WebEngineering');
-        $email->setSubject('Verify Your Email Address');
+        $email->setSubject('Reset Your Password');
         $email->addTo($to);
 
         $email->addContent(

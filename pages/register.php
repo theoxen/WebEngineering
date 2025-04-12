@@ -2,7 +2,6 @@
 include '../database/db_connect.php';
 include '../utils/mail.php';
 
-phpinfo();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
