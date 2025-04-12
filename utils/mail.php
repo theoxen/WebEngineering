@@ -6,6 +6,9 @@ use PHPMailer\PHPMailer\Exception;
 // Require Composer's autoloader
 require __DIR__ . '/../vendor/autoload.php';
 
+// IMPORTANT: Sign up for a free SendGrid account at https://sendgrid.com/
+// Create an API key in your SendGrid dashboard and replace 'YOUR_SENDGRID_API_KEY' below
+
 function sendVerificationEmail($to, $username, $token)
 {
     // Gets the current hostname and protocol
@@ -20,23 +23,22 @@ function sendVerificationEmail($to, $username, $token)
 
     $verificationLink = $baseUrl . '/pages/verify-email.php?token=' . $token;
 
-
     // Create a new PHPMailer instance
     $mail = new PHPMailer(true);
 
     try {
-        // Server settings
+        // Server settings - SendGrid configuration
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com'; // SMTP server
-        $mail->SMTPAuth = true;  // Enable SMTP authentication
-        $mail->Username = 'theodosisx874@gmail.com';  // SMTP username
-        $mail->Password = 'ltlw jknw zdfk bysf'; // SMTP password (app password)
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Enable TLS encryption
-        $mail->Port = 587; // TCP port to connect to (587 for TLS)
+        $mail->Host = 'smtp.sendgrid.net';      // SendGrid SMTP server
+        $mail->SMTPAuth = true;                 // Enable SMTP authentication
+        $mail->Username = 'apikey';             // SendGrid username is always 'apikey'
+        $mail->Password = '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'; // Your SendGrid API key
+        $mail->SMTPSecure = 'tls';              // Enable TLS encryption
+        $mail->Port = 587;                      // TCP port to connect to
 
         // Recipients
-        $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering');
-        $mail->addAddress($to); // Add recipient
+        $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering'); // Use verified sender in SendGrid
+        $mail->addAddress($to);                 // Add recipient
 
         // Content
         $mail->isHTML(true);
@@ -54,9 +56,6 @@ function sendVerificationEmail($to, $username, $token)
         </head>
         <body>
             <div class='container'>
-                <div class='header'>
-                    <h2>Verify Your Email Address</h2>
-                </div>
                 <div class='content'>
                     <p>Hello $username,</p>
                     <p>Thank you for registering! Please verify your email address by clicking the button below:</p>
@@ -74,7 +73,10 @@ function sendVerificationEmail($to, $username, $token)
         return $mail->send();
 
     } catch (Exception $e) {
-        error_log("Email could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        // Enhanced error logging for debugging
+        file_put_contents(__DIR__ . '/../mail-errors.log', 
+            date('[Y-m-d H:i:s] ') . "Email Error: " . $e->getMessage() . "\n", 
+            FILE_APPEND);
         return false;
     }
 }
@@ -93,27 +95,26 @@ function sendPasswordResetEmail($to, $username, $token)
 
     $resetLink = $baseUrl . '/pages/reset-password.php?token=' . $token;
 
-
     // Create a new PHPMailer instance
     $mail = new PHPMailer(true);
 
     try {
-        // Server settings
-        $mail->isSMTP(); // TODO: Put the smtp settings in a config file (?)
-        $mail->Host = 'smtp.gmail.com'; // SMTP server
-        $mail->SMTPAuth = true;  // Enable SMTP authentication
-        $mail->Username = 'theodosisx874@gmail.com';  // SMTP username
-        $mail->Password = 'ltlw jknw zdfk bysf'; // SMTP password (app password)
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Enable TLS encryption
-        $mail->Port = 587; // TCP port to connect to (587 for TLS)
+        // Server settings - SendGrid configuration
+        $mail->isSMTP();
+        $mail->Host = 'smtp.sendgrid.net';      // SendGrid SMTP server
+        $mail->SMTPAuth = true;                 // Enable SMTP authentication
+        $mail->Username = 'apikey';             // SendGrid username is always 'apikey'
+        $mail->Password = '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'; // Your SendGrid API key
+        $mail->SMTPSecure = 'tls';              // Enable TLS encryption
+        $mail->Port = 587;                      // TCP port to connect to
 
         // Recipients
-        $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering');
-        $mail->addAddress($to); // Add recipient
+        $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering'); // Use verified sender in SendGrid
+        $mail->addAddress($to);                 // Add recipient
 
         // Content
         $mail->isHTML(true);
-        $mail->Subject = 'Verify Your Email Address';
+        $mail->Subject = 'Reset Your Password';
         $mail->Body = "
         <html>
         <head>
@@ -152,9 +153,11 @@ function sendPasswordResetEmail($to, $username, $token)
         return $mail->send();
 
     } catch (Exception $e) {
-        error_log("Email could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        // Enhanced error logging for debugging
+        file_put_contents(__DIR__ . '/../mail-errors.log', 
+            date('[Y-m-d H:i:s] ') . "Email Error: " . $e->getMessage() . "\n", 
+            FILE_APPEND);
         return false;
     }
 }
 ?>
-
