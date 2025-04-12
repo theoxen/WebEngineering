@@ -1,13 +1,11 @@
 <?php
+// filepath: c:\xampp\htdocs\WebEngineering\utils\mail.php
 // Email functions
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 // Require Composer's autoloader
 require __DIR__ . '/../vendor/autoload.php';
-
-// IMPORTANT: Sign up for a free SendGrid account at https://sendgrid.com/
-// Create an API key in your SendGrid dashboard and replace 'YOUR_SENDGRID_API_KEY' below
 
 function sendVerificationEmail($to, $username, $token)
 {
@@ -35,6 +33,15 @@ function sendVerificationEmail($to, $username, $token)
         $mail->Password = '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'; // Your SendGrid API key
         $mail->SMTPSecure = 'tls';              // Enable TLS encryption
         $mail->Port = 587;                      // TCP port to connect to
+        
+        // SSL certificate verification bypass - critical for most Apache servers
+        $mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
 
         // Recipients
         $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering'); // Use verified sender in SendGrid
@@ -107,6 +114,15 @@ function sendPasswordResetEmail($to, $username, $token)
         $mail->Password = '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'; // Your SendGrid API key
         $mail->SMTPSecure = 'tls';              // Enable TLS encryption
         $mail->Port = 587;                      // TCP port to connect to
+        
+        // SSL certificate verification bypass - critical for most Apache servers
+        $mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
 
         // Recipients
         $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering'); // Use verified sender in SendGrid
