@@ -1,24 +1,6 @@
 <?php
-// filepath: c:\xampp\htdocs\WebEngineering\utils\mail.php
-// Email functions
 
-// Show all PHP errors in browser
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// Log that script has started
-@file_put_contents(__DIR__ . '/../debug.log', "=== mail.php started ===\n", FILE_APPEND);
-
-// Check for autoload file
-$autoloadPath = __DIR__ . '/../vendor/autoload.php';
-if (!file_exists($autoloadPath)) {
-    file_put_contents(__DIR__ . '/../debug.log', "ERROR: Autoload file not found at: $autoloadPath\n", FILE_APPEND);
-    die("ERROR: Composer autoload not found at: $autoloadPath");
-}
-
-require $autoloadPath;
-file_put_contents(__DIR__ . '/../debug.log', "Autoload loaded successfully\n", FILE_APPEND);
+require __DIR__ . '/../vendor/autoload.php';
 
 function sendVerificationEmail($to, $username, $token)
 {
