@@ -8,7 +8,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Log that script has started
-file_put_contents(__DIR__ . '/../debug.log', "=== mail.php started ===\n", FILE_APPEND);
+@file_put_contents(__DIR__ . '/../debug.log', "=== mail.php started ===\n", FILE_APPEND);
 
 // Check for autoload file
 $autoloadPath = __DIR__ . '/../vendor/autoload.php';
