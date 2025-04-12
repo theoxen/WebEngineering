@@ -1,6 +1,6 @@
 # Composer packages
-/vendor/
-composer.lock
+# /vendor/
+# composer.lock
 
 # Environment files
 .env

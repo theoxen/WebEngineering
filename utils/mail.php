@@ -157,3 +157,4 @@ function sendPasswordResetEmail($to, $username, $token)
     }
 }
 ?>
+
