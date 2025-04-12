@@ -25,33 +25,15 @@ function sendVerificationEmail($to, $username, $token)
     $mail = new PHPMailer(true);
 
     try {
-        // Server settings - SendGrid configuration
-        $mail->isSMTP();
-        $mail->Host = 'smtp.sendgrid.net';      // SendGrid SMTP server
-        $mail->SMTPAuth = true;                 // Enable SMTP authentication
-        $mail->Username = 'apikey';             // SendGrid username is always 'apikey'
-        $mail->Password = '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'; // Your SendGrid API key
-        $mail->SMTPSecure = 'tls';              // Enable TLS encryption
-        $mail->Port = 587;                      // TCP port to connect to
-        
-        // SSL certificate verification bypass - critical for most Apache servers
-        $mail->SMTPOptions = array(
-            'ssl' => array(
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-                'allow_self_signed' => true
-            )
-        );
+        $sendgrid = new \SendGrid('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');
+        $email = new \SendGrid\Mail\Mail();
+        $email->setFrom('theodosisx874@gmail.com', 'WebEngineering');
+        $email->setSubject('Verify Your Email Address');
+        $email->addTo($to);
 
-        // Recipients
-        $mail->setFrom('theodosisx874@gmail.com', 'WebEngineering'); // Use verified sender in SendGrid
-        $mail->addAddress($to);                 // Add recipient
-
-        // Content
-        $mail->isHTML(true);
-        $mail->Subject = 'Verify Your Email Address';
-        $mail->Body = "
-        <html>
+        $email->addContent(
+        "text/html",
+        "<html>
         <head>
             <style>
                 body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
@@ -75,9 +57,9 @@ function sendVerificationEmail($to, $username, $token)
                 </div>
             </div>
         </body>
-        </html>";
+        </html>");
 
-        return $mail->send();
+        return $sendgrid->send($email);
 
     } catch (Exception $e) {
         // Enhanced error logging for debugging
