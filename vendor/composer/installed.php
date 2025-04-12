@@ -3,7 +3,7 @@
         'name' => '__root__',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'cead03dd257359a91205282fc69a25aa2b824644',
+        'reference' => '1a84c20b215bedf28a34c53f97dc18f473f162b1',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         '__root__' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'cead03dd257359a91205282fc69a25aa2b824644',
+            'reference' => '1a84c20b215bedf28a34c53f97dc18f473f162b1',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -31,7 +31,7 @@
         'phpmailer/phpmailer' => array(
             'pretty_version' => 'v6.9.3',
             'version' => '6.9.3.0',
-            'reference' => '9400f305a898f194caff5521f64e5dfa926626f3',
+            'reference' => '2f5c94fe7493efc213f643c23b1b1c249d40f47e',
             'type' => 'library',
             'install_path' => __DIR__ . '/../phpmailer/phpmailer',
             'aliases' => array(),
