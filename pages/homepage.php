@@ -17,6 +17,7 @@ $monthNames = [
 $startYear = 2016;
 ?>
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -255,6 +256,29 @@ $startYear = 2016;
             align-self: center;
         }
         
+        /* Search and tracking styles */
+        .search-tracking-section .card {
+            border: none;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
+        
+        .search-tracking-section .card-header {
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+        
+        .search-tracking-section .table th {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
         @media (max-width: 768px) {
             .content-wrapper {
                 margin-left: 0;
@@ -284,9 +308,8 @@ $startYear = 2016;
             }
 
             .text-end {
-            align-self: flex-end;
+                align-self: flex-end;
             }
-        
         }
     </style>
 </head>
@@ -294,11 +317,191 @@ $startYear = 2016;
     <?php
     // Include sidebar
     include_once('../components/sidebar/sidebar.php');
+    
+    // Database connection
+    $servername = "localhost";
+    $username = "root"; 
+    $password = ""; 
+    $dbname = "cei326omada1";
+    
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    
+    
+    // Handle search functionality
+    $searchResults = [];
+    if (isset($_POST['searchApplicants'])) {
+        $searchTerm = isset($_POST['searchTerm']) ? $conn->real_escape_string($_POST['searchTerm']) : '';
+        
+        // Search by name or application number
+        if (!empty($searchTerm)) {
+            // Check if categories table exists, if not we'll exclude that join
+            $sql = "SHOW TABLES LIKE 'categories'";
+            $result = $conn->query($sql);
+            
+            if ($result && $result->num_rows > 0) {
+                // Categories table exists
+                $sql = "SELECT r.*, c.categoryName 
+                       FROM rankinglist r 
+                       JOIN categories c ON r.categoryID = c.categoryID 
+                       WHERE r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%'
+                       ORDER BY r.ranking ASC
+                       LIMIT 20";
+            } else {
+                // No categories table, just query rankinglist
+                $sql = "SELECT r.*, 'Unknown' as categoryName 
+                       FROM rankinglist r 
+                       WHERE r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%'
+                       ORDER BY r.ranking ASC
+                       LIMIT 20";
+            }
+                   
+            $result = $conn->query($sql);
+            
+            if ($result && $result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    $searchResults[] = $row;
+                }
+            }
+        }
+    }
+    
+    // Get tracked applicants list from session
+    if (!isset($_SESSION['tracked_applicants'])) {
+        $_SESSION['tracked_applicants'] = [];
+    }
+    $trackedApplicants = $_SESSION['tracked_applicants'];
     ?>
+    
     <div class="container content-wrapper">
         <div class="page-header">
             <h1 class="page-title"><?php echo $pageTitle; ?></h1>
             <p class="page-description">Πρόσβαση στους καταλόγους διοριστέων εκπαιδευτικών ανά περίοδο και έτος. Επιλέξτε τον κατάλογο που επιθυμείτε.</p>
+        </div>
+        
+        <!-- Applicant Search and Tracking Section -->
+        <div class="search-tracking-section mb-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-search me-2"></i> Αναζήτηση Υποψηφίων</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="" id="searchForm">
+                        <div class="row g-3">
+                            <div class="col-md-9">
+                                <input type="text" class="form-control" name="searchTerm" placeholder="Αναζήτηση με όνομα ή αριθμό αίτησης..." value="<?php echo isset($_POST['searchTerm']) ? htmlspecialchars($_POST['searchTerm']) : ''; ?>">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" name="searchApplicants" class="btn btn-primary w-100">
+                                    <i class="fas fa-search me-2"></i> Αναζήτηση
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <?php if (isset($_POST['searchApplicants']) && !empty($searchResults)): ?>
+                        <div class="search-results mt-4">
+                            <h5>Αποτελέσματα Αναζήτησης</h5>
+                            <form method="POST" action="../track-applicants.php" id="trackForm">
+                                <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th><input type="checkbox" id="selectAll" class="form-check-input"> Επιλογή</th>
+                                                    <th>Κατάταξη</th>
+                                                    <th>Ονοματεπώνυμο</th>
+                                                    <th>Αρ. Αίτησης</th>
+                                                    <th>Μόρια</th>
+                                                    <th>Κατηγορία</th>
+                                                    <th>Ενέργειες</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($searchResults as $applicant): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <input type="checkbox" name="track_applicants[]" value="<?php echo $applicant['id']; ?>" class="form-check-input applicant-check">
+                                                        </td>
+                                                        <td><?php echo $applicant['ranking']; ?></td>
+                                                        <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
+                                                        <td><?php echo $applicant['appNum']; ?></td>
+                                                        <td><?php echo number_format($applicant['points'], 2); ?></td>
+                                                        <td><?php echo htmlspecialchars($applicant['categoryName']); ?></td>
+                                                        <td>
+                                                            <button type="button" class="btn btn-sm btn-primary track-single" data-id="<?php echo $applicant['id']; ?>">
+                                                                <i class="fas fa-user-plus"></i>
+                                                            </button>
+                                                            <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>" class="btn btn-sm btn-info">
+                                                                <i class="fas fa-info-circle"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="d-flex justify-content-end mt-3">
+                                        <button type="submit" class="btn btn-success" name="track_selected">
+                                            <i class="fas fa-user-check me-2"></i> Παρακολούθηση Επιλεγμένων
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            
+            <!-- Tracked Applicants Section -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-user-check me-2"></i> Υπό Παρακολούθηση Υποψήφιοι</h5>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($trackedApplicants)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Κατάταξη</th>
+                                        <th>Ονοματεπώνυμο</th>
+                                        <th>Αρ. Αίτησης</th>
+                                        <th>Μόρια</th>
+                                        <th>Κατηγορία</th>
+                                        <th>Ενέργειες</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($trackedApplicants as $applicant): ?>
+                                        <tr>
+                                            <td><?php echo $applicant['ranking']; ?></td>
+                                            <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
+                                            <td><?php echo $applicant['appNum']; ?></td>
+                                            <td><?php echo number_format($applicant['points'], 2); ?></td>
+                                            <td><?php echo htmlspecialchars($applicant['categoryName']); ?></td>
+                                            <td>
+                                                <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>" class="btn btn-sm btn-info me-1">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
+                                                    <i class="fas fa-user-minus"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Δεν έχετε προσθέσει ακόμη υποψηφίους για παρακολούθηση.
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
         
         <div class="catalogs-container">
@@ -419,7 +622,67 @@ $startYear = 2016;
         </div>
     </div>
     
-    <!-- Bootstrap JS (optional, for interactive components) -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery for AJAX functionality -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Select all checkbox functionality
+            $('#selectAll').change(function() {
+                $('.applicant-check').prop('checked', $(this).prop('checked'));
+            });
+            
+            // Individual track button
+            $('.track-single').click(function() {
+                const applicantID = $(this).data('id');
+                
+                $.ajax({
+                    url: '../track-applicants.php',
+                    method: 'POST',
+                    data: {
+                        track_single: true,
+                        applicantID: applicantID
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            // Reload the page to show updated tracked list
+                            location.reload();
+                        }
+                    }
+                });
+            });
+            
+            // Untrack button functionality
+            $('.untrack-btn').click(function() {
+                const applicantID = $(this).data('id');
+                
+                $.ajax({
+                    url: '../track-applicants.php',
+                    method: 'POST',
+                    data: {
+                        untrack: true,
+                        applicantID: applicantID
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            // Reload the page to update tracked list
+                            location.reload();
+                        }
+                    }
+                });
+            });
+            
+            // Show success message if redirected with success parameter
+            if (window.location.search.includes('tracked=success')) {
+                $('<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                  '<i class="fas fa-check-circle me-2"></i> Οι επιλεγμένοι υποψήφιοι προστέθηκαν στην παρακολούθηση.' +
+                  '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                  '</div>').insertAfter('.page-header').delay(3000).fadeOut();
+            }
+        });
+    </script>
 </body>
 </html>
