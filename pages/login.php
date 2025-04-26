@@ -244,6 +244,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             right: 20px;
             z-index: 1050;
         }
+
+        .box-input-field-container {
+            padding: 40px;
+        }
+
+        @media screen and (max-width: 325px) {
+            .box-input-field-container {
+                padding: 20px;
+            }
+            
+        }
     </style>
 </head>
 
@@ -272,10 +283,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="container">
                 <div class="row justify-content-center">
-                    <div class="col-xl-5 col-lg-6 col-md-8">
+                    <div class="col-xl-6 col-lg-9 col-md-8">
                         <div class="auth-card card o-hidden border-0 shadow-lg my-5">
                             <div class="card-body p-0">
-                                <div class="p-5">
+                                <div class="box-input-field-container">
                                     <div class="text-center">
                                         <i class="fas fa-user-circle auth-icon fa-4x"></i>
                                         <h1 class="h4 text-gray-900 mb-4">Sign In</h1>

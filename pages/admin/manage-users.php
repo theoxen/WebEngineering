@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['action']) && isset($_POST['user_id'])) {
         $userId = $_POST['user_id'];
         $action = $_POST['action'];
-        
+
         // Validate that we're not acting on ourselves
         if ($userId == $_SESSION['user_id'] && ($action == 'delete' || $action == 'demote')) {
             $message = "You cannot $action yourself!";
@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     }
                     $stmt->close();
                     break;
-                    
+
                 case 'promote':
                     $stmt = $mysqli->prepare("UPDATE users SET role = 'admin' WHERE userId = ?");
                     $stmt->bind_param("i", $userId);
@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     }
                     $stmt->close();
                     break;
-                    
+
                 case 'demote':
                     $stmt = $mysqli->prepare("UPDATE users SET role = 'user' WHERE userId = ?");
                     $stmt->bind_param("i", $userId);
@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // Set up pagination
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
 $perPage = 10;
 $offset = ($page - 1) * $perPage;
 
@@ -218,7 +218,8 @@ $stmt->close();
             max-width: 400px;
         }
 
-        .modal-header, .modal-footer {
+        .modal-header,
+        .modal-footer {
             border-color: #e3e6f0;
         }
 
@@ -228,20 +229,20 @@ $stmt->close();
             right: 20px;
             z-index: 1050;
         }
-        
+
         .modal-icon {
             font-size: 4rem;
             margin-bottom: 1rem;
         }
-        
+
         .modal-icon.warning {
             color: #f6c23e;
         }
-        
+
         .modal-icon.danger {
             color: #e74a3b;
         }
-        
+
         .modal-icon.success {
             color: #1cc88a;
         }
@@ -260,299 +261,321 @@ $stmt->close();
 
 <body>
     <?php include_once('../../components/sidebar/sidebar.php'); ?>
-    <div class="content-wrapper">
-        <div class="container-fluid">
-            <!-- Page Heading -->
-            <div class="d-flex justify-content-between align-items-center mb-4 header-content">
-                <h1 class="page-title">Manage Users</h1>
-                <div>
-                    <a href="dashboard.php" class="btn btn-outline-primary">
-                        <i class="fas fa-arrow-left"></i> Back to Dashboard
-                    </a>
-                </div>
-            </div>
-
-            <!-- Alerts -->
-            <?php if ($message): ?>
-            <div class="alert alert-<?php echo $messageClass; ?> alert-dismissible fade show" role="alert">
-                <?php echo $message; ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <?php endif; ?>
-
-            <!-- User Management Card -->
-            <div class="card shadow">
-                <div class="card-header">
-                    <i class="fas fa-users me-2"></i> User Management
-                </div>
-                <div class="card-body">
-                    <!-- Search and Filter -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <form method="get" class="search-bar">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Search users..." name="search" value="<?php echo htmlspecialchars($search); ?>">
-                                    <select class="form-select" name="role" style="max-width: 120px;">
-                                        <option value="">All Roles</option>
-                                        <option value="user" <?php echo $role === 'user' ? 'selected' : ''; ?>>Users</option>
-                                        <option value="admin" <?php echo $role === 'admin' ? 'selected' : ''; ?>>Admins</option>
-                                    </select>
-                                    <button class="btn btn-primary" type="submit">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                    <?php if (!empty($search) || !empty($role)): ?>
-                                    <a href="manage-users.php" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times"></i> Clear
-                                    </a>
-                                    <?php endif; ?>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <span class="text-muted">Total: <?php echo $totalUsers; ?> users</span>
-                        </div>
+    <div class="main-content">
+        <div class="content-wrapper">
+            <div class="container-fluid">
+                <!-- Page Heading -->
+                <div class="d-flex justify-content-between align-items-center mb-4 header-content">
+                    <h1 class="page-title">Manage Users</h1>
+                    <div>
+                        <a href="dashboard.php" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
                     </div>
+                </div>
 
-                    <!-- Users Table -->
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>User</th>
-                                    <th>Email</th>
-                                    <th>Phone</th>
-                                    <th>Role</th>
-                                    <th>Registered Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (empty($users)): ?>
-                                <tr>
-                                    <td colspan="7" class="text-center">No users found.</td>
-                                </tr>
-                                <?php else: ?>
-                                <?php foreach ($users as $user): ?>
-                                <tr>
-                                    <td><?php echo $user['userId']; ?></td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="user-avatar me-2">
-                                                <?php echo strtoupper(substr($user['username'], 0, 1)); ?>
-                                            </div>
-                                            <?php echo htmlspecialchars($user['username']); ?>
-                                        </div>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($user['email']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['phoneNumber']); ?></td>
-                                    <td>
-                                        <?php if ($user['role'] === 'admin'): ?>
-                                        <span class="badge bg-danger">Admin</span>
-                                        <?php else: ?>
-                                        <span class="badge bg-primary">User</span>
+                <!-- Alerts -->
+                <?php if ($message): ?>
+                    <div class="alert alert-<?php echo $messageClass; ?> alert-dismissible fade show" role="alert">
+                        <?php echo $message; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
+                <!-- User Management Card -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <i class="fas fa-users me-2"></i> User Management
+                    </div>
+                    <div class="card-body">
+                        <!-- Search and Filter -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <form method="get" class="search-bar">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" placeholder="Search users..."
+                                            name="search" value="<?php echo htmlspecialchars($search); ?>">
+                                        <select class="form-select" name="role" style="max-width: 120px;">
+                                            <option value="">All Roles</option>
+                                            <option value="user" <?php echo $role === 'user' ? 'selected' : ''; ?>>Users
+                                            </option>
+                                            <option value="admin" <?php echo $role === 'admin' ? 'selected' : ''; ?>>
+                                                Admins</option>
+                                        </select>
+                                        <button class="btn btn-primary" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                        <?php if (!empty($search) || !empty($role)): ?>
+                                            <a href="manage-users.php" class="btn btn-outline-secondary">
+                                                <i class="fas fa-times"></i> Clear
+                                            </a>
                                         <?php endif; ?>
-                                    </td>
-                                    <td><?php echo date('M d, Y', strtotime($user['dateCreated'])); ?></td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary view-user" 
-                                                data-id="<?php echo $user['userId']; ?>"
-                                                data-username="<?php echo htmlspecialchars($user['username']); ?>"
-                                                data-email="<?php echo htmlspecialchars($user['email']); ?>"
-                                                data-phone="<?php echo htmlspecialchars($user['phoneNumber']); ?>"
-                                                data-dob="<?php echo htmlspecialchars($user['dateOfBirth']); ?>"
-                                                data-role="<?php echo htmlspecialchars($user['role']); ?>"
-                                                data-created="<?php echo date('M d, Y', strtotime($user['dateCreated'])); ?>">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            
-                                            <?php if ($user['role'] === 'user'): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-success promote-user ms-1"
-                                                data-id="<?php echo $user['userId']; ?>"
-                                                data-username="<?php echo htmlspecialchars($user['username']); ?>">
-                                                <i class="fas fa-user-shield"></i>
-                                            </button>
-                                            <?php elseif ($user['userId'] != $_SESSION['user_id']): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-warning demote-user ms-1"
-                                                data-id="<?php echo $user['userId']; ?>"
-                                                data-username="<?php echo htmlspecialchars($user['username']); ?>">
-                                                <i class="fas fa-user"></i>
-                                            </button>
-                                            <?php endif; ?>
-                                            
-                                            <?php if ($user['userId'] != $_SESSION['user_id']): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-danger delete-user ms-1"
-                                                data-id="<?php echo $user['userId']; ?>"
-                                                data-username="<?php echo htmlspecialchars($user['username']); ?>">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                            <?php endif; ?>
-                                        </div>
-                                        
-                                        <!-- Hidden forms for actions -->
-                                        <form id="promote-form-<?php echo $user['userId']; ?>" method="post" class="d-none">
-                                            <input type="hidden" name="user_id" value="<?php echo $user['userId']; ?>">
-                                            <input type="hidden" name="action" value="promote">
-                                        </form>
-                                        
-                                        <form id="demote-form-<?php echo $user['userId']; ?>" method="post" class="d-none">
-                                            <input type="hidden" name="user_id" value="<?php echo $user['userId']; ?>">
-                                            <input type="hidden" name="action" value="demote">
-                                        </form>
-                                        
-                                        <form id="delete-form-<?php echo $user['userId']; ?>" method="post" class="d-none">
-                                            <input type="hidden" name="user_id" value="<?php echo $user['userId']; ?>">
-                                            <input type="hidden" name="action" value="delete">
-                                        </form>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <span class="text-muted">Total: <?php echo $totalUsers; ?> users</span>
+                            </div>
+                        </div>
 
-                    <!-- Pagination -->
-                    <?php if ($totalPages > 1): ?>
-                    <nav aria-label="User list pagination">
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&role=<?php echo urlencode($role); ?>">
-                                    <i class="fas fa-chevron-left"></i>
-                                </a>
-                            </li>
-                            
-                            <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
-                            <li class="page-item <?php echo $i === $page ? 'active' : ''; ?>">
-                                <a class="page-link" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&role=<?php echo urlencode($role); ?>">
-                                    <?php echo $i; ?>
-                                </a>
-                            </li>
-                            <?php endfor; ?>
-                            
-                            <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&role=<?php echo urlencode($role); ?>">
-                                    <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                    <?php endif; ?>
+                        <!-- Users Table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>User</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Role</th>
+                                        <th>Registered Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($users)): ?>
+                                        <tr>
+                                            <td colspan="7" class="text-center">No users found.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($users as $user): ?>
+                                            <tr>
+                                                <td><?php echo $user['userId']; ?></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="user-avatar me-2">
+                                                            <?php echo strtoupper(substr($user['username'], 0, 1)); ?>
+                                                        </div>
+                                                        <?php echo htmlspecialchars($user['username']); ?>
+                                                    </div>
+                                                </td>
+                                                <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                                <td><?php echo htmlspecialchars($user['phoneNumber']); ?></td>
+                                                <td>
+                                                    <?php if ($user['role'] === 'admin'): ?>
+                                                        <span class="badge bg-danger">Admin</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-primary">User</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><?php echo date('M d, Y', strtotime($user['dateCreated'])); ?></td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        <button type="button" class="btn btn-sm btn-outline-primary view-user"
+                                                            data-id="<?php echo $user['userId']; ?>"
+                                                            data-username="<?php echo htmlspecialchars($user['username']); ?>"
+                                                            data-email="<?php echo htmlspecialchars($user['email']); ?>"
+                                                            data-phone="<?php echo htmlspecialchars($user['phoneNumber']); ?>"
+                                                            data-dob="<?php echo htmlspecialchars($user['dateOfBirth']); ?>"
+                                                            data-role="<?php echo htmlspecialchars($user['role']); ?>"
+                                                            data-created="<?php echo date('M d, Y', strtotime($user['dateCreated'])); ?>">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+
+                                                        <?php if ($user['role'] === 'user'): ?>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-success promote-user ms-1"
+                                                                data-id="<?php echo $user['userId']; ?>"
+                                                                data-username="<?php echo htmlspecialchars($user['username']); ?>">
+                                                                <i class="fas fa-user-shield"></i>
+                                                            </button>
+                                                        <?php elseif ($user['userId'] != $_SESSION['user_id']): ?>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-warning demote-user ms-1"
+                                                                data-id="<?php echo $user['userId']; ?>"
+                                                                data-username="<?php echo htmlspecialchars($user['username']); ?>">
+                                                                <i class="fas fa-user"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+
+                                                        <?php if ($user['userId'] != $_SESSION['user_id']): ?>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-danger delete-user ms-1"
+                                                                data-id="<?php echo $user['userId']; ?>"
+                                                                data-username="<?php echo htmlspecialchars($user['username']); ?>">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    </div>
+
+                                                    <!-- Hidden forms for actions -->
+                                                    <form id="promote-form-<?php echo $user['userId']; ?>" method="post"
+                                                        class="d-none">
+                                                        <input type="hidden" name="user_id"
+                                                            value="<?php echo $user['userId']; ?>">
+                                                        <input type="hidden" name="action" value="promote">
+                                                    </form>
+
+                                                    <form id="demote-form-<?php echo $user['userId']; ?>" method="post"
+                                                        class="d-none">
+                                                        <input type="hidden" name="user_id"
+                                                            value="<?php echo $user['userId']; ?>">
+                                                        <input type="hidden" name="action" value="demote">
+                                                    </form>
+
+                                                    <form id="delete-form-<?php echo $user['userId']; ?>" method="post"
+                                                        class="d-none">
+                                                        <input type="hidden" name="user_id"
+                                                            value="<?php echo $user['userId']; ?>">
+                                                        <input type="hidden" name="action" value="delete">
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <?php if ($totalPages > 1): ?>
+                            <nav aria-label="User list pagination">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                                        <a class="page-link"
+                                            href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&role=<?php echo urlencode($role); ?>">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+
+                                    <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
+                                        <li class="page-item <?php echo $i === $page ? 'active' : ''; ?>">
+                                            <a class="page-link"
+                                                href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&role=<?php echo urlencode($role); ?>">
+                                                <?php echo $i; ?>
+                                            </a>
+                                        </li>
+                                    <?php endfor; ?>
+
+                                    <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                                        <a class="page-link"
+                                            href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&role=<?php echo urlencode($role); ?>">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- User Details Modal -->
-    <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="userDetailsModalLabel">User Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-4">
-                        <div class="user-avatar mx-auto" style="width: 80px; height: 80px; font-size: 2rem;" id="modalUserAvatar">U</div>
-                        <h4 class="mt-2 mb-0" id="modalUsername">Username</h4>
+        <!-- User Details Modal -->
+        <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="userDetailsModalLabel">User Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-4">
+                            <div class="user-avatar mx-auto" style="width: 80px; height: 80px; font-size: 2rem;"
+                                id="modalUserAvatar">U</div>
+                            <h4 class="mt-2 mb-0" id="modalUsername">Username</h4>
+                            <div class="mb-3">
+                                <span class="badge" id="modalUserRole">User</span>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
-                            <span class="badge" id="modalUserRole">User</span>
+                            <label class="form-label fw-bold"><i class="fas fa-envelope me-2"></i>Email</label>
+                            <p id="modalUserEmail" class="mb-0">email@example.com</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-phone me-2"></i>Phone</label>
+                            <p id="modalUserPhone" class="mb-0">1234567890</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-calendar me-2"></i>Date of Birth</label>
+                            <p id="modalUserDob" class="mb-0">January 1, 1990</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Registration Date</label>
+                            <p id="modalUserCreated" class="mb-0">January 1, 2023</p>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold"><i class="fas fa-envelope me-2"></i>Email</label>
-                        <p id="modalUserEmail" class="mb-0">email@example.com</p>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold"><i class="fas fa-phone me-2"></i>Phone</label>
-                        <p id="modalUserPhone" class="mb-0">1234567890</p>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold"><i class="fas fa-calendar me-2"></i>Date of Birth</label>
-                        <p id="modalUserDob" class="mb-0">January 1, 1990</p>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Registration Date</label>
-                        <p id="modalUserCreated" class="mb-0">January 1, 2023</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Promote User Modal -->
-    <div class="modal fade" id="promoteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Promote to Admin</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <i class="fas fa-user-shield modal-icon success"></i>
-                    <h4>Promote User to Admin?</h4>
-                    <p>Are you sure you want to promote <strong id="promoteUsername"></strong> to admin status? This will give them full administrative rights to the system.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" id="confirmPromote">Promote to Admin</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Demote Admin Modal -->
-    <div class="modal fade" id="demoteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Demote Admin</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <i class="fas fa-user modal-icon warning"></i>
-                    <h4>Demote Admin to Regular User?</h4>
-                    <p>Are you sure you want to demote <strong id="demoteUsername"></strong> to regular user status? They will lose all administrative privileges.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-warning" id="confirmDemote">Demote to User</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Delete User Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Delete User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <i class="fas fa-exclamation-triangle modal-icon danger"></i>
-                    <h4>Delete User Permanently?</h4>
-                    <p>Are you sure you want to delete <strong id="deleteUsername"></strong>? This action cannot be undone and all user data will be permanently removed.</p>
-                    
-                    <div class="form-check mt-3 text-start">
-                        <input class="form-check-input" type="checkbox" id="deleteConfirm">
-                        <label class="form-check-label" for="deleteConfirm">
-                            I understand this action is irreversible.
-                        </label>
+
+        <!-- Promote User Modal -->
+        <div class="modal fade" id="promoteModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Promote to Admin</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="fas fa-user-shield modal-icon success"></i>
+                        <h4>Promote User to Admin?</h4>
+                        <p>Are you sure you want to promote <strong id="promoteUsername"></strong> to admin status? This
+                            will give them full administrative rights to the system.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="confirmPromote">Promote to Admin</button>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmDelete" disabled>Delete User</button>
+            </div>
+        </div>
+
+        <!-- Demote Admin Modal -->
+        <div class="modal fade" id="demoteModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Demote Admin</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="fas fa-user modal-icon warning"></i>
+                        <h4>Demote Admin to Regular User?</h4>
+                        <p>Are you sure you want to demote <strong id="demoteUsername"></strong> to regular user status?
+                            They will lose all administrative privileges.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-warning" id="confirmDemote">Demote to User</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete User Modal -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Delete User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="fas fa-exclamation-triangle modal-icon danger"></i>
+                        <h4>Delete User Permanently?</h4>
+                        <p>Are you sure you want to delete <strong id="deleteUsername"></strong>? This action cannot be
+                            undone and all user data will be permanently removed.</p>
+
+                        <div class="form-check mt-3 text-start">
+                            <input class="form-check-input" type="checkbox" id="deleteConfirm">
+                            <label class="form-check-label" for="deleteConfirm">
+                                I understand this action is irreversible.
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmDelete" disabled>Delete User</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -564,10 +587,10 @@ $stmt->close();
     <script>
         // Variables to store current user info for modals
         let currentUserId = null;
-        
+
         // Handle View User button click
         document.querySelectorAll('.view-user').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 const userId = this.getAttribute('data-id');
                 const username = this.getAttribute('data-username');
                 const email = this.getAttribute('data-email');
@@ -575,7 +598,7 @@ $stmt->close();
                 const dob = this.getAttribute('data-dob');
                 const role = this.getAttribute('data-role');
                 const created = this.getAttribute('data-created');
-                
+
                 // Update modal content
                 document.getElementById('modalUserAvatar').innerText = username.charAt(0).toUpperCase();
                 document.getElementById('modalUsername').innerText = username;
@@ -583,92 +606,93 @@ $stmt->close();
                 document.getElementById('modalUserPhone').innerText = phone;
                 document.getElementById('modalUserDob').innerText = dob;
                 document.getElementById('modalUserCreated').innerText = created;
-                
+
                 // Update role badge
                 const roleBadge = document.getElementById('modalUserRole');
                 roleBadge.innerText = role.charAt(0).toUpperCase() + role.slice(1);
                 roleBadge.className = role === 'admin' ? 'badge bg-danger' : 'badge bg-primary';
-                
+
                 // Show the modal
                 const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
                 modal.show();
             });
         });
-        
+
         // Handle Promote User button
         document.querySelectorAll('.promote-user').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 currentUserId = this.getAttribute('data-id');
                 const username = this.getAttribute('data-username');
-                
+
                 // Update modal content
                 document.getElementById('promoteUsername').innerText = username;
-                
+
                 // Show the modal
                 const modal = new bootstrap.Modal(document.getElementById('promoteModal'));
                 modal.show();
             });
         });
-        
+
         // Handle Demote User button
         document.querySelectorAll('.demote-user').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 currentUserId = this.getAttribute('data-id');
                 const username = this.getAttribute('data-username');
-                
+
                 // Update modal content
                 document.getElementById('demoteUsername').innerText = username;
-                
+
                 // Show the modal
                 const modal = new bootstrap.Modal(document.getElementById('demoteModal'));
                 modal.show();
             });
         });
-        
+
         // Handle Delete User button
         document.querySelectorAll('.delete-user').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 currentUserId = this.getAttribute('data-id');
                 const username = this.getAttribute('data-username');
-                
+
                 // Update modal content
                 document.getElementById('deleteUsername').innerText = username;
-                
+
                 // Reset the confirmation checkbox
                 document.getElementById('deleteConfirm').checked = false;
                 document.getElementById('confirmDelete').disabled = true;
-                
+
                 // Show the modal
                 const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
                 modal.show();
             });
         });
-        
+
         // Handle Delete Confirmation Checkbox
-        document.getElementById('deleteConfirm').addEventListener('change', function() {
+        document.getElementById('deleteConfirm').addEventListener('change', function () {
             document.getElementById('confirmDelete').disabled = !this.checked;
         });
-        
+
         // Handle Confirm Promote
-        document.getElementById('confirmPromote').addEventListener('click', function() {
+        document.getElementById('confirmPromote').addEventListener('click', function () {
             if (currentUserId) {
                 document.getElementById('promote-form-' + currentUserId).submit();
             }
         });
-        
+
         // Handle Confirm Demote
-        document.getElementById('confirmDemote').addEventListener('click', function() {
+        document.getElementById('confirmDemote').addEventListener('click', function () {
             if (currentUserId) {
                 document.getElementById('demote-form-' + currentUserId).submit();
             }
         });
-        
+
         // Handle Confirm Delete
-        document.getElementById('confirmDelete').addEventListener('click', function() {
+        document.getElementById('confirmDelete').addEventListener('click', function () {
             if (currentUserId && document.getElementById('deleteConfirm').checked) {
                 document.getElementById('delete-form-' + currentUserId).submit();
             }
         });
     </script>
 </body>
+
 </html>
