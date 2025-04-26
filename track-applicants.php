@@ -3,6 +3,16 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Check if user is logged in
+if (!isset($_SESSION['userId']) && !isset($_SESSION['user_id'])) {
+    // Redirect to login page if user isn't logged in
+    header("Location: pages/login.php");
+    exit;
+}
+
+// Get the user ID from session
+$userId = isset($_SESSION['userId']) ? $_SESSION['userId'] : $_SESSION['user_id'];
+
 // Initialize tracked applicants array in session if not exists
 if (!isset($_SESSION['tracked_applicants'])) {
     $_SESSION['tracked_applicants'] = [];
@@ -51,8 +61,39 @@ function getApplicantData($conn, $applicantID) {
     return null;
 }
 
+// Function to add tracking to database - using the actual trackings table structure
+function addTrackingToDatabase($conn, $userId, $applicantData) {
+    // Check if tracking already exists - now checking by name, birthday AND application number
+    $sql = "SELECT trackingID FROM trackings 
+            WHERE userID = ? AND candidateFullName = ? AND candidateBirthdayDate = ? AND appNum = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("isss", $userId, $applicantData['fullName'], $applicantData['birthdayDate'], $applicantData['appNum']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows == 0) {
+        // Insert new tracking record - now including appNum
+        $sql = "INSERT INTO trackings (userID, candidateFullName, candidateBirthdayDate, candidateTitleDate, appNum, isOwnCandidate) 
+                VALUES (?, ?, ?, ?, ?, 0)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("issss", $userId, $applicantData['fullName'], $applicantData['birthdayDate'], $applicantData['titleDate'], $applicantData['appNum']);
+        return $stmt->execute();
+    }
+    
+    return false;
+}
+
+// Function to remove tracking from database
+function removeTrackingFromDatabase($conn, $userId, $applicantData) {
+    $sql = "DELETE FROM trackings 
+            WHERE userID = ? AND candidateFullName = ? AND candidateBirthdayDate = ? AND appNum = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("isss", $userId, $applicantData['fullName'], $applicantData['birthdayDate'], $applicantData['appNum']);
+    $stmt->execute();
+    return $stmt->affected_rows > 0;
+}
+
 // Check if form was submitted to track multiple applicants
-// Look for both 'track_applicants' and 'track_selected' parameters
 if ((isset($_POST['track_applicants']) && is_array($_POST['track_applicants'])) || 
     (isset($_POST['track_selected']) && isset($_POST['track_applicants']) && is_array($_POST['track_applicants']))) {
     
@@ -61,7 +102,7 @@ if ((isset($_POST['track_applicants']) && is_array($_POST['track_applicants'])) 
     
     // For each selected applicant
     foreach ($applicantIDs as $applicantID) {
-        // Check if this applicant is already being tracked
+        // Check if this applicant is already being tracked in session
         $alreadyTracked = false;
         foreach ($_SESSION['tracked_applicants'] as $tracked) {
             if ($tracked['id'] == $applicantID) {
@@ -75,7 +116,11 @@ if ((isset($_POST['track_applicants']) && is_array($_POST['track_applicants'])) 
             $applicantData = getApplicantData($conn, $applicantID);
             
             if ($applicantData) {
+                // Add to session
                 $_SESSION['tracked_applicants'][] = $applicantData;
+                
+                // Add to database
+                addTrackingToDatabase($conn, $userId, $applicantData);
             }
         }
     }
@@ -89,7 +134,7 @@ if ((isset($_POST['track_applicants']) && is_array($_POST['track_applicants'])) 
 if (isset($_POST['track_single']) && isset($_POST['applicantID'])) {
     $applicantID = $_POST['applicantID'];
     
-    // Check if already tracked
+    // Check if already tracked in session
     $alreadyTracked = false;
     foreach ($_SESSION['tracked_applicants'] as $tracked) {
         if ($tracked['id'] == $applicantID) {
@@ -103,7 +148,11 @@ if (isset($_POST['track_single']) && isset($_POST['applicantID'])) {
         $applicantData = getApplicantData($conn, $applicantID);
         
         if ($applicantData) {
+            // Add to session
             $_SESSION['tracked_applicants'][] = $applicantData;
+            
+            // Add to database
+            addTrackingToDatabase($conn, $userId, $applicantData);
         }
     }
     
@@ -117,9 +166,11 @@ if (isset($_POST['track_single']) && isset($_POST['applicantID'])) {
 if (isset($_POST['untrack']) && isset($_POST['applicantID'])) {
     $applicantID = $_POST['applicantID'];
     
-    // Remove from tracked list
+    // Find the applicant in the tracked list
+    $applicantData = null;
     foreach ($_SESSION['tracked_applicants'] as $key => $tracked) {
         if ($tracked['id'] == $applicantID) {
+            $applicantData = $tracked;
             unset($_SESSION['tracked_applicants'][$key]);
             break;
         }
@@ -127,6 +178,11 @@ if (isset($_POST['untrack']) && isset($_POST['applicantID'])) {
     
     // Reindex array
     $_SESSION['tracked_applicants'] = array_values($_SESSION['tracked_applicants']);
+    
+    // Remove from database if applicant was found
+    if ($applicantData) {
+        removeTrackingFromDatabase($conn, $userId, $applicantData);
+    }
     
     // Return JSON response for AJAX request
     header('Content-Type: application/json');

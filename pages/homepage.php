@@ -37,6 +37,8 @@ $startYear = 2016;
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     
 
+    
+
     <style>
         /* Additional homepage styles */
         body {
@@ -330,7 +332,50 @@ $startYear = 2016;
         die("Connection failed: " . $conn->connect_error);
     }
 
-    
+    if (isset($_SESSION['userId']) || isset($_SESSION['user_id'])) {
+        $userId = isset($_SESSION['userId']) ? $_SESSION['userId'] : $_SESSION['user_id'];
+        
+        // Reset tracked applicants array
+        $_SESSION['tracked_applicants'] = [];
+        
+// Get all tracked applicants from the database using the tracking table structure
+$sql = "SHOW TABLES LIKE 'categories'";
+$result = $conn->query($sql);
+
+if ($result && $result->num_rows > 0) {
+    // Categories table exists
+    $sql = "SELECT t.*, r.*, c.categoryName 
+            FROM trackings t
+            JOIN rankinglist r ON (r.fullName = t.candidateFullName 
+                                AND r.birthdayDate = t.candidateBirthdayDate 
+                                AND r.appNum = t.appNum)
+            LEFT JOIN categories c ON r.categoryID = c.categoryID
+            WHERE t.userID = ?";
+} else {
+    // No categories table, just query rankinglist
+    $sql = "SELECT t.*, r.*, 'Unknown' as categoryName 
+            FROM trackings t
+            JOIN rankinglist r ON (r.fullName = t.candidateFullName 
+                               AND r.birthdayDate = t.candidateBirthdayDate
+                               AND r.appNum = t.appNum)
+            WHERE t.userID = ?";
+}
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        // Make sure categoryName exists
+        if (!isset($row['categoryName'])) {
+            $row['categoryName'] = 'N/A';
+        }
+        $_SESSION['tracked_applicants'][] = $row;
+    }
+}
+    }
     
     // Handle search functionality
     $searchResults = [];
@@ -481,8 +526,7 @@ $startYear = 2016;
                                             <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
                                             <td><?php echo $applicant['appNum']; ?></td>
                                             <td><?php echo number_format($applicant['points'], 2); ?></td>
-                                            <td><?php echo htmlspecialchars($applicant['categoryName']); ?></td>
-                                            <td>
+                                            <td><?php echo isset($applicant['categoryName']) ? htmlspecialchars($applicant['categoryName']) : 'N/A'; ?></td>                                            <td>
                                                 <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>" class="btn btn-sm btn-info me-1">
                                                     <i class="fas fa-info-circle"></i>
                                                 </a>
