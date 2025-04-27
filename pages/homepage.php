@@ -3,6 +3,20 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+
+// Check if we're returning from applicant-details.php with preserved search parameters
+if (isset($_GET['return']) && $_GET['return'] == 'search' && !isset($_POST['searchApplicants']) && isset($_SESSION['last_search'])) {
+    // Restore the previous search from session
+    $_POST = $_SESSION['last_search'];
+    $_POST['searchApplicants'] = true; // Force search execution
+}
+
+// Save search parameters to session when searching
+if (isset($_POST['searchApplicants'])) {
+    $_SESSION['last_search'] = $_POST;
+}
+
+
 $pageTitle = "Κατάλογοι Διοριστέων";
 
 $currentYear = date("Y");
@@ -282,10 +296,10 @@ $startYear = 2016;
         }
 
         .table-fixed-height {
-        max-height: 400px;
-        overflow-y: auto;
-    }
-    
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
         .table-fixed-height thead {
             position: sticky;
             top: 0;
@@ -308,18 +322,18 @@ $startYear = 2016;
             border-radius: 4px;
         }
         
-            .search-tracking-section .card-body {
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .search-tracking-section form {
-        width: 100%;
-    }
-    
-    .search-results {
-        width: 100%;
-    }
+        .search-tracking-section .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .search-tracking-section form {
+            width: 100%;
+        }
+        
+        .search-results {
+            width: 100%;
+        }
 
         .table-fixed-height::-webkit-scrollbar-thumb:hover {
             background: #a1a1a1;
@@ -382,97 +396,129 @@ $startYear = 2016;
         // Reset tracked applicants array
         $_SESSION['tracked_applicants'] = [];
         
-// Get all tracked applicants from the database using the tracking table structure
-$sql = "SHOW TABLES LIKE 'categories'";
-$result = $conn->query($sql);
+        // Get all tracked applicants from the database using the tracking table structure
+        $sql = "SHOW TABLES LIKE 'categories'";
+        $result = $conn->query($sql);
 
-if ($result && $result->num_rows > 0) {
-    // Categories table exists
-    $sql = "SELECT t.*, r.*, c.categoryName 
-            FROM trackings t
-            JOIN rankinglist r ON (r.fullName = t.candidateFullName 
-                                AND r.birthdayDate = t.candidateBirthdayDate 
-                                AND r.appNum = t.appNum)
-            LEFT JOIN categories c ON r.categoryID = c.categoryID
-            WHERE t.userID = ?";
-} else {
-    // No categories table, just query rankinglist
-    $sql = "SELECT t.*, r.*, 'Unknown' as categoryName 
-            FROM trackings t
-            JOIN rankinglist r ON (r.fullName = t.candidateFullName 
-                               AND r.birthdayDate = t.candidateBirthdayDate
-                               AND r.appNum = t.appNum)
-            WHERE t.userID = ?";
-}
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $userId);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        // Make sure categoryName exists
-        if (!isset($row['categoryName'])) {
-            $row['categoryName'] = 'N/A';
+        if ($result && $result->num_rows > 0) {
+            // Categories table exists
+            $sql = "SELECT t.*, r.*, c.categoryName 
+                    FROM trackings t
+                    JOIN rankinglist r ON (r.fullName = t.candidateFullName 
+                                        AND r.birthdayDate = t.candidateBirthdayDate 
+                                        AND r.appNum = t.appNum)
+                    LEFT JOIN categories c ON r.categoryID = c.categoryID
+                    WHERE t.userID = ?";
+        } else {
+            // No categories table, just query rankinglist
+            $sql = "SELECT t.*, r.*, 'Unknown' as categoryName 
+                    FROM trackings t
+                    JOIN rankinglist r ON (r.fullName = t.candidateFullName 
+                                       AND r.birthdayDate = t.candidateBirthdayDate
+                                       AND r.appNum = t.appNum)
+                    WHERE t.userID = ?";
         }
-        $_SESSION['tracked_applicants'][] = $row;
-    }
-}
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                // Make sure categoryName exists
+                if (!isset($row['categoryName'])) {
+                    $row['categoryName'] = 'N/A';
+                }
+                $_SESSION['tracked_applicants'][] = $row;
+            }
+        }
     }
     
     // Handle search functionality
     $searchResults = [];
-    if (isset($_POST['searchApplicants'])) {
-        $searchTerm = isset($_POST['searchTerm']) ? $conn->real_escape_string($_POST['searchTerm']) : '';
-        $categoryFilter = isset($_POST['categoryFilter']) ? $conn->real_escape_string($_POST['categoryFilter']) : '';
-        
-        // Check if categories table exists
-        $sql = "SHOW TABLES LIKE 'categories'";
-        $result = $conn->query($sql);
-        $categoriesExist = ($result && $result->num_rows > 0);
-        
-        if ($categoriesExist) {
-            // Base SQL with categories
-            $sql = "SELECT r.*, c.categoryName 
-                   FROM rankinglist r 
-                   JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
-                   
-            // Add search conditions - now including category name in the search
-            if (!empty($searchTerm)) {
-                $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.categoryName LIKE '%$searchTerm%')";
-            }
-            
-            // Add category filter
-            if (!empty($categoryFilter)) {
-                $sql .= " AND r.categoryID = '$categoryFilter'";
-            }
-            
-            // Add ordering and limit
-            $sql .= " ORDER BY r.ranking ASC LIMIT 50";
-        } else {
-            // Base SQL without categories
-            $sql = "SELECT r.*, 'Unknown' as categoryName 
-                   FROM rankinglist r WHERE 1=1";
-                   
-            // Add search conditions - without category search since table doesn't exist
-            if (!empty($searchTerm)) {
-                $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
-            }
-            
-            // Add ordering and limit
-            $sql .= " ORDER BY r.ranking ASC LIMIT 50";
+if (isset($_POST['searchApplicants'])) {
+    $searchTerm = isset($_POST['searchTerm']) ? $conn->real_escape_string($_POST['searchTerm']) : '';
+    
+    // Get date filter values
+    $birthdayFrom = isset($_POST['birthdayFrom']) && !empty($_POST['birthdayFrom']) ? $conn->real_escape_string($_POST['birthdayFrom']) : '';
+    $birthdayTo = isset($_POST['birthdayTo']) && !empty($_POST['birthdayTo']) ? $conn->real_escape_string($_POST['birthdayTo']) : '';
+    $registrationFrom = isset($_POST['registrationFrom']) && !empty($_POST['registrationFrom']) ? $conn->real_escape_string($_POST['registrationFrom']) : '';
+    $registrationTo = isset($_POST['registrationTo']) && !empty($_POST['registrationTo']) ? $conn->real_escape_string($_POST['registrationTo']) : '';
+    
+    // Check if categories table exists
+    $sql = "SHOW TABLES LIKE 'categories'";
+    $result = $conn->query($sql);
+    $categoriesExist = ($result && $result->num_rows > 0);
+    
+    if ($categoriesExist) {
+        // Base SQL with categories
+        $sql = "SELECT r.*, c.categoryName 
+               FROM rankinglist r 
+               JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
+               
+        // Add search conditions - now including category name in the search
+        if (!empty($searchTerm)) {
+            $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.categoryName LIKE '%$searchTerm%')";
         }
         
-        // Execute query
-        $result = $conn->query($sql);
+        // Add birthday date filter
+        if (!empty($birthdayFrom)) {
+            $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
+        }
+        if (!empty($birthdayTo)) {
+            $sql .= " AND r.birthdayDate <= '$birthdayTo'";
+        }
         
-        if ($result && $result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $searchResults[] = $row;
-            }
+        // Add registration date filter
+        if (!empty($registrationFrom)) {
+            $sql .= " AND r.registrationDate >= '$registrationFrom'";
+        }
+        if (!empty($registrationTo)) {
+            $sql .= " AND r.registrationDate <= '$registrationTo'";
+        }
+        
+        // Add ordering and limit
+        $sql .= " ORDER BY r.ranking ASC LIMIT 50";
+    } else {
+        // Base SQL without categories
+        $sql = "SELECT r.*, 'Unknown' as categoryName 
+               FROM rankinglist r WHERE 1=1";
+               
+        // Add search conditions - without category search since table doesn't exist
+        if (!empty($searchTerm)) {
+            $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
+        }
+        
+        // Add birthday date filter
+        if (!empty($birthdayFrom)) {
+            $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
+        }
+        if (!empty($birthdayTo)) {
+            $sql .= " AND r.birthdayDate <= '$birthdayTo'";
+        }
+        
+        // Add registration date filter
+        if (!empty($registrationFrom)) {
+            $sql .= " AND r.registrationDate >= '$registrationFrom'";
+        }
+        if (!empty($registrationTo)) {
+            $sql .= " AND r.registrationDate <= '$registrationTo'";
+        }
+        
+        // Add ordering and limit
+        $sql .= " ORDER BY r.ranking ASC LIMIT 50";
+    }
+    
+    // Execute query
+    $result = $conn->query($sql);
+    
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $searchResults[] = $row;
         }
     }
+}
     
     // Get tracked applicants list from session
     if (!isset($_SESSION['tracked_applicants'])) {
@@ -480,7 +526,7 @@ if ($result && $result->num_rows > 0) {
     }
     $trackedApplicants = $_SESSION['tracked_applicants'];
     ?>
-    
+
     <div class="container content-wrapper">
         <div class="page-header">
             <h1 class="page-title"><?php echo $pageTitle; ?></h1>
@@ -502,7 +548,56 @@ if ($result && $result->num_rows > 0) {
                                 value="<?php echo isset($_POST['searchTerm']) ? htmlspecialchars($_POST['searchTerm']) : ''; ?>">
                         </div>
                         
-                        <!-- Search button below input, centered -->
+                        <!-- Date filters -->
+                        <div class="row mb-4">
+                            <!-- Birthday Date Range -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Ημερομηνία Γέννησης:</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                            <input type="date" class="form-control" name="birthdayFrom" 
+                                                value="<?php echo isset($_POST['birthdayFrom']) ? $_POST['birthdayFrom'] : ''; ?>">
+                                        </div>
+                                        <small class="text-muted">Από</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                            <input type="date" class="form-control" name="birthdayTo" 
+                                                value="<?php echo isset($_POST['birthdayTo']) ? $_POST['birthdayTo'] : ''; ?>">
+                                        </div>
+                                        <small class="text-muted">Έως</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Registration Date Range -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Ημερομηνία Εγγραφής:</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                            <input type="date" class="form-control" name="registrationFrom" 
+                                                value="<?php echo isset($_POST['registrationFrom']) ? $_POST['registrationFrom'] : ''; ?>">
+                                        </div>
+                                        <small class="text-muted">Από</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                            <input type="date" class="form-control" name="registrationTo" 
+                                                value="<?php echo isset($_POST['registrationTo']) ? $_POST['registrationTo'] : ''; ?>">
+                                        </div>
+                                        <small class="text-muted">Έως</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Search button below filters, centered -->
                         <div class="text-center mb-4">
                             <button type="submit" name="searchApplicants" class="btn btn-primary px-5">
                                 <i class="fas fa-search me-2"></i> Αναζήτηση
@@ -510,118 +605,131 @@ if ($result && $result->num_rows > 0) {
                         </div>
                     </form>
                 
-               
-            
                     <div class="search-results mt-4">
-                        <h5 class="text-center mb-3"><?php echo isset($_POST['searchApplicants']) && !empty($_POST['searchTerm']) ? 'Αποτελέσματα Αναζήτησης' : 'Λίστα Υποψηφίων'; ?></h5>
-        
-                <?php
-                // Get applicants to display (either search results or default list)
-                $displayApplicants = [];
-                
-                if (isset($_POST['searchApplicants']) && !empty($_POST['searchTerm'])) {
-                    // Use search results if a search was performed
-                    $displayApplicants = $searchResults;
-                } else {
-                    // Otherwise, get a default list of applicants (limited to 50)
-                    $sql = "SHOW TABLES LIKE 'categories'";
-                    $result = $conn->query($sql);
-                    
-                    if ($result && $result->num_rows > 0) {
-                        // Categories table exists
-                        $sql = "SELECT r.*, c.categoryName 
-                               FROM rankinglist r 
-                               JOIN categories c ON r.categoryID = c.categoryID 
-                               ORDER BY r.ranking ASC
-                               LIMIT 50";
-                    } else {
-                        // No categories table, just query rankinglist
-                        $sql = "SELECT r.*, 'Unknown' as categoryName 
-                               FROM rankinglist r 
-                               ORDER BY r.ranking ASC
-                               LIMIT 50";
-                    }
-                           
-                    $result = $conn->query($sql);
-                    
-                    if ($result && $result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                            $displayApplicants[] = $row;
+                    <h5 class="text-center mb-3">
+                        <?php 
+                        $isSearch = isset($_POST['searchApplicants']);
+                        $hasSearchTerm = !empty($_POST['searchTerm']);
+                        $hasBirthdayFilter = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']);
+                        $hasRegDateFilter = !empty($_POST['registrationFrom']) || !empty($_POST['registrationTo']);
+                        
+                        if ($isSearch && ($hasSearchTerm || $hasBirthdayFilter || $hasRegDateFilter)) {
+                            echo 'Αποτελέσματα Αναζήτησης';
+                        } else {
+                            echo 'Λίστα Υποψηφίων';
                         }
-                    }
-                }
-                
-                if (!empty($displayApplicants)): 
-                ?>
-                <form method="POST" action="../track-applicants.php" id="trackForm">
-                    <div class="table-responsive table-fixed-height">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th><input type="checkbox" id="selectAll" class="form-check-input"> Επιλογή</th>
-                                    <th>Κατάταξη</th>
-                                    <th>Ονοματεπώνυμο</th>
-                                    <th>Αρ. Αίτησης</th>
-                                    <th>Μόρια</th>
-                                    <th>Κατηγορία</th>
-                                    <th>Ενέργειες</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            <?php foreach ($displayApplicants as $applicant): 
-    // Check if this applicant is already being tracked
-    $isTracked = false;
-    foreach ($trackedApplicants as $tracked) {
-        if ($tracked['id'] == $applicant['id']) {
-            $isTracked = true;
-            break;
-        }
-    }
-?>
-    <tr<?php echo $isTracked ? ' class="table-light"' : ''; ?>>
-        <td>
-            <input type="checkbox" name="track_applicants[]" value="<?php echo $applicant['id']; ?>" 
-                   class="form-check-input applicant-check" <?php echo $isTracked ? 'checked' : ''; ?>>
-        </td>
-        <td><?php echo $applicant['ranking']; ?></td>
-        <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
-        <td><?php echo $applicant['appNum']; ?></td>
-        <td><?php echo number_format($applicant['points'], 2); ?></td>
-        <td><?php echo isset($applicant['categoryName']) ? htmlspecialchars($applicant['categoryName']) : 'N/A'; ?></td>
-        <td>
-            <?php if ($isTracked): ?>
-                <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
-                    <i class="fas fa-user-minus"></i>
-                </button>
-            <?php else: ?>
-                <button type="button" class="btn btn-sm btn-primary track-single" data-id="<?php echo $applicant['id']; ?>">
-                    <i class="fas fa-user-plus"></i>
-                </button>
-            <?php endif; ?>
-            <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>" class="btn btn-sm btn-info">
-                <i class="fas fa-info-circle"></i>
-            </a>
-        </td>
-    </tr>
-<?php endforeach; ?>
-                            </tbody>
-                        </table>
+                        ?>
+                    </h5>                        
+                        <?php
+                        // Get applicants to display (either search results or default list)
+                        $displayApplicants = [];
+                        
+                        if (isset($_POST['searchApplicants'])) {
+                            // Use the search results
+                            $displayApplicants = $searchResults;
+                        } else {
+                            // Otherwise, get a default list of applicants (limited to 50)
+                            $sql = "SHOW TABLES LIKE 'categories'";
+                            $result = $conn->query($sql);
+                            
+                            if ($result && $result->num_rows > 0) {
+                                // Categories table exists
+                                $sql = "SELECT r.*, c.categoryName 
+                                       FROM rankinglist r 
+                                       JOIN categories c ON r.categoryID = c.categoryID 
+                                       ORDER BY r.ranking ASC
+                                       LIMIT 50";
+                            } else {
+                                // No categories table, just query rankinglist
+                                $sql = "SELECT r.*, 'Unknown' as categoryName 
+                                       FROM rankinglist r 
+                                       ORDER BY r.ranking ASC
+                                       LIMIT 50";
+                            }
+                            
+                            $result = $conn->query($sql);
+                            
+                            if ($result && $result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()) {
+                                    $displayApplicants[] = $row;
+                                }
+                            }
+                        }
+                        
+                        if (!empty($displayApplicants)): 
+                        ?>
+                        <form method="POST" action="../track-applicants.php" id="trackForm">
+                            <div class="table-responsive table-fixed-height">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th><input type="checkbox" id="selectAll" class="form-check-input"> Επιλογή</th>
+                                            <th>Κατάταξη</th>
+                                            <th>Ονοματεπώνυμο</th>
+                                            <th>Αρ. Αίτησης</th>
+                                            <th>Μόρια</th>
+                                            <th>Κατηγορία</th>
+                                            <th>Ημ. Εγγραφής</th>
+                                            <th>Ημ. Πτυχίου</th>
+                                            <th>Ενέργειες</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($displayApplicants as $applicant): 
+                                        // Check if this applicant is already being tracked
+                                        $isTracked = false;
+                                        foreach ($trackedApplicants as $tracked) {
+                                            if ($tracked['id'] == $applicant['id']) {
+                                                $isTracked = true;
+                                                break;
+                                            }
+                                        }
+                                    ?>
+                                        <tr<?php echo $isTracked ? ' class="table-light"' : ''; ?>>
+                                            <td>
+                                                <input type="checkbox" name="track_applicants[]" value="<?php echo $applicant['id']; ?>" 
+                                                    class="form-check-input applicant-check" <?php echo $isTracked ? 'checked' : ''; ?>>
+                                            </td>
+                                            <td><?php echo $applicant['ranking']; ?></td>
+                                            <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
+                                            <td><?php echo $applicant['appNum']; ?></td>
+                                            <td><?php echo number_format($applicant['points'], 2); ?></td>
+                                            <td><?php echo isset($applicant['categoryName']) ? htmlspecialchars($applicant['categoryName']) : 'N/A'; ?></td>
+                                            <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
+                                            <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
+                                            <td>
+                                                <?php if ($isTracked): ?>
+                                                    <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
+                                                        <i class="fas fa-user-minus"></i>
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button type="button" class="btn btn-sm btn-primary track-single" data-id="<?php echo $applicant['id']; ?>">
+                                                        <i class="fas fa-user-plus"></i>
+                                                    </button>
+                                                <?php endif; ?>
+                                                <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-end mt-3">
+                                <button type="submit" class="btn btn-success" name="track_selected">
+                                    <i class="fas fa-user-check me-2"></i> Παρακολούθηση Επιλεγμένων
+                                </button>
+                            </div>
+                        </form>
+                        <?php else: ?>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Δεν βρέθηκαν υποψήφιοι.
+                        </div>
+                        <?php endif; ?>
                     </div>
-                    <div class="d-flex justify-content-end mt-3">
-                        <button type="submit" class="btn btn-success" name="track_selected">
-                            <i class="fas fa-user-check me-2"></i> Παρακολούθηση Επιλεγμένων
-                        </button>
-                    </div>
-                </form>
-                <?php else: ?>
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> Δεν βρέθηκαν υποψήφιοι.
                 </div>
-                <?php endif; ?>
             </div>
-        </div>
-    </div>
-</div>
             
             <!-- Tracked Applicants Section -->
             <div class="card shadow-sm mt-4">
@@ -634,12 +742,13 @@ if ($result && $result->num_rows > 0) {
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
-                                        
                                         <th>Κατάταξη</th>
                                         <th>Ονοματεπώνυμο</th>
                                         <th>Αρ. Αίτησης</th>
                                         <th>Μόρια</th>
                                         <th>Κατηγορία</th>
+                                        <th>Ημ. Εγγραφής</th>
+                                        <th>Ημ. Πτυχίου</th>
                                         <th>Ενέργειες</th>
                                     </tr>
                                 </thead>
@@ -650,10 +759,13 @@ if ($result && $result->num_rows > 0) {
                                             <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
                                             <td><?php echo $applicant['appNum']; ?></td>
                                             <td><?php echo number_format($applicant['points'], 2); ?></td>
-                                            <td><?php echo isset($applicant['categoryName']) ? htmlspecialchars($applicant['categoryName']) : 'N/A'; ?></td>                                            <td>
-                                                <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>" class="btn btn-sm btn-info me-1">
-                                                    <i class="fas fa-info-circle"></i>
-                                                </a>
+                                            <td><?php echo isset($applicant['categoryName']) ? htmlspecialchars($applicant['categoryName']) : 'N/A'; ?></td>
+                                            <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
+                                            <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
+                                            <td>
+                                            <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
+                                                <i class="fas fa-info-circle"></i>
+                                            </a>
                                                 <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
                                                     <i class="fas fa-user-minus"></i>
                                                 </button>
@@ -693,7 +805,7 @@ if ($result && $result->num_rows > 0) {
             if ($hasFebruary) {
                 $monthNum = 2;
                 $monthName = $monthNames[$monthNum];
-                $cardUrl = "year-season-details.php?year=" . $year . "&month=" . $monthNum; // TODO: CHANGE THE FILENAME TO SOMETHING BETTER AND MORE DESCRIPTIVE
+                $cardUrl = "year-season-details.php?year=" . $year . "&month=" . $monthNum;
                 
                 echo '<a href="' . $cardUrl . '" class="card-link">
                     <div class="catalog-card">

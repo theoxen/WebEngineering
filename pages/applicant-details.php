@@ -163,11 +163,11 @@ $conn->close();
     <?php include_once('../components/sidebar/sidebar.php'); ?>
     
     <div class="container content-wrapper">
-        <div class="mb-4">
-            <a href="homepage.php" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-left me-2"></i> Επιστροφή
-            </a>
-        </div>
+    <div class="mb-4">
+    <a href="homepage.php?return=search" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> Επιστροφή στα αποτελέσματα
+    </a>
+</div>
         
         <div class="card shadow-sm">
             <div class="card-body">
