@@ -280,6 +280,50 @@ $startYear = 2016;
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
         }
+
+        .table-fixed-height {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+        .table-fixed-height thead {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 1;
+        }
+        
+        /* Custom scrollbar styling */
+        .table-fixed-height::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .table-fixed-height::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .table-fixed-height::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+            .search-tracking-section .card-body {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .search-tracking-section form {
+        width: 100%;
+    }
+    
+    .search-results {
+        width: 100%;
+    }
+
+        .table-fixed-height::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
         
         @media (max-width: 768px) {
             .content-wrapper {
@@ -381,36 +425,51 @@ if ($result && $result->num_rows > 0) {
     $searchResults = [];
     if (isset($_POST['searchApplicants'])) {
         $searchTerm = isset($_POST['searchTerm']) ? $conn->real_escape_string($_POST['searchTerm']) : '';
+        $categoryFilter = isset($_POST['categoryFilter']) ? $conn->real_escape_string($_POST['categoryFilter']) : '';
         
-        // Search by name or application number
-        if (!empty($searchTerm)) {
-            // Check if categories table exists, if not we'll exclude that join
-            $sql = "SHOW TABLES LIKE 'categories'";
-            $result = $conn->query($sql);
-            
-            if ($result && $result->num_rows > 0) {
-                // Categories table exists
-                $sql = "SELECT r.*, c.categoryName 
-                       FROM rankinglist r 
-                       JOIN categories c ON r.categoryID = c.categoryID 
-                       WHERE r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%'
-                       ORDER BY r.ranking ASC
-                       LIMIT 20";
-            } else {
-                // No categories table, just query rankinglist
-                $sql = "SELECT r.*, 'Unknown' as categoryName 
-                       FROM rankinglist r 
-                       WHERE r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%'
-                       ORDER BY r.ranking ASC
-                       LIMIT 20";
-            }
+        // Check if categories table exists
+        $sql = "SHOW TABLES LIKE 'categories'";
+        $result = $conn->query($sql);
+        $categoriesExist = ($result && $result->num_rows > 0);
+        
+        if ($categoriesExist) {
+            // Base SQL with categories
+            $sql = "SELECT r.*, c.categoryName 
+                   FROM rankinglist r 
+                   JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
                    
-            $result = $conn->query($sql);
+            // Add search conditions - now including category name in the search
+            if (!empty($searchTerm)) {
+                $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.categoryName LIKE '%$searchTerm%')";
+            }
             
-            if ($result && $result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    $searchResults[] = $row;
-                }
+            // Add category filter
+            if (!empty($categoryFilter)) {
+                $sql .= " AND r.categoryID = '$categoryFilter'";
+            }
+            
+            // Add ordering and limit
+            $sql .= " ORDER BY r.ranking ASC LIMIT 50";
+        } else {
+            // Base SQL without categories
+            $sql = "SELECT r.*, 'Unknown' as categoryName 
+                   FROM rankinglist r WHERE 1=1";
+                   
+            // Add search conditions - without category search since table doesn't exist
+            if (!empty($searchTerm)) {
+                $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
+            }
+            
+            // Add ordering and limit
+            $sql .= " ORDER BY r.ranking ASC LIMIT 50";
+        }
+        
+        // Execute query
+        $result = $conn->query($sql);
+        
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $searchResults[] = $row;
             }
         }
     }
@@ -432,73 +491,137 @@ if ($result && $result->num_rows > 0) {
         <div class="search-tracking-section mb-5">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-search me-2"></i> Αναζήτηση Υποψηφίων</h5>
+                    <h5 class="mb-0 text-center"><i class="fas fa-search me-2"></i> Αναζήτηση Υποψηφίων</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="" id="searchForm">
-                        <div class="row g-3">
-                            <div class="col-md-9">
-                                <input type="text" class="form-control" name="searchTerm" placeholder="Αναζήτηση με όνομα ή αριθμό αίτησης..." value="<?php echo isset($_POST['searchTerm']) ? htmlspecialchars($_POST['searchTerm']) : ''; ?>">
-                            </div>
-                            <div class="col-md-3">
-                                <button type="submit" name="searchApplicants" class="btn btn-primary w-100">
-                                    <i class="fas fa-search me-2"></i> Αναζήτηση
-                                </button>
-                            </div>
+                        <!-- Search input at top, full width -->
+                        <div class="mb-4">
+                            <input type="text" class="form-control form-control-lg" name="searchTerm" 
+                                placeholder="Αναζήτηση με ονοματεπώνυμο, αριθμό αίτησης ή κατηγορία..." 
+                                value="<?php echo isset($_POST['searchTerm']) ? htmlspecialchars($_POST['searchTerm']) : ''; ?>">
+                        </div>
+                        
+                        <!-- Search button below input, centered -->
+                        <div class="text-center mb-4">
+                            <button type="submit" name="searchApplicants" class="btn btn-primary px-5">
+                                <i class="fas fa-search me-2"></i> Αναζήτηση
+                            </button>
                         </div>
                     </form>
+                
+               
+            
+                    <div class="search-results mt-4">
+                        <h5 class="text-center mb-3"><?php echo isset($_POST['searchApplicants']) && !empty($_POST['searchTerm']) ? 'Αποτελέσματα Αναζήτησης' : 'Λίστα Υποψηφίων'; ?></h5>
+        
+                <?php
+                // Get applicants to display (either search results or default list)
+                $displayApplicants = [];
+                
+                if (isset($_POST['searchApplicants']) && !empty($_POST['searchTerm'])) {
+                    // Use search results if a search was performed
+                    $displayApplicants = $searchResults;
+                } else {
+                    // Otherwise, get a default list of applicants (limited to 50)
+                    $sql = "SHOW TABLES LIKE 'categories'";
+                    $result = $conn->query($sql);
                     
-                    <?php if (isset($_POST['searchApplicants']) && !empty($searchResults)): ?>
-                        <div class="search-results mt-4">
-                            <h5>Αποτελέσματα Αναζήτησης</h5>
-                            <form method="POST" action="../track-applicants.php" id="trackForm">
-                                <div class="table-responsive">
-                                        <table class="table table-hover">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th><input type="checkbox" id="selectAll" class="form-check-input"> Επιλογή</th>
-                                                    <th>Κατάταξη</th>
-                                                    <th>Ονοματεπώνυμο</th>
-                                                    <th>Αρ. Αίτησης</th>
-                                                    <th>Μόρια</th>
-                                                    <th>Κατηγορία</th>
-                                                    <th>Ενέργειες</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($searchResults as $applicant): ?>
-                                                    <tr>
-                                                        <td>
-                                                            <input type="checkbox" name="track_applicants[]" value="<?php echo $applicant['id']; ?>" class="form-check-input applicant-check">
-                                                        </td>
-                                                        <td><?php echo $applicant['ranking']; ?></td>
-                                                        <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
-                                                        <td><?php echo $applicant['appNum']; ?></td>
-                                                        <td><?php echo number_format($applicant['points'], 2); ?></td>
-                                                        <td><?php echo htmlspecialchars($applicant['categoryName']); ?></td>
-                                                        <td>
-                                                            <button type="button" class="btn btn-sm btn-primary track-single" data-id="<?php echo $applicant['id']; ?>">
-                                                                <i class="fas fa-user-plus"></i>
-                                                            </button>
-                                                            <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>" class="btn btn-sm btn-info">
-                                                                <i class="fas fa-info-circle"></i>
-                                                            </a>
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div class="d-flex justify-content-end mt-3">
-                                        <button type="submit" class="btn btn-success" name="track_selected">
-                                            <i class="fas fa-user-check me-2"></i> Παρακολούθηση Επιλεγμένων
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        <?php endif; ?>
+                    if ($result && $result->num_rows > 0) {
+                        // Categories table exists
+                        $sql = "SELECT r.*, c.categoryName 
+                               FROM rankinglist r 
+                               JOIN categories c ON r.categoryID = c.categoryID 
+                               ORDER BY r.ranking ASC
+                               LIMIT 50";
+                    } else {
+                        // No categories table, just query rankinglist
+                        $sql = "SELECT r.*, 'Unknown' as categoryName 
+                               FROM rankinglist r 
+                               ORDER BY r.ranking ASC
+                               LIMIT 50";
+                    }
+                           
+                    $result = $conn->query($sql);
+                    
+                    if ($result && $result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            $displayApplicants[] = $row;
+                        }
+                    }
+                }
+                
+                if (!empty($displayApplicants)): 
+                ?>
+                <form method="POST" action="../track-applicants.php" id="trackForm">
+                    <div class="table-responsive table-fixed-height">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><input type="checkbox" id="selectAll" class="form-check-input"> Επιλογή</th>
+                                    <th>Κατάταξη</th>
+                                    <th>Ονοματεπώνυμο</th>
+                                    <th>Αρ. Αίτησης</th>
+                                    <th>Μόρια</th>
+                                    <th>Κατηγορία</th>
+                                    <th>Ενέργειες</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <?php foreach ($displayApplicants as $applicant): 
+    // Check if this applicant is already being tracked
+    $isTracked = false;
+    foreach ($trackedApplicants as $tracked) {
+        if ($tracked['id'] == $applicant['id']) {
+            $isTracked = true;
+            break;
+        }
+    }
+?>
+    <tr<?php echo $isTracked ? ' class="table-light"' : ''; ?>>
+        <td>
+            <input type="checkbox" name="track_applicants[]" value="<?php echo $applicant['id']; ?>" 
+                   class="form-check-input applicant-check" <?php echo $isTracked ? 'checked' : ''; ?>>
+        </td>
+        <td><?php echo $applicant['ranking']; ?></td>
+        <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
+        <td><?php echo $applicant['appNum']; ?></td>
+        <td><?php echo number_format($applicant['points'], 2); ?></td>
+        <td><?php echo isset($applicant['categoryName']) ? htmlspecialchars($applicant['categoryName']) : 'N/A'; ?></td>
+        <td>
+            <?php if ($isTracked): ?>
+                <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
+                    <i class="fas fa-user-minus"></i>
+                </button>
+            <?php else: ?>
+                <button type="button" class="btn btn-sm btn-primary track-single" data-id="<?php echo $applicant['id']; ?>">
+                    <i class="fas fa-user-plus"></i>
+                </button>
+            <?php endif; ?>
+            <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>" class="btn btn-sm btn-info">
+                <i class="fas fa-info-circle"></i>
+            </a>
+        </td>
+    </tr>
+<?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-success" name="track_selected">
+                            <i class="fas fa-user-check me-2"></i> Παρακολούθηση Επιλεγμένων
+                        </button>
+                    </div>
+                </form>
+                <?php else: ?>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Δεν βρέθηκαν υποψήφιοι.
                 </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
             
             <!-- Tracked Applicants Section -->
             <div class="card shadow-sm mt-4">
@@ -507,10 +630,11 @@ if ($result && $result->num_rows > 0) {
                 </div>
                 <div class="card-body">
                     <?php if (!empty($trackedApplicants)): ?>
-                        <div class="table-responsive">
+                        <div class="table-responsive table-fixed-height">
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
+                                        
                                         <th>Κατάταξη</th>
                                         <th>Ονοματεπώνυμο</th>
                                         <th>Αρ. Αίτησης</th>
