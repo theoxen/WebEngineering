@@ -3,7 +3,7 @@
 $dbHost = "127.0.0.1";
 $dbUsername = "cei326omada1user";
 $dbPassword = "UPJ!AqeNu3i1!kE";
-$dbName = "cei326omada1";
+$dbName = "cei326omada1user";
 
 // Create database connection
 $mysqli = new mysqli($dbHost, $dbUsername, $dbPassword, $dbName);

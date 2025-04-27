@@ -1,52 +1,63 @@
 <?php
-// api/middleware/AuthMiddleware.php
-
-require_once __DIR__ . '/../../vendor/autoload.php';
-use \Firebase\JWT\JWT;
-use \Firebase\JWT\Key;
-
-class AuthMiddleware {
-    private static $secretKey = "your-secret-key-here"; // Change this to a secure secret key
-    private static $algorithm = 'HS256';
-
-    public static function requireAuth() {
-        $headers = getallheaders();
-        
-        if (!isset($headers['Authorization'])) {
-            http_response_code(401);
-            echo json_encode(["error" => "No authorization token provided"]);
-            exit;
+function requireAuth() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    // Check session-based authentication
+    if (isset($_SESSION['user_id'])) {
+        return true;
+    }
+    
+    // Check token-based authentication for API
+    $headers = getallheaders();
+    $authHeader = $headers['Authorization'] ?? '';
+    
+    if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        $token = $matches[1];
+        // Validate token (implement JWT validation or your token system)
+        if (validateToken($token)) {
+            return true;
         }
+    }
+    
+    // No valid authentication
+    if (isApiRequest()) {
+        http_response_code(401);
+        echo json_encode(["error" => "Unauthorized"]);
+        exit;
+    } else {
+        // Redirect web pages to login
+        header("Location: /WebEngineering/pages/login.php");
+        exit;
+    }
+}
 
-        $authHeader = $headers['Authorization'];
-        $token = str_replace('Bearer ', '', $authHeader);
+function isApiRequest() {
+    return strpos($_SERVER['REQUEST_URI'], '/api/') !== false;
+}
 
-        try {
-            $decoded = JWT::decode($token, new Key(self::$secretKey, self::$algorithm));
-            return $decoded;
-        } catch (\Firebase\JWT\ExpiredException $e) {
-            http_response_code(401);
-            echo json_encode(["error" => "Token has expired"]);
+function validateToken($token) {
+    // Implement your token validation logic here
+    // This is just a placeholder
+    return false;
+}
+
+function requireAdmin() {
+    requireAuth();
+    
+    if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+        if (isApiRequest()) {
+            http_response_code(403);
+            echo json_encode(["error" => "Forbidden: Admin access required"]);
             exit;
-        } catch (\Exception $e) {
-            http_response_code(401);
-            echo json_encode(["error" => "Invalid token"]);
+        } else {
+            // Redirect web pages
+            header("Location: /WebEngineering/pages/homepage.php");
             exit;
         }
     }
-
-    public static function generateToken($userId, $username) {
-        $issuedAt = time();
-        $expire = $issuedAt + 60 * 60 * 24; // 24 hours
-
-        $payload = [
-            "iat" => $issuedAt,
-            "exp" => $expire,
-            "userId" => $userId,
-            "username" => $username
-        ];
-
-        return JWT::encode($payload, self::$secretKey, self::$algorithm);
-    }
+    
+    return true;
 }
 ?>
