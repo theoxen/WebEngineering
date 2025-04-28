@@ -6,6 +6,7 @@
     "require": {
         "firebase/php-jwt": "^6.11",
         "sendgrid/sendgrid": "^8.1",
-        "phpmailer/phpmailer": "^6.9"
+        "phpmailer/phpmailer": "^6.9",
+        "smalot/pdfparser": "^2.12"
     }
 }
