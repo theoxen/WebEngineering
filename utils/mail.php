@@ -4,8 +4,6 @@ require __DIR__ . '/../vendor/autoload.php';
 
 function sendVerificationEmail($to, $username, $token)
 {
-    file_put_contents(__DIR__ . '/../debug.log', "sendVerificationEmail() called\n", FILE_APPEND);
-
     // Build base URL
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'];
@@ -18,8 +16,6 @@ function sendVerificationEmail($to, $username, $token)
     $verificationLink = $baseUrl . '/pages/verify-email.php?token=' . $token;
 
     try {
-        file_put_contents(__DIR__ . '/../debug.log', "Initializing SendGrid\n", FILE_APPEND);
-
         $sendgrid = new \SendGrid('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');
         $email = new \SendGrid\Mail\Mail();
         $email->setFrom('theodosisx874@gmail.com', 'WebEngineering');
@@ -53,18 +49,14 @@ function sendVerificationEmail($to, $username, $token)
         </html>");
 
         $response = $sendgrid->send($email);
-        file_put_contents(__DIR__ . '/../debug.log', "Email sent. Status code: " . $response->statusCode() . "\n", FILE_APPEND);
         return $response;
     } catch (\Exception $e) {
-        file_put_contents(__DIR__ . '/../debug.log', "Email Error: " . $e->getMessage() . "\n", FILE_APPEND);
         return false;
     }
 }
 
 function sendPasswordResetEmail($to, $username, $token)
 {
-    file_put_contents(__DIR__ . '/../debug.log', "sendPasswordResetEmail() called\n", FILE_APPEND);
-
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'];
     $baseUrl = $protocol . '://' . $host;
@@ -76,8 +68,6 @@ function sendPasswordResetEmail($to, $username, $token)
     $resetLink = $baseUrl . '/pages/reset-password.php?token=' . $token;
 
     try {
-        file_put_contents(__DIR__ . '/../debug.log', "Initializing SendGrid for reset\n", FILE_APPEND);
-
         $sendgrid = new \SendGrid('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');
         $email = new \SendGrid\Mail\Mail();
         $email->setFrom('theodosisx874@gmail.com', 'WebEngineering');
@@ -113,10 +103,8 @@ function sendPasswordResetEmail($to, $username, $token)
         </html>");
 
         $response = $sendgrid->send($email);
-        file_put_contents(__DIR__ . '/../debug.log', "Reset email sent. Status code: " . $response->statusCode() . "\n", FILE_APPEND);
         return $response;
     } catch (\Exception $e) {
-        file_put_contents(__DIR__ . '/../debug.log', "Reset Email Error: " . $e->getMessage() . "\n", FILE_APPEND);
         return false;
     }
 }

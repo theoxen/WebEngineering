@@ -1,72 +1,233 @@
 <?php
-// api/endpoints/AuthEndpoint.php
+require_once __DIR__ . '/../../utils/DatabaseHelper.php';
+require_once __DIR__ . '/../utils/api_helpers.php';
 
-require_once __DIR__ . '/../../database/db_connect.php';
-
-function loginHandler($method) {
+function handleLogin($method) {
     if ($method !== 'POST') {
-        http_response_code(405); // Method Not Allowed
-        echo json_encode(["error" => "Method not allowed"]);
-        return;
+        sendError(405, "Method not allowed");
     }
     
-    // Retrieve and decode JSON input
-    $input = json_decode(file_get_contents('php://input'), true);
-    $username = $input['username'] ?? '';
-    $password = $input['password'] ?? '';
-
-    if (!$username || !$password) {
-        http_response_code(400);
-        echo json_encode(["error" => "Missing login details"]);
-        return;
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    if (!isset($data['email']) || !isset($data['password'])) {
+        sendError(400, "Missing email or password");
     }
     
-    // Verify the credentials (simplified example)
-    $db = getDbConnection();
-    $stmt = $db->prepare("SELECT id, password FROM users WHERE username = ?");
-    $stmt->execute([$username]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$user || !password_verify($password, $user['password'])) {
-        http_response_code(401);
-        echo json_encode(["error" => "Invalid username or password"]);
-        return;
+    try {
+        $db = DatabaseHelper::getInstance();
+        
+        // Debug the query
+        $tableName = 'users'; // The table name you're querying
+        $columns = $db->fetchAll("SHOW COLUMNS FROM $tableName");
+        error_log("Table columns for $tableName: " . json_encode($columns));
+        
+        $user = $db->fetchOne(
+            "SELECT * FROM users WHERE email = ?", 
+            "s", 
+            [$data['email']]
+        );
+        
+        if (!$user) {
+            sendError(401, "Invalid credentials - user not found");
+        }
+        
+        // Now we have all fields, we can see what columns actually exist
+        error_log("User data: " . json_encode($user));
+        
+        if (!password_verify($data['password'], $user['password'])) {
+            sendError(401, "Invalid credentials - password incorrect");
+        }
+        
+        // Use the correct column names based on what's in your database
+        $userId = $user['userId'] ?? $user['id'] ?? $user['ID'] ?? null;
+        $userEmail = $user['email'] ?? $user['EMAIL'] ?? null;
+        $userRole = $user['role'] ?? $user['user_role'] ?? 'user';
+        
+        if (!$userId) {
+            sendError(500, "User ID column not found in database");
+        }
+        
+        // Start session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Set session variables
+        $_SESSION['userId'] = $userId;
+        $_SESSION['email'] = $userEmail;
+        $_SESSION['role'] = $userRole;
+        
+        
+        
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Login successful',
+            'user' => [
+                'id' => $userId,
+                'email' => $userEmail,
+                'role' => $userRole
+            ],
+            
+        ]);
+        
+    } catch (Exception $e) {
+        sendError(500, "Server error: " . $e->getMessage());
     }
-    
-    // On success: return success message (consider adding a token here)
-    http_response_code(200);
-    echo json_encode(["message" => "Login successful", "user_id" => $user['id']]);
 }
 
-function registerHandler($method) {
+function handleRegister($method) {
     if ($method !== 'POST') {
-        http_response_code(405);
-        echo json_encode(["error" => "Method not allowed"]);
-        return;
+        sendError(405, "Method not allowed");
     }
     
-    $input = json_decode(file_get_contents('php://input'), true);
-    $username = $input['username'] ?? '';
-    $password = $input['password'] ?? '';
-    $email    = $input['email'] ?? '';
+    $data = json_decode(file_get_contents('php://input'), true);
     
-    if (!$username || !$password || !$email) {
-        http_response_code(400);
-        echo json_encode(["error" => "Missing registration information"]);
-        return;
+    // Validate required fields
+    if (!isset($data['username']) || !isset($data['email']) || !isset($data['password'])) {
+        sendError(400, "Missing required fields");
     }
     
-    $db = getDbConnection();
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $db->prepare("INSERT INTO users (username, password, email) VALUES (?, ?, ?)");
-    $result = $stmt->execute([$username, $hashedPassword, $email]);
+    $db = DatabaseHelper::getInstance();
     
-    if ($result) {
-        http_response_code(201);
-        echo json_encode(["message" => "Registration successful"]);
+    // Check if username or email already exists
+    $existing = $db->fetchOne(
+        "SELECT * FROM users WHERE username = ? OR email = ?", 
+        "ss", 
+        [$data['username'], $data['email']]
+    );
+    
+    if ($existing) {
+        sendError(409, "Username or email already in use");
+    }
+    
+    // Hash password
+    $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+    
+    // Generate verification token
+    $verificationToken = bin2hex(random_bytes(32));
+    
+    // Set default values for optional fields
+    $phoneNumber = $data['phoneNumber'] ?? null;
+    $dateOfBirth = $data['dateOfBirth'] ?? null;
+    
+    // Format date of birth as string if it exists
+    $formattedDate = null;
+    if ($dateOfBirth) {
+        // Parse the date and format it as a string the database can use
+        $dateObj = DateTime::createFromFormat('Y-m-d', $dateOfBirth);
+        if ($dateObj) {
+            $formattedDate = $dateObj->format('Y-m-d');
+        }else{
+            sendError(400, "Invalid date format. Please use YYYY-MM-DD format (e.g. 2000-01-20)");
+        }
+    }
+    
+    // Insert new user
+    $userId = $db->insert(
+        "INSERT INTO users (username, email, phoneNumber, dateOfBirth, password, role, email_verified, verification_token) VALUES (?, ?, ?, ?, ?, 'user', 0, ?)",
+        "ssssss",
+        [$data['username'], $data['email'], $phoneNumber, $formattedDate, $hashedPassword, $verificationToken]
+    );
+    
+    if ($userId) {
+        http_response_code(201); // Created
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Registration successful',
+            'user' => [
+                'id' => $userId,
+                'username' => $data['username'],
+                'email' => $data['email']
+            ]
+        ]);
     } else {
-        http_response_code(500);
-        echo json_encode(["error" => "Registration failed"]);
+        // Add more detailed error information for debugging
+        sendError(500, "Registration failed");
+    }
+}
+
+function handleLogout($method) {
+    if ($method !== 'POST' && $method !== 'GET') {
+        sendError(405, "Method not allowed");
+    }
+    
+    // Clear session data
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    // Store the logged out status
+    $wasLoggedIn = isset($_SESSION['userId']);
+    $username = $_SESSION['username'] ?? 'Unknown';
+    
+    // Destroy session
+    session_unset();
+    session_destroy();
+    
+    if ($wasLoggedIn) {
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Logout successful'
+        ]);
+    } else {
+        echo json_encode([
+            'status' => 'success', 
+            'message' => 'Already logged out'
+        ]);
+    }
+}
+
+function handleResetPassword($method) {
+    if ($method !== 'POST') {
+        sendError(405, "Method not allowed");
+    }
+    
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    if (!isset($data['email'])) {
+        sendError(400, "Email is required");
+    }
+    
+    $db = DatabaseHelper::getInstance();
+    
+    // Check if user exists
+    $user = $db->fetchOne(
+        "SELECT id, username FROM users WHERE email = ?", 
+        "s", 
+        [$data['email']]
+    );
+    
+    if ($user) {
+        // Generate reset token
+        $token = bin2hex(random_bytes(32));
+        $expires = date('Y-m-d H:i:s', time() + 3600); // 1 hour expiry
+        
+        // Store reset token
+        $db->executeQuery(
+            "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?",
+            "ssi",
+            [$token, $expires, $user['id']]
+        );
+        
+        // Here you would normally send an email with the reset link
+        // Using the mail.php utility
+        // require_once __DIR__ . '/../../utils/mail.php';
+        // sendPasswordResetEmail($data['email'], $user['username'], $token);
+    }
+    
+    // Always return success for security (don't reveal if email exists)
+    echo json_encode([
+        'status' => 'success',
+        'message' => 'If your email is registered, you will receive password reset instructions'
+    ]);
+}
+
+// Only define if not already defined elsewhere
+if (!function_exists('sendError')) {
+    function sendError($code, $message) {
+        http_response_code($code);
+        echo json_encode(['error' => $message]);
+        exit;
     }
 }
 ?>

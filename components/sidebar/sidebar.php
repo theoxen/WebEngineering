@@ -1,5 +1,4 @@
 <?php
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -13,8 +12,7 @@ $isLocalhost = ($_SERVER['HTTP_HOST'] === 'localhost' || strpos($_SERVER['HTTP_H
 $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
 ?>
 
-
-<!-- Mobile Toggle Button OUTSIDE sidebar-wrapper -->
+<!-- Mobile Toggle Button -->
 <button type="button" id="sidebarCollapseBtn" class="sidebar-toggle-btn">
     <i class="fas fa-bars"></i>
 </button>
@@ -36,20 +34,26 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                     </a>
                 </li>
                 
-                
                 <?php if ($isLoggedIn): ?>
                     <!-- Logged in user options -->
-                     <!-- TODO USER PROFILE THAT WILL DISPLAY THE PROFILE + THE CANDIDATES THAT ARE BEING TRACKED (?) -->
                     <li class="nav-item"> 
                         <a href="<?php echo $baseUrl?>myprofile.php" class="nav-link <?php echo $currentPage == 'profile.php' ? 'active' : ''; ?>">
                             <i class="fas fa-user me-2"></i> Profile
                         </a>
                     </li>
+
                     <li class="nav-item">
                         <a href="<?php echo $baseUrl?>user-settings.php" class="nav-link <?php echo $currentPage == 'user-settings.php' ? 'active' : ''; ?>">
                             <i class="fas fa-cog me-2"></i> Settings
                         </a>
                     </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link <?= $pageTitle === 'API Keys' ? 'active' : '' ?>" href="api.php">
+                            <i class="fas fa-key"></i> API Keys
+                        </a>
+                    </li>
+
                     
                     <?php if ($isAdmin): ?>
                         <!-- Admin only options -->
@@ -99,59 +103,63 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
 </div>
 
 <script>
-// This is an IIFE (Immediately Invoked Function Expression) that runs as soon as it's defined
-(function() {
-    
+document.addEventListener('DOMContentLoaded', function() {
     const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
     const sidebar = document.querySelector('.sidebar-wrapper');
     
-    // Toggle function
+    // Toggle function for sidebar with icon change
     function toggleSidebar() {
         if (sidebar) {
             sidebar.classList.toggle('active');
-            
-            // Toggle body class for overlay
             document.body.classList.toggle('sidebar-active');
             
-            // Prevent body scrolling when sidebar is active
+            // Change the icon based on sidebar state
             if (sidebar.classList.contains('active')) {
-                document.body.style.overflow = 'hidden';
+                // If sidebar is now open
+                setTimeout(() => {
+                    sidebarCollapseBtn.innerHTML = '<i class="fas fa-times"></i>'; // Change to X icon
+                }, 150); // Short delay for smooth animation
             } else {
-                document.body.style.overflow = '';
+                // If sidebar is now closed
+                setTimeout(() => {
+                    sidebarCollapseBtn.innerHTML = '<i class="fas fa-bars"></i>'; // Change back to bars
+                }, 150);
             }
-            
-            console.log('Sidebar toggled, active:', sidebar.classList.contains('active'));
         }
     }
     
-    // Checking window width and update UI accordingly
+    // Handle responsiveness
     function handleResponsiveness() {
         if (window.innerWidth < 768) {
-            // Mobile view
-            sidebarCollapseBtn.style.display = 'block';
-        } else {
-            // Desktop view
-            sidebarCollapseBtn.style.display = 'none';
-            // Make sure sidebar is visible on desktop
+            // Mobile view - hide sidebar by default
             if (sidebar) {
                 sidebar.classList.remove('active');
                 document.body.classList.remove('sidebar-active');
-                document.body.style.overflow = '';
+                sidebarCollapseBtn.style.display = 'flex'; // Show toggle button
+                sidebarCollapseBtn.innerHTML = '<i class="fas fa-bars"></i>'; // Reset to bars icon
+            }
+        } else {
+            // Desktop view - show sidebar by default
+            if (sidebar) {
+                sidebar.classList.remove('active'); // Reset any active states
+                document.body.classList.remove('sidebar-active');
+                sidebarCollapseBtn.style.display = 'none'; // Hide toggle button
             }
         }
     }
     
-    // Adding click event listener to button
+    // Add click event listener to toggle button
     if (sidebarCollapseBtn) {
         sidebarCollapseBtn.addEventListener('click', function(e) {
-            e.stopPropagation(); // Prevent event from bubbling
+            e.stopPropagation(); // Prevent event bubbling
             toggleSidebar();
         });
     }
     
-    // Adding click event listener to close sidebar when clicking outside
+    // Close sidebar when clicking outside on mobile
     document.addEventListener('click', function(event) {
-        if (sidebar && 
+        const isMobile = window.innerWidth < 768;
+        if (isMobile && sidebar && 
             sidebar.classList.contains('active') &&
             !sidebar.contains(event.target) &&
             event.target !== sidebarCollapseBtn) {
@@ -159,37 +167,17 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
         }
     });
     
-    // Make sure sidebar content clicks don't close the sidebar
+    // Prevent click events within sidebar from propagating
     if (sidebar) {
         sidebar.addEventListener('click', function(e) {
             e.stopPropagation();
         });
     }
     
-    // Initial check
+    // Initial check for responsiveness
     handleResponsiveness();
     
-    // Listen for window resize
+    // Listen for window resize events
     window.addEventListener('resize', handleResponsiveness);
-})();
-
-function toggleSidebar() {
-    if (sidebar) {
-        console.log('Toggle function called');
-        sidebar.classList.toggle('active');
-        console.log('Sidebar active class:', sidebar.classList.contains('active'));
-        
-        // Toggle body class for overlay
-        document.body.classList.toggle('sidebar-active');
-        
-        // Prevent body scrolling when sidebar is active
-        if (sidebar.classList.contains('active')) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-    } else {
-        console.error('Sidebar element not found');
-    }
-}
+});
 </script>
