@@ -405,18 +405,18 @@ $startYear = 2016;
     <?php
     // Include sidebar
     include_once('../components/sidebar/sidebar.php');
+    include '../database/db_connect.php';
+    // // Database connection
+    // $servername = "localhost";
+    // $username = "root"; 
+    // $password = ""; 
+    // $dbname = "cei326omada1";
     
-    // Database connection
-    $servername = "localhost";
-    $username = "root"; 
-    $password = ""; 
-    $dbname = "cei326omada1";
+    // $conn = new mysqli($servername, $username, $password, $dbname);
     
-    $conn = new mysqli($servername, $username, $password, $dbname);
-    
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
+    // if ($conn->connect_error) {
+    //     die("Connection failed: " . $conn->connect_error);
+    // }
 
     if (isset($_SESSION['userId']) || isset($_SESSION['user_id'])) {
         $userId = isset($_SESSION['userId']) ? $_SESSION['userId'] : $_SESSION['user_id'];
@@ -426,7 +426,7 @@ $startYear = 2016;
         
         // Get all tracked applicants from the database using the tracking table structure
         $sql = "SHOW TABLES LIKE 'categories'";
-        $result = $conn->query($sql);
+        $result = $mysqli->query($sql);
 
         if ($result && $result->num_rows > 0) {
             // Categories table exists
@@ -447,7 +447,7 @@ $startYear = 2016;
                     WHERE t.userID = ?";
         }
 
-        $stmt = $conn->prepare($sql);
+        $stmt = $mysqli->prepare($sql);
         $stmt->bind_param("i", $userId);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -466,17 +466,17 @@ $startYear = 2016;
     // Handle search functionality
     $searchResults = [];
 if (isset($_POST['searchApplicants'])) {
-    $searchTerm = isset($_POST['searchTerm']) ? $conn->real_escape_string($_POST['searchTerm']) : '';
+    $searchTerm = isset($_POST['searchTerm']) ? $mysqli->real_escape_string($_POST['searchTerm']) : '';
     
     // Get date filter values
-    $birthdayFrom = isset($_POST['birthdayFrom']) && !empty($_POST['birthdayFrom']) ? $conn->real_escape_string($_POST['birthdayFrom']) : '';
-    $birthdayTo = isset($_POST['birthdayTo']) && !empty($_POST['birthdayTo']) ? $conn->real_escape_string($_POST['birthdayTo']) : '';
-    $registrationFrom = isset($_POST['registrationFrom']) && !empty($_POST['registrationFrom']) ? $conn->real_escape_string($_POST['registrationFrom']) : '';
-    $registrationTo = isset($_POST['registrationTo']) && !empty($_POST['registrationTo']) ? $conn->real_escape_string($_POST['registrationTo']) : '';
+    $birthdayFrom = isset($_POST['birthdayFrom']) && !empty($_POST['birthdayFrom']) ? $mysqli->real_escape_string($_POST['birthdayFrom']) : '';
+    $birthdayTo = isset($_POST['birthdayTo']) && !empty($_POST['birthdayTo']) ? $mysqli->real_escape_string($_POST['birthdayTo']) : '';
+    $registrationFrom = isset($_POST['registrationFrom']) && !empty($_POST['registrationFrom']) ? $mysqli->real_escape_string($_POST['registrationFrom']) : '';
+    $registrationTo = isset($_POST['registrationTo']) && !empty($_POST['registrationTo']) ? $mysqli->real_escape_string($_POST['registrationTo']) : '';
     
     // Check if categories table exists
     $sql = "SHOW TABLES LIKE 'categories'";
-    $result = $conn->query($sql);
+    $result = $mysqli->query($sql);
     $categoriesExist = ($result && $result->num_rows > 0);
     
     if ($categoriesExist) {
@@ -539,7 +539,7 @@ if (isset($_POST['searchApplicants'])) {
     }
     
     // Execute query
-    $result = $conn->query($sql);
+    $result = $mysqli->query($sql);
     
     if ($result && $result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
@@ -661,7 +661,7 @@ if (isset($_POST['searchApplicants'])) {
                         } else {
                             // Otherwise, get a default list of applicants (limited to 50)
                             $sql = "SHOW TABLES LIKE 'categories'";
-                            $result = $conn->query($sql);
+                            $result = $mysqli->query($sql);
                             
                             if ($result && $result->num_rows > 0) {
                                 // Categories table exists
@@ -678,7 +678,7 @@ if (isset($_POST['searchApplicants'])) {
                                        LIMIT 50";
                             }
                             
-                            $result = $conn->query($sql);
+                            $result = $mysqli->query($sql);
                             
                             if ($result && $result->num_rows > 0) {
                                 while ($row = $result->fetch_assoc()) {

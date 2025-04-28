@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
+include '../database/db_connect.php';
 $pageTitle = "Στοιχεία Υποψηφίου";
 
 // Check if ID is provided
@@ -11,24 +11,24 @@ if (!isset($_GET['id'])) {
     exit;
 }
 
-// Database connection
-$servername = "localhost";
-$username = "root"; 
-$password = ""; 
-$dbname = "cei326omada1";
+// // Database connection
+// $servername = "localhost";
+// $username = "root"; 
+// $password = ""; 
+// $dbname = "cei326omada1";
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+// $conn = new mysqli($servername, $username, $password, $dbname);
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+// if ($conn->connect_error) {
+//     die("Connection failed: " . $conn->connect_error);
+// }
 
 $applicantID = $_GET['id'];
 $applicantDetails = null;
 
 // Check if categories table exists
 $sql = "SHOW TABLES LIKE 'categories'";
-$result = $conn->query($sql);
+$result = $mysqli->query($sql);
 
 if ($result && $result->num_rows > 0) {
     // Categories table exists
@@ -43,7 +43,7 @@ if ($result && $result->num_rows > 0) {
             WHERE r.id = ?";
 }
 
-$stmt = $conn->prepare($sql);
+$stmt = $mysqli->prepare($sql);
 $stmt->bind_param("i", $applicantID);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -78,7 +78,7 @@ if (isset($_SESSION['tracked_applicants'])) {
     }
 }
 
-$conn->close();
+$mysqli->close();
 ?>
 <!DOCTYPE html>
 <html lang="el">

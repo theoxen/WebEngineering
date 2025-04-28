@@ -2,6 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+include 'database/db_connect.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['userId']) && !isset($_SESSION['user_id'])) {
@@ -18,23 +19,23 @@ if (!isset($_SESSION['tracked_applicants'])) {
     $_SESSION['tracked_applicants'] = [];
 }
 
-// Database connection
-$servername = "localhost";
-$username = "root"; 
-$password = ""; 
-$dbname = "cei326omada1";
+// // Database connection
+// $servername = "localhost";
+// $username = "root"; 
+// $password = ""; 
+// $dbname = "cei326omada1";
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+// $conn = new mysqli($servername, $username, $password, $dbname);
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+// if ($conn->connect_error) {
+//     die("Connection failed: " . $conn->connect_error);
+// }
 
 // Function to fetch applicant data from database
-function getApplicantData($conn, $applicantID) {
+function getApplicantData($mysqli, $applicantID) {
     // Check if categories table exists
     $sql = "SHOW TABLES LIKE 'categories'";
-    $result = $conn->query($sql);
+    $result = $mysqli->query($sql);
     
     if ($result && $result->num_rows > 0) {
         // Categories table exists
@@ -49,7 +50,7 @@ function getApplicantData($conn, $applicantID) {
                 WHERE r.id = ?";
     }
     
-    $stmt = $conn->prepare($sql);
+    $stmt = $mysqli->prepare($sql);
     $stmt->bind_param("i", $applicantID);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -62,11 +63,11 @@ function getApplicantData($conn, $applicantID) {
 }
 
 // Function to add tracking to database - using the actual trackings table structure
-function addTrackingToDatabase($conn, $userId, $applicantData) {
+function addTrackingToDatabase($mysqli, $userId, $applicantData) {
     // Check if tracking already exists - now checking by name, birthday AND application number
     $sql = "SELECT trackingID FROM trackings 
             WHERE userID = ? AND candidateFullName = ? AND candidateBirthdayDate = ? AND appNum = ?";
-    $stmt = $conn->prepare($sql);
+    $stmt = $mysqli->prepare($sql);
     $stmt->bind_param("isss", $userId, $applicantData['fullName'], $applicantData['birthdayDate'], $applicantData['appNum']);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -75,7 +76,7 @@ function addTrackingToDatabase($conn, $userId, $applicantData) {
         // Insert new tracking record - now including appNum
         $sql = "INSERT INTO trackings (userID, candidateFullName, candidateBirthdayDate, candidateTitleDate, appNum, isOwnCandidate) 
                 VALUES (?, ?, ?, ?, ?, 0)";
-        $stmt = $conn->prepare($sql);
+        $stmt = $mysqli->prepare($sql);
         $stmt->bind_param("issss", $userId, $applicantData['fullName'], $applicantData['birthdayDate'], $applicantData['titleDate'], $applicantData['appNum']);
         return $stmt->execute();
     }
@@ -84,10 +85,10 @@ function addTrackingToDatabase($conn, $userId, $applicantData) {
 }
 
 // Function to remove tracking from database
-function removeTrackingFromDatabase($conn, $userId, $applicantData) {
+function removeTrackingFromDatabase($mysqli, $userId, $applicantData) {
     $sql = "DELETE FROM trackings 
             WHERE userID = ? AND candidateFullName = ? AND candidateBirthdayDate = ? AND appNum = ?";
-    $stmt = $conn->prepare($sql);
+    $stmt = $mysqli->prepare($sql);
     $stmt->bind_param("isss", $userId, $applicantData['fullName'], $applicantData['birthdayDate'], $applicantData['appNum']);
     $stmt->execute();
     return $stmt->affected_rows > 0;
@@ -113,14 +114,14 @@ if ((isset($_POST['track_applicants']) && is_array($_POST['track_applicants'])) 
         
         if (!$alreadyTracked) {
             // Fetch applicant data from database
-            $applicantData = getApplicantData($conn, $applicantID);
+            $applicantData = getApplicantData($mysqli, $applicantID);
             
             if ($applicantData) {
                 // Add to session
                 $_SESSION['tracked_applicants'][] = $applicantData;
                 
                 // Add to database
-                addTrackingToDatabase($conn, $userId, $applicantData);
+                addTrackingToDatabase($mysqli, $userId, $applicantData);
             }
         }
     }
@@ -145,14 +146,14 @@ if (isset($_POST['track_single']) && isset($_POST['applicantID'])) {
     
     if (!$alreadyTracked) {
         // Fetch applicant data
-        $applicantData = getApplicantData($conn, $applicantID);
+        $applicantData = getApplicantData($mysqli, $applicantID);
         
         if ($applicantData) {
             // Add to session
             $_SESSION['tracked_applicants'][] = $applicantData;
             
             // Add to database
-            addTrackingToDatabase($conn, $userId, $applicantData);
+            addTrackingToDatabase($mysqli, $userId, $applicantData);
         }
     }
     
@@ -181,7 +182,7 @@ if (isset($_POST['untrack']) && isset($_POST['applicantID'])) {
     
     // Remove from database if applicant was found
     if ($applicantData) {
-        removeTrackingFromDatabase($conn, $userId, $applicantData);
+        removeTrackingFromDatabase($mysqli, $userId, $applicantData);
     }
     
     // Return JSON response for AJAX request
@@ -191,6 +192,6 @@ if (isset($_POST['untrack']) && isset($_POST['applicantID'])) {
 }
 
 // If no action was taken, redirect to homepage
-$conn->close();
+$mysqli->close();
 header("Location: pages/homepage.php");
 exit;
