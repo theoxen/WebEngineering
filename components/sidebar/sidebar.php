@@ -45,11 +45,19 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                             <i class="fas fa-user me-2"></i> Profile
                         </a>
                     </li>
+
                     <li class="nav-item">
                         <a href="<?php echo $baseUrl?>user-settings.php" class="nav-link <?php echo $currentPage == 'user-settings.php' ? 'active' : ''; ?>">
                             <i class="fas fa-cog me-2"></i> Settings
                         </a>
                     </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link <?= $pageTitle === 'API Keys' ? 'active' : '' ?>" href="api.php">
+                            <i class="fas fa-key"></i> API Keys
+                        </a>
+                    </li>
+
                     
                     <?php if ($isAdmin): ?>
                         <!-- Admin only options -->
