@@ -581,7 +581,7 @@ if (isset($_POST['searchApplicants'])) {
                             
                             <!-- Registration Date Range -->
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Ημερομηνία Εγγραφής:</label>
+                                <label class="form-label fw-bold">Ημερομηνία Εγγραφής Στους Καταλόγους:</label>
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <div class="input-group">
