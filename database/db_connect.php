@@ -3,7 +3,7 @@
 $dbHost = "127.0.0.1";
 $dbUsername = "cei326omada1user";
 $dbPassword = "UPJ!AqeNu3i1!kE";
-$dbName = "cei326omada1user";
+$dbName = "cei326omada1";
 
 // Create database connection
 $mysqli = new mysqli($dbHost, $dbUsername, $dbPassword, $dbName);
@@ -12,8 +12,4 @@ $mysqli = new mysqli($dbHost, $dbUsername, $dbPassword, $dbName);
 if ($mysqli->connect_error) {
 	die("Failed connecting to the database: " . $mysqli->connect_error);
 }
-
-
-
-
 ?>
