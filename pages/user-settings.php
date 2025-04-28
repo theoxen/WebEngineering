@@ -19,7 +19,7 @@ $toastClass = '';
 if (isset($_SESSION['flash_message'])) {
     $message = $_SESSION['flash_message'];
     $toastClass = $_SESSION['flash_class'];
-    
+
     // Clear flash messages so they don't show up again on refresh
     unset($_SESSION['flash_message']);
     unset($_SESSION['flash_class']);
@@ -228,7 +228,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .row {
             width: 90% !important;
         }
-        
+
 
         .page-header {
             padding: 1.5rem 0;
@@ -381,240 +381,249 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <?php
     include_once('../components/sidebar/sidebar.php');
     ?>
-    <div class="page">
-        <!-- Toast notifications with fixed positioning -->
-        <?php if ($message): ?>
-        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080; margin-top: 15px;">
-            <div class="toast align-items-center text-white bg-<?php echo $toastClass; ?> border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <?php echo $message; ?>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
-
-        <div class="container-fluid content-wrapper">
-            <div class="page-header">
-                <h1 class="page-title"><?php echo $pageTitle; ?></h1>
-                <p class="text-muted">Manage your profile information, password, and notification preferences.</p>
-            </div>
-
-            <div class="row">
-                <div class="col-lg-3">
-                    <!-- Account Summary -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <i class="fas fa-id-card"></i> Account Summary
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-center mb-4">
-                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                                    style="width: 80px; height: 80px; font-size: 2rem;">
-                                    <?php echo strtoupper(substr($userData['username'], 0, 1)); ?>
-                                </div>
+    <div class="main-content">
+        <div class="page">
+            <!-- Toast notifications with fixed positioning -->
+            <?php if ($message): ?>
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080; margin-top: 15px;">
+                    <div class="toast align-items-center text-white bg-<?php echo $toastClass; ?> border-0 show"
+                        role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <?php echo $message; ?>
                             </div>
-
-                            <h5 class="text-center mb-3"><?php echo htmlspecialchars($userData['username']); ?></h5>
-
-                            <div class="mb-3">
-                                <strong><i class="fas fa-envelope me-2 text-muted"></i> Email:</strong>
-                                <p class="text-muted"><?php echo htmlspecialchars($userData['email']); ?></p>
-                            </div>
-
-                            <div class="mb-3">
-                                <strong><i class="fas fa-clock me-2 text-muted"></i> Account Created:</strong>
-                                <p class="text-muted"><?php echo date('F j, Y'); ?></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-bolt"></i> Quick Actions
-                        </div>
-                        <div class="card-body">
-                            <div class="list-group">
-                                <a href="homepage.php" class="list-group-item list-group-item-action">
-                                    <i class="fas fa-home me-2"></i> Go to Homepage
-                                </a>
-                                <a href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal"
-                                    data-bs-target="#deleteAccountModal">
-                                    <i class="fas fa-user-times me-2 text-danger"></i> Delete Account
-                                </a>
-                                <a href="logout.php" class="list-group-item list-group-item-action">
-                                    <i class="fas fa-sign-out-alt me-2"></i> Log Out
-                                </a>
-                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                aria-label="Close"></button>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-9">
-                    <!-- Personal Information -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <i class="fas fa-user-circle"></i> Personal Information
-                        </div>
-                        <div class="card-body">
-                            <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-                                <div class="mb-3">
-                                    <label for="username" class="form-label">Username</label>
-                                    <input type="text" class="form-control" id="username" name="username"
-                                        value="<?php echo htmlspecialchars($userData['username']); ?>" required>
-                                </div>
+            <?php endif; ?>
 
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control disabled-input" id="email"
-                                        value="<?php echo htmlspecialchars($userData['email']); ?>" readonly>
-                                    <div class="form-text text-muted">Email cannot be changed. Please contact support if
-                                        you need to update your email.</div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="phoneNumber" class="form-label">Phone Number</label>
-                                    <input type="text" class="form-control" id="phoneNumber" name="phoneNumber"
-                                        value="<?php echo htmlspecialchars($userData['phoneNumber'] ?? ''); ?>">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="dateOfBirth" class="form-label">Date of Birth</label>
-                                    <input type="date" class="form-control" id="dateOfBirth" name="dateOfBirth"
-                                        value="<?php echo htmlspecialchars($userData['dateOfBirth'] ?? ''); ?>">
-                                </div>
-
-                                <button type="submit" name="update_profile" class="btn btn-primary">Save
-                                    Changes</button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Change Password -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <i class="fas fa-lock"></i> Change Password
-                        </div>
-                        <div class="card-body">
-                            <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-                                <div class="mb-3">
-                                    <label for="currentPassword" class="form-label">Current Password</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" id="currentPassword"
-                                            name="currentPassword" required>
-                                        <span class="input-group-text">
-                                            <i class="fas fa-eye-slash toggle-password"
-                                                data-target="currentPassword"></i>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="newPassword" class="form-label">New Password</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" id="newPassword" name="newPassword" minlength="8"
-                                            required>
-                                        <span class="input-group-text">
-                                            <i class="fas fa-eye-slash toggle-password" data-target="newPassword"></i>
-                                        </span>
-                                    </div>
-                                    <div class="form-text text-muted">Must be at least 8 characters long.</div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="confirmPassword" class="form-label">Confirm New Password</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" id="confirmPassword"
-                                            name="confirmPassword" required>
-                                        <span class="input-group-text">
-                                            <i class="fas fa-eye-slash toggle-password"
-                                                data-target="confirmPassword"></i>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <button type="submit" name="change_password" class="btn btn-primary">Change
-                                    Password</button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Notification Settings -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <i class="fas fa-bell"></i> Email Notification Settings
-                        </div>
-                        <div class="card-body">
-                            <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="newCatalogNotify"
-                                        name="newCatalogNotify" <?php echo $settingsData['newCatalogNotify'] ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="newCatalogNotify">
-                                        <strong>New Catalog</strong>
-                                        <p class="text-muted mb-0">Receive notifications when new catalogs are published
-                                        </p>
-                                    </label>
-                                </div>
-
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="catalogUpdateNotify"
-                                        name="catalogUpdateNotify" <?php echo $settingsData['catalogUpdateNotify'] ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="catalogUpdateNotify">
-                                        <strong>Catalog Update</strong>
-                                        <p class="text-muted mb-0">Get reminders about existing catalog catalogs that
-                                            have been updated</p>
-                                    </label>
-                                </div>
-
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="positionChangeNotify"
-                                        name="positionChangeNotify" <?php echo $settingsData['positionChangeNotify'] ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="positionChangeNotify">
-                                        <strong>Position Change</strong>
-                                        <p class="text-muted mb-0">Receive notifications when your connected accounts'
-                                            position changes</p>
-                                    </label>
-                                </div>
-
-                                <button type="submit" name="update_notifications" class="btn btn-primary">Save
-                                    Notification Settings</button>
-                            </form>
-                        </div>
-                    </div>
+            <div class="container-fluid content-wrapper">
+                <div class="page-header" style="justify-content: center; justify-self: center;">
+                    <h1 class="page-title"><?php echo $pageTitle; ?></h1>
+                    <p class="text-muted" style="text-align: center;">Manage your profile information, password, and notification preferences.</p>
                 </div>
 
-            </div>
-        </div>
-
-        <!-- Delete Account Modal -->
-        <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteAccountModalLabel">Delete Account</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="text-center mb-4">
-                            <i class="fas fa-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
-                        </div>
-                        <p>Are you sure you want to delete your account? This action cannot be undone.</p>
-                        <p>All your personal data and settings will be permanently removed.</p>
-
-                        <form id="deleteAccountForm" method="post" action="delete-user.php">
-                            <div class="mb-3">
-                                <label for="deleteConfirm" class="form-label">Type "DELETE" to confirm</label>
-                                <input type="text" class="form-control" id="deleteConfirm" required>
+                <div class="row" style="justify-self: center;">
+                    <div class="col-lg-3">
+                        <!-- Account Summary -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-id-card"></i> Account Summary
                             </div>
-                        </form>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-center mb-4">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                        style="width: 80px; height: 80px; font-size: 2rem;">
+                                        <?php echo strtoupper(substr($userData['username'], 0, 1)); ?>
+                                    </div>
+                                </div>
+
+                                <h5 class="text-center mb-3"><?php echo htmlspecialchars($userData['username']); ?></h5>
+
+                                <div class="mb-3">
+                                    <strong><i class="fas fa-envelope me-2 text-muted"></i> Email:</strong>
+                                    <p class="text-muted"><?php echo htmlspecialchars($userData['email']); ?></p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <strong><i class="fas fa-clock me-2 text-muted"></i> Account Created:</strong>
+                                    <p class="text-muted"><?php echo date('F j, Y'); ?></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-bolt"></i> Quick Actions
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="homepage.php" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-home me-2"></i> Go to Homepage
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal"
+                                        data-bs-target="#deleteAccountModal">
+                                        <i class="fas fa-user-times me-2 text-danger"></i> Delete Account
+                                    </a>
+                                    <a href="logout.php" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Log Out
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>Delete
-                            Account</button>
+                    <div class="col-lg-9">
+                        <!-- Personal Information -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-user-circle"></i> Personal Information
+                            </div>
+                            <div class="card-body">
+                                <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label">Username</label>
+                                        <input type="text" class="form-control" id="username" name="username"
+                                            value="<?php echo htmlspecialchars($userData['username']); ?>" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control disabled-input" id="email"
+                                            value="<?php echo htmlspecialchars($userData['email']); ?>" readonly>
+                                        <div class="form-text text-muted">Email cannot be changed. Please contact
+                                            support if
+                                            you need to update your email.</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="phoneNumber" class="form-label">Phone Number</label>
+                                        <input type="text" class="form-control" id="phoneNumber" name="phoneNumber"
+                                            value="<?php echo htmlspecialchars($userData['phoneNumber'] ?? ''); ?>">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                                        <input type="date" class="form-control" id="dateOfBirth" name="dateOfBirth"
+                                            value="<?php echo htmlspecialchars($userData['dateOfBirth'] ?? ''); ?>">
+                                    </div>
+
+                                    <button type="submit" name="update_profile" class="btn btn-primary">Save
+                                        Changes</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Change Password -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-lock"></i> Change Password
+                            </div>
+                            <div class="card-body">
+                                <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+                                    <div class="mb-3">
+                                        <label for="currentPassword" class="form-label">Current Password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="currentPassword"
+                                                name="currentPassword" required>
+                                            <span class="input-group-text">
+                                                <i class="fas fa-eye-slash toggle-password"
+                                                    data-target="currentPassword"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="newPassword" class="form-label">New Password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="newPassword"
+                                                name="newPassword" minlength="8" required>
+                                            <span class="input-group-text">
+                                                <i class="fas fa-eye-slash toggle-password"
+                                                    data-target="newPassword"></i>
+                                            </span>
+                                        </div>
+                                        <div class="form-text text-muted">Must be at least 8 characters long.</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="confirmPassword"
+                                                name="confirmPassword" required>
+                                            <span class="input-group-text">
+                                                <i class="fas fa-eye-slash toggle-password"
+                                                    data-target="confirmPassword"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" name="change_password" class="btn btn-primary">Change
+                                        Password</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Notification Settings -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-bell"></i> Email Notification Settings
+                            </div>
+                            <div class="card-body">
+                                <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="newCatalogNotify"
+                                            name="newCatalogNotify" <?php echo $settingsData['newCatalogNotify'] ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="newCatalogNotify">
+                                            <strong>New Catalog</strong>
+                                            <p class="text-muted mb-0">Receive notifications when new catalogs are
+                                                published
+                                            </p>
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="catalogUpdateNotify"
+                                            name="catalogUpdateNotify" <?php echo $settingsData['catalogUpdateNotify'] ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="catalogUpdateNotify">
+                                            <strong>Catalog Update</strong>
+                                            <p class="text-muted mb-0">Get reminders about existing catalog catalogs
+                                                that
+                                                have been updated</p>
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="positionChangeNotify"
+                                            name="positionChangeNotify" <?php echo $settingsData['positionChangeNotify'] ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="positionChangeNotify">
+                                            <strong>Position Change</strong>
+                                            <p class="text-muted mb-0">Receive notifications when your connected
+                                                accounts'
+                                                position changes</p>
+                                        </label>
+                                    </div>
+
+                                    <button type="submit" name="update_notifications" class="btn btn-primary">Save
+                                        Notification Settings</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Delete Account Modal -->
+            <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteAccountModalLabel">Delete Account</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+                            </div>
+                            <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                            <p>All your personal data and settings will be permanently removed.</p>
+
+                            <form id="deleteAccountForm" method="post" action="delete-user.php">
+                                <div class="mb-3">
+                                    <label for="deleteConfirm" class="form-label">Type "DELETE" to confirm</label>
+                                    <input type="text" class="form-control" id="deleteConfirm" required>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>Delete
+                                Account</button>
+                        </div>
                     </div>
                 </div>
             </div>

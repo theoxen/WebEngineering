@@ -8,11 +8,13 @@ class ComposerStaticInita6ddd177f68c6a11c3306d75a5533519
 {
     public static $files = array (
         '79f66bc0a1900f77abe4a9a299057a0a' => __DIR__ . '/..' . '/starkbank/ecdsa/src/ellipticcurve.php',
+        '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
     );
 
     public static $prefixLengthsPsr4 = array (
         'S' => 
         array (
+            'Symfony\\Polyfill\\Mbstring\\' => 26,
             'SendGrid\\Stats\\' => 15,
             'SendGrid\\Mail\\' => 14,
             'SendGrid\\Helper\\' => 16,
@@ -31,6 +33,10 @@ class ComposerStaticInita6ddd177f68c6a11c3306d75a5533519
     );
 
     public static $prefixDirsPsr4 = array (
+        'Symfony\\Polyfill\\Mbstring\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
+        ),
         'SendGrid\\Stats\\' => 
         array (
             0 => __DIR__ . '/..' . '/sendgrid/sendgrid/lib/stats',
@@ -65,6 +71,16 @@ class ComposerStaticInita6ddd177f68c6a11c3306d75a5533519
         ),
     );
 
+    public static $prefixesPsr0 = array (
+        'S' => 
+        array (
+            'Smalot\\PdfParser\\' => 
+            array (
+                0 => __DIR__ . '/..' . '/smalot/pdfparser/src',
+            ),
+        ),
+    );
+
     public static $classMap = array (
         'BaseSendGridClientInterface' => __DIR__ . '/..' . '/sendgrid/sendgrid/lib/BaseSendGridClientInterface.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
@@ -77,6 +93,7 @@ class ComposerStaticInita6ddd177f68c6a11c3306d75a5533519
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInita6ddd177f68c6a11c3306d75a5533519::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInita6ddd177f68c6a11c3306d75a5533519::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInita6ddd177f68c6a11c3306d75a5533519::$prefixesPsr0;
             $loader->classMap = ComposerStaticInita6ddd177f68c6a11c3306d75a5533519::$classMap;
 
         }, null, ClassLoader::class);

@@ -64,6 +64,13 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
 
     <!-- Custom CSS for admin dashboard -->
     <style>
+        /* Apply box-sizing to all elements */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
         :root {
             --primary-color: #4e73df;
             --secondary-color: #1cc88a;
@@ -77,29 +84,51 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
         body {
             font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: var(--light-color);
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            width: 100%;
         }
 
-        .admin-wrapper {
-            display: flex;
+        /* Main content container */
+        .main-content {
+            transition: all 0.3s;
+            overflow-x: hidden;
+            max-width: 100%;
+            width: auto;
         }
 
-        .content-wrapper {
-            flex: 1;
-            padding: 50px;
+        /* Page container */
+        .dashboard-container {
+            padding: 1.5rem;
+            padding-top: 50px;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        /* Fix for Bootstrap row negative margins */
+        .row {
+            --bs-gutter-x: 1.5rem;
+            margin-right: calc(var(--bs-gutter-x) * -0.5);
+            margin-left: calc(var(--bs-gutter-x) * -0.5);
+            max-width: 100%;
         }
 
         .page-title {
             font-weight: 700;
             margin-bottom: 1.5rem;
             color: var(--dark-color);
+            font-size: 1.75rem;
         }
 
+        /* Card styling */
         .card {
             border: none;
             border-radius: 0.75rem;
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
             margin-bottom: 1.5rem;
             transition: transform 0.2s ease-in-out;
+            overflow: hidden;
         }
 
         .card:hover {
@@ -117,6 +146,7 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
             padding: 1.25rem;
         }
 
+        /* Stats cards */
         .stat-card {
             border-left: 0.25rem solid;
             position: relative;
@@ -166,6 +196,7 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
             margin-bottom: 0;
         }
 
+        /* Text colors */
         .primary-text {
             color: var(--primary-color);
         }
@@ -182,13 +213,13 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
             color: var(--danger-color);
         }
 
+        /* Action cards */
         .action-card {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100%;
-            min-height: 160px;
             text-align: center;
             padding: 1.5rem;
         }
@@ -215,197 +246,297 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
             font-size: 0.9rem;
             margin-bottom: 1rem;
         }
+
+        /* Table responsiveness */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+        }
+
+        /* Responsive styles */
+        @media (min-width: 768px) {
+            .main-content {
+                padding-right: 15px;
+                /* Add padding to prevent content touching the edge */
+            }
+        }
+
+        @media (max-width: 1199.98px) {
+            .stat-card-value {
+                font-size: 1.4rem;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .dashboard-container {
+                padding-left: 0.5rem;
+                padding-right: 0.   5rem;
+            }
+
+            .page-title {
+                font-size: 1.6rem;
+            }
+
+            .stat-card-value {
+                font-size: 1.3rem;
+            }
+
+            .action-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .main-content {
+                margin-left: 0 !important;
+                /* Override any margin on mobile */
+                width: 100% !important;
+            }
+
+            .dashboard-container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+
+            .page-title {
+                width: 100%;
+                text-align: center;
+                /* Center the title text */
+                margin-bottom: 1.5rem;
+                /* Add more space between title and buttons */
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: center !important;
+                /* Changed from flex-start to center */
+                text-align: center;
+            }
+
+            .page-header-buttons {
+                margin-top: 0.5rem;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                /* Center the buttons */
+            }
+
+            .stat-card-value {
+                font-size: 1.2rem;
+            }
+
+            .action-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+            }
+
+            .action-title {
+                font-size: 1.1rem;
+            }
+
+            /* Ensure cards stay in their designated columns */
+            .col-md-6 {
+                padding-right: 12px;
+                padding-left: 12px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .dashboard-container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+
+            .page-title {
+                font-size: 1.3rem;
+                text-align: center;
+                padding: 0 0.5rem; /* Add padding for extra small screens */
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+
+            .action-card {
+                padding: 1rem;
+            }
+
+            /* Fix for mobile when sidebar is open */
+            body.sidebar-active .main-content {
+                max-width: 100vw;
+                overflow-x: hidden;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <?php
-    // Include sidebar
-    include_once('../../components/sidebar/sidebar.php');
-    ?>
-    <div class="admin-wrapper">
-        <!-- Main Content -->
-        <div class="content-wrapper">
-            <div class="container-fluid">
-                <!-- Page Heading -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1 class="page-title">Admin Dashboard</h1>
-                    <div>
-                        <a href="../homepage.php" class="btn btn-outline-secondary">
-                            <i class="fas fa-home"></i> Back to Site
-                        </a>
-                        <a href="../logout.php" class="btn btn-outline-danger ms-2">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </div>
+    <?php include_once('../../components/sidebar/sidebar.php'); ?>
+
+    <div class="main-content">
+        <div class="dashboard-container">
+            <!-- Page Heading -->
+            <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+                <h1 class="page-title">Admin Dashboard</h1>
+                <div class="page-header-buttons">
+                    <a href="../homepage.php" class="btn btn-outline-secondary">
+                        <i class="fas fa-home"></i> <span class="d-none d-sm-inline">Back to Site</span>
+                    </a>
+                    <a href="../logout.php" class="btn btn-outline-danger ms-2">
+                        <i class="fas fa-sign-out-alt"></i> <span class="d-none d-sm-inline">Logout</span>
+                    </a>
                 </div>
+            </div>
 
-                <!-- Content Row - Statistics Cards -->
-                <div class="row">
-                    <!-- Total Users Card -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card stat-card primary h-100">
-                            <div class="card-body">
-                                <div class="stat-card-body">
-                                    <div class="stat-card-title primary-text">Total Users</div>
-                                    <div class="stat-card-value"><?php echo $userCount; ?></div>
-                                </div>
-                                <i class="fas fa-users stat-card-icon primary-text"></i>
+            <!-- Content Row - Statistics Cards -->
+            <div class="row g-3" style="justify-self: center;">
+                <!-- Total Users Card -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card primary h-100">
+                        <div class="card-body">
+                            <div class="stat-card-body">
+                                <div class="stat-card-title primary-text">Total Users</div>
+                                <div class="stat-card-value"><?php echo $userCount; ?></div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Admins Card -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card stat-card danger h-100">
-                            <div class="card-body">
-                                <div class="stat-card-body">
-                                    <div class="stat-card-title danger-text">Administrators</div>
-                                    <div class="stat-card-value"><?php echo $adminCount; ?></div>
-                                </div>
-                                <i class="fas fa-user-shield stat-card-icon danger-text"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- New Users Card -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card stat-card success h-100">
-                            <div class="card-body">
-                                <div class="stat-card-body">
-                                    <div class="stat-card-title success-text">New Users (30 days)</div>
-                                    <div class="stat-card-value"><?php echo $newUsersCount; ?></div>
-                                </div>
-                                <i class="fas fa-user-plus stat-card-icon success-text"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Date Card -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card stat-card warning h-100">
-                            <div class="card-body">
-                                <div class="stat-card-body">
-                                    <div class="stat-card-title warning-text">Current Date</div>
-                                    <div class="stat-card-value"><?php echo date('M d, Y'); ?></div>
-                                </div>
-                                <i class="fas fa-calendar-alt stat-card-icon warning-text"></i>
-                            </div>
+                            <i class="fas fa-users stat-card-icon primary-text"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- Content Row - Admin Actions -->
-                <div class="row">
-                    <div class="col-12 mb-4">
-                        <h2 class="h4 mb-3">Administration Tools</h2>
-                    </div>
-
-                    <!-- Manage Users -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="action-card">
-                                <div class="action-icon" style="background-color: var(--primary-color);">
-                                    <i class="fas fa-users-cog"></i>
-                                </div>
-                                <h3 class="action-title">Manage Users</h3>
-                                <p class="action-description">View, edit, and manage user accounts</p>
-                                <a href="manage-users.php" class="btn btn-primary">
-                                    <i class="fas fa-arrow-right"></i> Go to User Management
-                                </a>
+                <!-- Admins Card -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card danger h-100">
+                        <div class="card-body">
+                            <div class="stat-card-body">
+                                <div class="stat-card-title danger-text">Administrators</div>
+                                <div class="stat-card-value"><?php echo $adminCount; ?></div>
                             </div>
+                            <i class="fas fa-user-shield stat-card-icon danger-text"></i>
                         </div>
                     </div>
-
-                    <!-- Manage Lists -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="action-card">
-                                <div class="action-icon" style="background-color: var(--secondary-color);">
-                                    <i class="fas fa-clipboard-list"></i>
-                                </div>
-                                <h3 class="action-title">Manage Lists</h3>
-                                <p class="action-description">Configure candidate lists</p>
-                                <a href="system-settings.php" class="btn btn-success">
-                                    <i class="fas fa-arrow-right"></i> Go to List Management
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- View Reports -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="action-card">
-                                <div class="action-icon" style="background-color: var(--info-color);">
-                                    <i class="fas fa-chart-bar"></i>
-                                </div>
-                                <h3 class="action-title">Analytics</h3>
-                                <p class="action-description">View site statistics and reports</p>
-                                <a href="analytics.php" class="btn btn-info text-white">
-                                    <i class="fas fa-arrow-right"></i> View Reports
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- EXTRA CARD -->
-                    <!-- <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="action-card">
-                                <div class="action-icon" style="background-color: var(--warning-color);">
-                                    <i class="fas fa-tools"></i> ICON HERE
-                                </div>
-                                <h3 class="action-title">TITLE</h3>
-                                <p class="action-description">DESCRIPTION</p>
-                                <a href="file.php" class="btn btn-warning">
-                                    <i class="fas fa-arrow-right"></i> LINK NAME
-                                </a>
-                            </div>
-                        </div>
-                    </div> -->
                 </div>
 
-                <!-- Content Row - Charts and Tables -->
-                <div class="row">
-                    <!-- Recent Users -->
-                    <div class="col-lg-6 mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <i class="fas fa-user-clock mr-2"></i> Recent User Registrations
+                <!-- New Users Card -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card success h-100">
+                        <div class="card-body">
+                            <div class="stat-card-body">
+                                <div class="stat-card-title success-text">New Users (30 days)</div>
+                                <div class="stat-card-value"><?php echo $newUsersCount; ?></div>
                             </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
+                            <i class="fas fa-user-plus stat-card-icon success-text"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Card -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card warning h-100">
+                        <div class="card-body">
+                            <div class="stat-card-body">
+                                <div class="stat-card-title warning-text">Current Date</div>
+                                <div class="stat-card-value"><?php echo date('M d, Y'); ?></div>
+                            </div>
+                            <i class="fas fa-calendar-alt stat-card-icon warning-text"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Row - Admin Actions -->
+            <div class="row mt-3">
+                <div class="col-12 mb-3">
+                    <h2 class="h4">Administration Tools</h2>
+                </div>
+
+                <!-- Manage Users -->
+                <div class="col-xl-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="action-card">
+                            <div class="action-icon" style="background-color: var(--primary-color);">
+                                <i class="fas fa-users-cog"></i>
+                            </div>
+                            <h3 class="action-title">Manage Users</h3>
+                            <p class="action-description">View, edit, and manage user accounts</p>
+                            <a href="manage-users.php" class="btn btn-primary w-100">
+                                <i class="fas fa-arrow-right"></i> Go to User Management
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manage Lists -->
+                <div class="col-xl-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="action-card">
+                            <div class="action-icon" style="background-color: var(--secondary-color);">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <h3 class="action-title">Manage Lists</h3>
+                            <p class="action-description">Configure candidate lists</p>
+                            <a href="system-settings.php" class="btn btn-success w-100">
+                                <i class="fas fa-arrow-right"></i> Go to List Management
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View Reports -->
+                <div class="col-xl-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="action-card">
+                            <div class="action-icon" style="background-color: var(--info-color);">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h3 class="action-title">Analytics</h3>
+                            <p class="action-description">View site statistics and reports</p>
+                            <a href="analytics.php" class="btn btn-info text-white w-100">
+                                <i class="fas fa-arrow-right"></i> View Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Row - Recent Users Table -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-user-clock me-2"></i> Recent User Registrations</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Registered</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php while ($user = $recentUsersResult->fetch_assoc()): ?>
                                             <tr>
-                                                <th>Username</th>
-                                                <th>Email</th>
-                                                <th>Registered</th>
+                                                <td><?php echo htmlspecialchars($user['username']); ?></td>
+                                                <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                                <td><?php echo date('M d, Y', strtotime($user['dateCreated'])); ?></td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php while ($user = $recentUsersResult->fetch_assoc()): ?>
-                                                <tr>
-                                                    <td><?php echo htmlspecialchars($user['username']); ?></td>
-                                                    <td><?php echo htmlspecialchars($user['email']); ?></td>
-                                                    <td><?php echo date('M d, Y', strtotime($user['dateCreated'])); ?></td>
-                                                </tr>
-                                            <?php endwhile; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="text-center mt-3">
-                                    <a href="manage-users.php" class="btn btn-sm btn-primary">View All Users</a>
-                                </div>
+                                        <?php endwhile; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="manage-users.php" class="btn btn-sm btn-primary">View All Users</a>
                             </div>
                         </div>
                     </div>
-
-                    
                 </div>
-
-
             </div>
         </div>
     </div>
@@ -413,6 +544,33 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Fix for mobile sidebar overflow -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+            const sidebar = document.querySelector('.sidebar-wrapper');
+            const mainContent = document.querySelector('.main-content');
+
+            if (sidebarCollapseBtn) {
+                sidebarCollapseBtn.addEventListener('click', function () {
+                    if (window.innerWidth < 768) {
+                        // On mobile, ensure content doesn't overflow when sidebar is open
+                        if (!document.body.classList.contains('sidebar-active')) {
+                            document.body.style.overflow = 'hidden';
+                        } else {
+                            document.body.style.overflow = '';
+                        }
+                    }
+                });
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', function () {
+                // Reset overflow on window resize
+                document.body.style.overflow = '';
+            });
+        });
+    </script>
 </body>
 
 </html>
