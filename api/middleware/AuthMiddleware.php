@@ -60,4 +60,47 @@ function requireAdmin() {
     
     return true;
 }
+
+/**
+ * Validates the API key from the request headers
+ * 
+ * @return array|false Returns the API key data if valid, false otherwise
+ */
+function validateApiKey() {
+    include '../database/db_connect.php';
+    
+    // Get the API key from the request headers
+    $headers = getallheaders();
+    $apiKey = isset($headers['X-API-Key']) ? $headers['X-API-Key'] : null;
+    
+    if (!$apiKey) {
+        return false;
+    }
+    
+    // Get database connection
+    $db = DatabaseHelper::getInstance();
+    
+    // Check if the API key exists and is valid
+    $apiKeyData = $db->fetchOne(
+        "SELECT ak.*, ak.userId as user_id 
+         FROM api_keys ak
+         WHERE ak.api_key = ? 
+         AND ak.is_active = 1 
+         AND ak.expires_at > NOW()",
+        "s",
+        [$apiKey]
+    );
+    
+    if (!$apiKeyData) {
+        return false;
+    }
+    
+    // Add a hard-coded 'read' permission
+    $apiKeyData['permissions'] = 'read';
+    
+    return $apiKeyData;
+}
+
+
+
 ?>

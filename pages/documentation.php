@@ -1,3 +1,11 @@
+<?php
+    // Check if user is logged in
+    session_start();
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
+    ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,6 +54,9 @@
             border-radius: 0.375rem;
             padding: 1rem;
             margin-bottom: 1.5rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
         
         .endpoint {
@@ -110,12 +121,6 @@
             top: 1rem;
         }
         
-        @media (max-width: 991.98px) {
-            .sidebar {
-                margin-bottom: 2rem;
-            }
-        }
-        
         .alert-example {
             background-color: #f8f9fa;
             border-color: #e9ecef;
@@ -137,17 +142,140 @@
         #searchDocs {
             margin-bottom: 1rem;
         }
+        
+        /* Mobile responsiveness improvements */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                position: relative;
+                height: auto;
+                margin-bottom: 2rem;
+            }
+            
+            .sticky-top {
+                position: relative;
+                top: 0;
+            }
+            
+            .endpoint-url code {
+                font-size: 0.8rem;
+            }
+            
+            pre {
+                font-size: 0.85rem;
+            }
+            
+            .table {
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 767.98px) {
+            .method-badge {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+            }
+            
+            h4 {
+                font-size: 1.2rem;
+            }
+            
+            h5 {
+                font-size: 1rem;
+            }
+            
+            .param-table th {
+                width: 30%;
+            }
+            
+            pre {
+                padding: 0.75rem;
+            }
+            
+            .sidebar .nav-link {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.9rem;
+            }
+            
+            .sidebar .nav-pills .nav-pills .nav-link {
+                padding-left: 1.5rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 575.98px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .endpoint-url {
+                padding: 0.4rem;
+                font-size: 0.75rem;
+            }
+            
+            pre {
+                font-size: 0.75rem;
+                padding: 0.5rem;
+            }
+            
+            .alert {
+                padding: 0.75rem;
+                font-size: 0.85rem;
+            }
+            
+            /* Improve table responsiveness on very small screens */
+            .table-responsive {
+                font-size: 0.75rem;
+            }
+            
+            /* Make sidebar toggleable on mobile */
+            .mobile-nav-toggle {
+                display: block;
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+            
+            .sidebar-content {
+                display: none;
+            }
+            
+            .sidebar-content.show {
+                display: block;
+            }
+        }
+        
+        /* Hamburger menu for mobile */
+        .mobile-nav-toggle {
+            display: none;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 0.5rem 1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        
+        /* Code snippets in small screens */
+        @media (max-width: 767.98px) {
+            code {
+                word-break: break-word;
+            }
+            
+            pre code {
+                white-space: pre-wrap;
+            }
+        }
+        
+        /* Ensure tables are scrollable on mobile */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 </head>
 <body>
-    <?php
-    // Check if user is logged in
-    session_start();
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: login.php");
-        exit();
-    }
-    ?>
+
 
     <header class="bg-dark py-3 mb-4">
         <div class="container">
@@ -162,50 +290,59 @@
 
     <div class="container">
         <div class="row">
+            <!-- Mobile navigation toggle -->
+            <div class="col-12 d-lg-none">
+                <button class="mobile-nav-toggle w-100" id="toggleSidebar">
+                    <i class="fas fa-bars me-2"></i> Navigation Menu
+                </button>
+            </div>
+            
             <!-- Sidebar Navigation -->
             <div class="col-lg-3">
                 <div class="sidebar">
                     <nav id="navbar-docs" class="navbar">
-                        <div class="mb-3">
-                            <input type="text" id="searchDocs" class="form-control" placeholder="Search documentation...">
+                        <div class="sidebar-content" id="sidebarContent">
+                            <div class="mb-3">
+                                <input type="text" id="searchDocs" class="form-control" placeholder="Search documentation...">
+                            </div>
+                            <ul class="nav nav-pills flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#section-introduction">Introduction</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#section-authentication">Authentication</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#section-errors">Error Handling</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#section-rate-limits">Rate Limits</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#section-endpoints">API Endpoints</a>
+                                    <ul class="nav nav-pills flex-column ms-3">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#endpoint-auth">Authentication</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#endpoint-users">Users</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#endpoint-data">Data</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#endpoint-api-keys">API Keys</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#section-webhooks">Webhooks</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#section-changelog">Changelog</a>
+                                </li>
+                            </ul>
                         </div>
-                        <ul class="nav nav-pills flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link" href="#section-introduction">Introduction</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#section-authentication">Authentication</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#section-errors">Error Handling</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#section-rate-limits">Rate Limits</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#section-endpoints">API Endpoints</a>
-                                <ul class="nav nav-pills flex-column ms-3">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#endpoint-auth">Authentication</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#endpoint-users">Users</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#endpoint-data">Data</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#endpoint-api-keys">API Keys</a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#section-webhooks">Webhooks</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#section-changelog">Changelog</a>
-                            </li>
-                        </ul>
                     </nav>
                 </div>
             </div>
@@ -223,110 +360,202 @@
                     <p>Our RESTful API provides programmatic access to our service, allowing you to:</p>
                     <ul>
                         <li>Authenticate users</li>
-                        <li>Manage user accounts</li>
-                        <li>Create and manipulate data entries</li>
+                        <li>Access user account information</li>
+                        <li>View data entries</li>
                         <li>Generate and manage API keys</li>
                     </ul>
                     <p>All API access is over HTTPS, and all data is sent and received as JSON.</p>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Important Note:</strong> All API keys currently have read-only permissions. Write operations (POST, PUT, DELETE) are not available through the API at this time.
+                    </div>
                 </section>
 
                 <section id="section-authentication">
-                    <h2 class="section-title">Authentication</h2>
-                    <p>All API requests require authentication using either session-based authentication or an API key. You can obtain your API key from the <a href="api.php">API Keys Management</a> page.</p>
-                    
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            API Key Authentication
-                        </div>
-                        <div class="card-body">
-                            <p>To authenticate API requests, include your API key in the request header:</p>
-                            <pre><code class="language-bash">curl -X GET \
-  'https://cei326-omada1.cut.ac.cy/api/data' \
-  -H 'X-API-Key: YOUR_API_KEY_HERE'</code></pre>
+    <h2 class="section-title">Authentication</h2>
+    <p>All API requests require authentication using either session-based authentication or an API key. You can obtain your API key from the <a href="api.php">API Keys Management</a> page.</p>
+    
+    <div class="card mb-4">
+    <div class="card-header">
+        API Key Authentication
+    </div>
+    <div class="card-body">
+        <p>To authenticate API requests, include your API key in the <code>X-API-Key</code> header:</p>
+        
+        <h5>cURL Example:</h5>
+        <div class="table-responsive">
+            <pre><code class="language-bash">curl -X GET "https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=data" -H "X-API-Key: YOUR_API_KEY_HERE"</code></pre>
+        </div>
+        
+        <h5>JavaScript Example:</h5>
+        <div class="table-responsive">
+            <pre><code class="language-javascript">fetch('https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=data', {
+  method: 'GET',
+  headers: {
+    'X-API-Key': 'YOUR_API_KEY_HERE'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));</code></pre>
+        </div>
+        
+        <h5>PHP Example:</h5>
+        <div class="table-responsive">
+            <pre><code class="language-php">$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=data');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'X-API-Key: YOUR_API_KEY_HERE'
+]);
 
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Important:</strong> Keep your API keys secure. Do not share them in publicly accessible areas like GitHub or client-side code.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            Session-based Authentication
-                        </div>
-                        <div class="card-body">
-                            <p>For web applications, you can use session-based authentication by first logging in via the login endpoint:</p>
-                            <pre><code class="language-bash">curl -X POST \
-  'https://cei326-omada1.cut.ac.cy/api/auth/login' \
-  -H 'Content-Type: application/json' \
-  -d '{"email": "user@example.com", "password": "your_password"}'</code></pre>
+$response = curl_exec($ch);
+curl_close($ch);
 
-                            <p>The response will include session cookies that will be automatically used for authentication in subsequent requests when using a browser or tools that preserve cookies.</p>
-                        </div>
-                    </div>
-                </section>
+$data = json_decode($response, true);</code></pre>
+        </div>
+
+        <h5>Python Example:</h5>
+        <div class="table-responsive">
+            <pre><code class="language-python">import requests
+
+headers = {
+    'X-API-Key': 'YOUR_API_KEY_HERE'
+}
+
+response = requests.get('https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=data', headers=headers)
+data = response.json()</code></pre>
+        </div>
+
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Important:</strong> Keep your API keys secure. Do not share them in publicly accessible areas like GitHub or client-side code.
+        </div>
+        
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Note:</strong> All API keys are currently restricted to read-only operations (GET requests). Attempts to use other HTTP methods will result in a 403 Forbidden response.
+        </div>
+    </div>
+</div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            Session-based Authentication
+        </div>
+        <div class="card-body">
+            <p>For web applications and user interfaces, session-based authentication is automatically handled when you log in through the website interface. If you're developing a client application that needs to maintain sessions:</p>
+            
+            <h5>1. Log in through the authentication endpoint</h5>
+            <p>Send a POST request to the login endpoint with valid credentials. Your application should store and manage the returned session cookies.</p>
+            
+            <h5>2. Include session cookies in subsequent requests</h5>
+            <p>Most HTTP client libraries will automatically handle cookie management for you after login.</p>
+            
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Security Note:</strong> Session-based authentication should only be used in secure, trusted environments. For server-to-server communication or third-party integrations, API key authentication is recommended.
+            </div>
+            
+            <h5>Example Implementation (JavaScript):</h5>
+            <div class="table-responsive">
+                <pre><code class="language-javascript">// Example of login and session management in JavaScript
+async function login(email, password) {
+  const response = await fetch('https://cei326-omada1.cut.ac.cy/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ email, password }),
+    credentials: 'include' // Important: This tells fetch to include cookies
+  });
+  
+  return await response.json();
+}
+
+// For subsequent authenticated requests
+async function fetchData() {
+  const response = await fetch('https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=data', {
+    method: 'GET',
+    credentials: 'include' // Include session cookies
+  });
+  
+  return await response.json();
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</section>
 
                 <section id="section-errors">
                     <h2 class="section-title">Error Handling</h2>
                     <p>Our API uses conventional HTTP response codes to indicate the success or failure of API requests.</p>
                     
-                    <table class="table table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Status Code</th>
-                                <th>Description</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><code>200 - OK</code></td>
-                                <td>The request was successful.</td>
-                            </tr>
-                            <tr>
-                                <td><code>201 - Created</code></td>
-                                <td>The resource was successfully created.</td>
-                            </tr>
-                            <tr>
-                                <td><code>400 - Bad Request</code></td>
-                                <td>The request was invalid or cannot be served.</td>
-                            </tr>
-                            <tr>
-                                <td><code>401 - Unauthorized</code></td>
-                                <td>Authentication failed or user doesn't have permissions.</td>
-                            </tr>
-                            <tr>
-                                <td><code>403 - Forbidden</code></td>
-                                <td>The request is valid, but the server is refusing action.</td>
-                            </tr>
-                            <tr>
-                                <td><code>404 - Not Found</code></td>
-                                <td>The requested resource could not be found.</td>
-                            </tr>
-                            <tr>
-                                <td><code>405 - Method Not Allowed</code></td>
-                                <td>The HTTP method used is not supported for this resource.</td>
-                            </tr>
-                            <tr>
-                                <td><code>409 - Conflict</code></td>
-                                <td>The request could not be completed due to a conflict with the current state of the resource.</td>
-                            </tr>
-                            <tr>
-                                <td><code>429 - Too Many Requests</code></td>
-                                <td>You've exceeded the rate limit.</td>
-                            </tr>
-                            <tr>
-                                <td><code>500 - Internal Server Error</code></td>
-                                <td>An error occurred on the server.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Status Code</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>200 - OK</code></td>
+                                    <td>The request was successful.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>201 - Created</code></td>
+                                    <td>The resource was successfully created.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>400 - Bad Request</code></td>
+                                    <td>The request was invalid or cannot be served.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>401 - Unauthorized</code></td>
+                                    <td>Authentication failed or user doesn't have permissions.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>403 - Forbidden</code></td>
+                                    <td>The request is valid, but the server is refusing action. This will be returned for all write operations with API keys due to read-only restrictions.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>404 - Not Found</code></td>
+                                    <td>The requested resource could not be found.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>405 - Method Not Allowed</code></td>
+                                    <td>The HTTP method used is not supported for this resource.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>409 - Conflict</code></td>
+                                    <td>The request could not be completed due to a conflict with the current state of the resource.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>429 - Too Many Requests</code></td>
+                                    <td>You've exceeded the rate limit.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>500 - Internal Server Error</code></td>
+                                    <td>An error occurred on the server.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     
                     <h5 class="mt-4">Error Response Format</h5>
                     <p>Error responses will include a JSON object with the following structure:</p>
-                    <pre><code class="language-json">{
+                    <div class="table-responsive">
+                        <pre><code class="language-json">{
   "error": "A human-readable error message"
 }</code></pre>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Common Error:</strong> When attempting to use POST, PUT, or DELETE methods with an API key, you will receive a 403 Forbidden response with the message: "Method not allowed. This API key only has read permissions."
+                    </div>
                 </section>
 
                 <section id="section-rate-limits">
@@ -358,13 +587,16 @@
                             </div>
                             
                             <h5>Request Body</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "email": "user@example.com",
   "password": "your_password"
 }</code></pre>
+                            </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "status": "success",
   "message": "Login successful",
   "user": {
@@ -373,6 +605,7 @@
     "role": "user"
   }
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -387,14 +620,17 @@
                             </div>
                             
                             <h5>Request Body</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "username": "newuser",
   "email": "newuser@example.com",
   "password": "secure_password"
 }</code></pre>
+                            </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "status": "success",
   "message": "Registration successful",
   "user": {
@@ -403,6 +639,7 @@
     "email": "newuser@example.com"
   }
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -417,10 +654,12 @@
                             </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "status": "success",
   "message": "Logout successful"
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -435,15 +674,19 @@
                             </div>
                             
                             <h5>Request Body</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "email": "user@example.com"
 }</code></pre>
+                            </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "status": "success",
   "message": "If your email is registered, you will receive password reset instructions"
 }</code></pre>
+                            </div>
                         </div>
                     </div>
                     
@@ -462,46 +705,49 @@
                             </div>
                             
                             <h5>Query Parameters</h5>
-                            <table class="table table-bordered param-table">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Parameter</th>
-                                        <th>Type</th>
-                                        <th>Required</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><code>page</code></td>
-                                        <td>Integer</td>
-                                        <td>No</td>
-                                        <td>Page number (default: 1)</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>limit</code></td>
-                                        <td>Integer</td>
-                                        <td>No</td>
-                                        <td>Results per page (default: 20, max: 100)</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table table-bordered param-table">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Parameter</th>
+                                            <th>Type</th>
+                                            <th>Required</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>page</code></td>
+                                            <td>Integer</td>
+                                            <td>No</td>
+                                            <td>Page number (default: 1)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>limit</code></td>
+                                            <td>Integer</td>
+                                            <td>No</td>
+                                            <td>Results per page (default: 20, max: 100)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "users": [
     {
-      "id": 1,
+      "userId": 1,
       "username": "admin",
       "email": "admin@example.com",
-      "created_at": "2023-01-01T00:00:00Z",
+      "dateCreated": "2023-01-01T00:00:00Z",
       "role": "admin"
     },
     {
-      "id": 2,
+      "userId": 2,
       "username": "user",
       "email": "user@example.com",
-      "created_at": "2023-01-02T00:00:00Z",
+      "dateCreated": "2023-01-02T00:00:00Z",
       "role": "user"
     }
   ],
@@ -512,6 +758,7 @@
     "pages": 3
   }
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -526,13 +773,15 @@
                             </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
-  "id": 123,
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
+  "userId": 123,
   "username": "username",
   "email": "user@example.com",
-  "created_at": "2023-06-01T10:00:00Z",
+  "dateCreated": "2023-06-01T10:00:00Z",
   "role": "user"
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -547,13 +796,15 @@
                             </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
-  "id": 123,
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
+  "userId": 123,
   "username": "username",
   "email": "user@example.com",
-  "created_at": "2023-06-01T10:00:00Z",
+  "dateCreated": "2023-06-01T10:00:00Z",
   "role": "user"
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -561,22 +812,31 @@
                                 <span class="badge method-badge badge-put me-2">PUT</span>
                                 <h4 class="mb-0">/users/{id}</h4>
                             </div>
-                            <p>Updates a user's information.</p>
+                            <p>Updates a user's information. <strong>(Not available with API key - session authentication only)</strong></p>
                             
                             <div class="endpoint-url mb-3">
                                 <code>PUT https://cei326-omada1.cut.ac.cy/api/users/123</code>
                             </div>
                             
+                            <div class="alert alert-warning mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
+                            </div>
+                            
                             <h5>Request Body</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "username": "updated_username",
   "email": "updated_email@example.com"
 }</code></pre>
+                            </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "message": "User updated successfully"
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -584,22 +844,28 @@
                                 <span class="badge method-badge badge-delete me-2">DELETE</span>
                                 <h4 class="mb-0">/users/{id}</h4>
                             </div>
-                            <p>Deletes a user account.</p>
+                            <p>Deletes a user account. <strong>(Not available with API key - session authentication only)</strong></p>
                             
                             <div class="endpoint-url mb-3">
                                 <code>DELETE https://cei326-omada1.cut.ac.cy/api/users/123</code>
                             </div>
                             
+                            <div class="alert alert-warning mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
+                            </div>
+                            
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "message": "User deleted successfully"
 }</code></pre>
+                            </div>
                         </div>
                     </div>
                     
                     <div id="endpoint-data" class="endpoint">
                         <h3 class="mb-3">Data Endpoints</h3>
-                        
                         <div class="mb-4">
                             <div class="d-flex align-items-center mb-3">
                                 <span class="badge method-badge badge-get me-2">GET</span>
@@ -612,65 +878,62 @@
                             </div>
                             
                             <h5>Query Parameters</h5>
-                            <table class="table table-bordered param-table">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Parameter</th>
-                                        <th>Type</th>
-                                        <th>Required</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><code>page</code></td>
-                                        <td>Integer</td>
-                                        <td>No</td>
-                                        <td>Page number (default: 1)</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>limit</code></td>
-                                        <td>Integer</td>
-                                        <td>No</td>
-                                        <td>Results per page (default: 20, max: 100)</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>sort</code></td>
-                                        <td>String</td>
-                                        <td>No</td>
-                                        <td>Field to sort by (default: created_at)</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>order</code></td>
-                                        <td>String</td>
-                                        <td>No</td>
-                                        <td>Sort order: asc or desc (default: desc)</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table table-bordered param-table">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Parameter</th>
+                                            <th>Type</th>
+                                            <th>Required</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>page</code></td>
+                                            <td>Integer</td>
+                                            <td>No</td>
+                                            <td>Page number (default: 1)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>limit</code></td>
+                                            <td>Integer</td>
+                                            <td>No</td>
+                                            <td>Results per page (default: 20, max: 100)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>sort</code></td>
+                                            <td>String</td>
+                                            <td>No</td>
+                                            <td>Field to sort by (default: dateCreated)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>order</code></td>
+                                            <td>String</td>
+                                            <td>No</td>
+                                            <td>Sort order: asc or desc (default: desc)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "data": [
     {
-      "id": 1,
-      "title": "Sample data entry",
-      "description": "This is a sample entry",
-      "status": "active",
-      "is_public": 1,
-      "tags": ["sample", "test"],
-      "created_at": "2023-06-01T10:00:00Z",
-      "updated_at": "2023-06-01T10:00:00Z"
+      "userId": 1,
+      "username": "sample user",
+      "email": "sample@example.com",
+      "role": "user",
+      "dateCreated": "2023-06-01T10:00:00Z"
     },
     {
-      "id": 2,
-      "title": "Another data entry",
-      "description": "This is another sample entry",
-      "status": "inactive",
-      "is_public": 0,
-      "tags": ["sample"],
-      "created_at": "2023-06-02T14:30:00Z",
-      "updated_at": "2023-06-02T14:30:00Z"
+      "userId": 2,
+      "username": "another user",
+      "email": "another@example.com",
+      "role": "user",
+      "dateCreated": "2023-06-02T14:30:00Z"
     }
   ],
   "pagination": {
@@ -685,6 +948,7 @@
     }
   }
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -699,16 +963,15 @@
                             </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
-  "id": 42,
-  "title": "Specific data entry",
-  "description": "This is a specific data entry",
-  "status": "active",
-  "is_public": 1,
-  "tags": ["important", "featured"],
-  "created_at": "2023-06-05T09:15:00Z",
-  "updated_at": "2023-06-05T09:15:00Z"
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
+  "userId": 42,
+  "username": "specific user",
+  "email": "specific@example.com",
+  "role": "user",
+  "dateCreated": "2023-06-05T09:15:00Z"
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -716,35 +979,40 @@
                                 <span class="badge method-badge badge-post me-2">POST</span>
                                 <h4 class="mb-0">/data</h4>
                             </div>
-                            <p>Creates a new data entry.</p>
+                            <p>Creates a new data entry. <strong>(Not available with API key - session authentication only)</strong></p>
                             
                             <div class="endpoint-url mb-3">
                                 <code>POST https://cei326-omada1.cut.ac.cy/api/data</code>
                             </div>
                             
+                            <div class="alert alert-warning mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
+                            </div>
+                            
                             <h5>Request Body</h5>
-                            <pre><code class="language-json">{
-  "title": "New data entry",
-  "description": "This is a new data entry",
-  "status": "active",
-  "is_public": 1,
-  "tags": ["new", "important"]
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
+  "username": "New user",
+  "email": "new@example.com",
+  "password": "secure_password",
+  "role": "user"
 }</code></pre>
+                            </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "message": "Data entry created successfully",
   "data": {
-    "id": 51,
-    "title": "New data entry",
-    "description": "This is a new data entry",
-    "status": "active",
-    "is_public": 1,
-    "tags": ["new", "important"],
-    "created_at": "2023-06-15T09:12:34Z",
-    "updated_at": "2023-06-15T09:12:34Z"
+    "userId": 51,
+    "username": "New user",
+    "email": "new@example.com",
+    "role": "user",
+    "dateCreated": "2023-06-15T09:12:34Z"
   }
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -752,32 +1020,38 @@
                                 <span class="badge method-badge badge-put me-2">PUT</span>
                                 <h4 class="mb-0">/data/{id}</h4>
                             </div>
-                            <p>Updates a data entry.</p>
+                            <p>Updates a data entry. <strong>(Not available with API key - session authentication only)</strong></p>
                             
                             <div class="endpoint-url mb-3">
                                 <code>PUT https://cei326-omada1.cut.ac.cy/api/data/51</code>
                             </div>
                             
+                            <div class="alert alert-warning mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
+                            </div>
+                            
                             <h5>Request Body</h5>
-                            <pre><code class="language-json">{
-  "title": "Updated title",
-  "status": "inactive"
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
+  "username": "Updated username",
+  "email": "updated@example.com"
 }</code></pre>
+                            </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "message": "Data entry updated successfully",
   "data": {
-    "id": 51,
-    "title": "Updated title",
-    "description": "This is a new data entry",
-    "status": "inactive",
-    "is_public": 1,
-    "tags": ["new", "important"],
-    "created_at": "2023-06-15T09:12:34Z",
-    "updated_at": "2023-06-15T10:45:22Z"
+    "userId": 51,
+    "username": "Updated username",
+    "email": "updated@example.com",
+    "role": "user",
+    "dateCreated": "2023-06-15T09:12:34Z"
   }
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -785,16 +1059,23 @@
                                 <span class="badge method-badge badge-delete me-2">DELETE</span>
                                 <h4 class="mb-0">/data/{id}</h4>
                             </div>
-                            <p>Deletes a data entry.</p>
+                            <p>Deletes a data entry. <strong>(Not available with API key - session authentication only)</strong></p>
                             
                             <div class="endpoint-url mb-3">
                                 <code>DELETE https://cei326-omada1.cut.ac.cy/api/data/51</code>
                             </div>
                             
+                            <div class="alert alert-warning mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
+                            </div>
+                            
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "message": "Data entry deleted successfully"
 }</code></pre>
+                            </div>
                         </div>
                     </div>
                     
@@ -813,7 +1094,8 @@
                             </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "keys": [
     {
       "id": 1,
@@ -835,6 +1117,7 @@
     }
   ]
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -842,26 +1125,35 @@
                                 <span class="badge method-badge badge-post me-2">POST</span>
                                 <h4 class="mb-0">/api-keys</h4>
                             </div>
-                            <p>Creates a new API key.</p>
+                            <p>Creates a new API key. <strong>(Not available with API key - session authentication only)</strong></p>
                             
                             <div class="endpoint-url mb-3">
                                 <code>POST https://cei326-omada1.cut.ac.cy/api/api-keys</code>
                             </div>
                             
+                            <div class="alert alert-warning mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
+                            </div>
+                            
                             <h5>Request Body</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "name": "New API Key",
   "expires_in_days": 30
 }</code></pre>
+                            </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "id": 3,
   "name": "New API Key",
   "api_key": "full_api_key_here_only_shown_once",
   "expires_at": "2023-07-15T09:12:34Z",
   "message": "API key created successfully"
 }</code></pre>
+                            </div>
                             <div class="alert alert-warning">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
                                 <strong>Important:</strong> The full API key is only returned once upon creation. Store it securely.
@@ -873,16 +1165,23 @@
                                 <span class="badge method-badge badge-delete me-2">DELETE</span>
                                 <h4 class="mb-0">/api-keys/{id}</h4>
                             </div>
-                            <p>Revokes (deactivates) an API key.</p>
+                            <p>Revokes (deactivates) an API key. <strong>(Not available with API key - session authentication only)</strong></p>
                             
                             <div class="endpoint-url mb-3">
                                 <code>DELETE https://cei326-omada1.cut.ac.cy/api/api-keys/3</code>
                             </div>
                             
+                            <div class="alert alert-warning mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
+                            </div>
+                            
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "message": "API key revoked successfully"
 }</code></pre>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
@@ -901,17 +1200,20 @@
                             </div>
                             
                             <h5>Response</h5>
-                            <pre><code class="language-json">{
+                            <div class="table-responsive">
+                                <pre><code class="language-json">{
   "status": "success",
   "message": "API key is valid",
   "data": {
     "user_id": 123,
     "username": "username",
     "role": "user",
+    "permissions": "read",
     "key_name": "Development Key",
     "expires_at": "2023-07-01T10:00:00Z"
   }
 }</code></pre>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -930,6 +1232,14 @@
                     <h2 class="section-title">Changelog</h2>
                     <div class="timeline">
                         <div class="mb-4">
+                            <h5><span class="badge bg-primary me-2">v1.1.0</span> April 2025</h5>
+                            <ul>
+                                <li>All API keys now have read-only permissions</li>
+                                <li>Updated error handling for permissions-related issues</li>
+                                <li>Improved documentation</li>
+                            </ul>
+                        </div>
+                        <div class="mb-4">
                             <h5><span class="badge bg-primary me-2">v1.0.0</span> June 2023</h5>
                             <ul>
                                 <li>Initial API release</li>
@@ -947,7 +1257,7 @@
                         <i class="fas fa-question-circle fa-2x me-3"></i>
                         <div>
                             <h5 class="mb-1">Need Help?</h5>
-                            <p class="mb-0">If you have any questions or need assistance with our API, please <a href="#">contact our support team</a>.</p>
+                            <p class="mb-0">If you have any questions or need assistance with our API, please contact our support team.</p>
                         </div>
                     </div>
                 </div>
@@ -955,19 +1265,7 @@
         </div>
     </div>
 
-    <footer class="bg-light py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-0">© 2023 WebEngineering. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-end">
-                    <a href="#" class="text-decoration-none me-3">Terms of Service</a>
-                    <a href="#" class="text-decoration-none">Privacy Policy</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+   
 
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -1043,7 +1341,41 @@
                     endpoint.style.display = hasMatch ? 'block' : 'none';
                 });
             });
+            
+            // Mobile navigation toggle
+            const toggleButton = document.getElementById('toggleSidebar');
+            const sidebarContent = document.getElementById('sidebarContent');
+            
+            // Show sidebar content by default on larger screens
+            if (window.innerWidth >= 992) {
+                sidebarContent.classList.add('show');
+            }
+            
+            toggleButton.addEventListener('click', () => {
+                sidebarContent.classList.toggle('show');
+                toggleButton.innerHTML = sidebarContent.classList.contains('show') 
+                    ? '<i class="fas fa-times me-2"></i> Close Navigation' 
+                    : '<i class="fas fa-bars me-2"></i> Navigation Menu';
+            });
+            
+            // Ensure sidebar is visible when screen size changes to desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 992) {
+                    sidebarContent.classList.add('show');
+                }
+            });
+            
+            // Close sidebar when clicking on a link on mobile
+            if (window.innerWidth < 992) {
+                navLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        sidebarContent.classList.remove('show');
+                        toggleButton.innerHTML = '<i class="fas fa-bars me-2"></i> Navigation Menu';
+                    });
+                });
+            }
         });
     </script>
 </body>
 </html>
+
