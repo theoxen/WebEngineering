@@ -17,9 +17,18 @@ function handleDataRequest($method, $pathSegments) {
         exit;
     }
 
-    // Check if the API key has the correct permission for this method
-    if ($method !== 'GET' && $apiKeyData['permissions'] === 'read') {
-        sendError(403, "Method not allowed. This API key only has read permissions.");
+   // Check if the API key has the correct permission for this method
+    if ($method === 'GET' && !$apiKeyData['permissions']['get']) {
+        sendError(403, "Method not allowed. This API key does not have GET permission.");
+        exit;
+    } else if ($method === 'POST' && !$apiKeyData['permissions']['post']) {
+        sendError(403, "Method not allowed. This API key does not have POST permission.");
+        exit;
+    } else if ($method === 'PUT' && !$apiKeyData['permissions']['put']) {
+        sendError(403, "Method not allowed. This API key does not have PUT permission.");
+        exit;
+    } else if ($method === 'DELETE' && !$apiKeyData['permissions']['delete']) {
+        sendError(403, "Method not allowed. This API key does not have DELETE permission.");
         exit;
     }
 

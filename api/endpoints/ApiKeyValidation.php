@@ -4,7 +4,7 @@
  * Validates API keys and marks expired ones as inactive
  */
 
-require_once __DIR__ . '/../database/db_connect.php';
+require_once __DIR__ . '/../../database/db_connect.php';
 
 /**
  * Get the API key from headers or query string
@@ -26,6 +26,7 @@ function getApiKey() {
 /**
  * Check if API key is valid and not expired
  * Returns user data if valid, false otherwise
+ * Modified to include role information to give full permissions
  */
 function validateApiKey($mysqli) {
     $apiKey = getApiKey();
@@ -37,14 +38,15 @@ function validateApiKey($mysqli) {
     // First check if key exists and get associated data
     $stmt = $mysqli->prepare("
         SELECT k.id, k.userId, k.expires_at, k.is_active, 
-               u.id as user_id, u.username, u.email, u.role
+               k.allow_get, k.allow_post, k.allow_put, k.allow_delete,
+               u.userId as user_id, u.username, u.email, u.role
         FROM api_keys k
-        JOIN users u ON k.userId = u.id
+        JOIN users u ON k.userId = u.userId
         WHERE k.api_key = ?
     ");
     
     if (!$stmt) {
-        error_log("SQL Error in validateApiKey: " . $mysqli->error);
+        error_log(message: "SQL Error in validateApiKey: " . $mysqli->error);
         return false;
     }
     
@@ -89,12 +91,18 @@ function validateApiKey($mysqli) {
     $updateStmt->bind_param("i", $keyData['id']);
     $updateStmt->execute();
     
-    // Return user data for the API consumer
+    // Return user data for the API consumer with permissions
     return [
         'user_id' => $keyData['user_id'],
         'username' => $keyData['username'],
         'email' => $keyData['email'],
-        'role' => $keyData['role']
+        'role' => $keyData['role'],
+        'permissions' => [
+            'get' => (bool)$keyData['allow_get'],
+            'post' => (bool)$keyData['allow_post'],
+            'put' => (bool)$keyData['allow_put'],
+            'delete' => (bool)$keyData['allow_delete']
+        ]
     ];
 }
 

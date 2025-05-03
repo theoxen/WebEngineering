@@ -335,12 +335,6 @@
                                         </li>
                                     </ul>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#section-webhooks">Webhooks</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#section-changelog">Changelog</a>
-                                </li>
                             </ul>
                         </div>
                     </nav>
@@ -365,11 +359,7 @@
                         <li>Generate and manage API keys</li>
                     </ul>
                     <p>All API access is over HTTPS, and all data is sent and received as JSON.</p>
-                    
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Important Note:</strong> All API keys currently have read-only permissions. Write operations (POST, PUT, DELETE) are not available through the API at this time.
-                    </div>
+
                 </section>
 
                 <section id="section-authentication">
@@ -432,10 +422,7 @@ data = response.json()</code></pre>
             <strong>Important:</strong> Keep your API keys secure. Do not share them in publicly accessible areas like GitHub or client-side code.
         </div>
         
-        <div class="alert alert-info mt-3">
-            <i class="fas fa-info-circle me-2"></i>
-            <strong>Note:</strong> All API keys are currently restricted to read-only operations (GET requests). Attempts to use other HTTP methods will result in a 403 Forbidden response.
-        </div>
+        
     </div>
 </div>
     
@@ -517,10 +504,6 @@ async function fetchData() {
                                     <td>Authentication failed or user doesn't have permissions.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>403 - Forbidden</code></td>
-                                    <td>The request is valid, but the server is refusing action. This will be returned for all write operations with API keys due to read-only restrictions.</td>
-                                </tr>
-                                <tr>
                                     <td><code>404 - Not Found</code></td>
                                     <td>The requested resource could not be found.</td>
                                 </tr>
@@ -583,7 +566,7 @@ async function fetchData() {
                             <p>Authenticates a user and creates a session.</p>
                             
                             <div class="endpoint-url mb-3">
-                                <code>POST https://cei326-omada1.cut.ac.cy/api/auth/login</code>
+                                <code>POST https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=auth&action=login</code>
                             </div>
                             
                             <h5>Request Body</h5>
@@ -598,9 +581,10 @@ async function fetchData() {
                             <div class="table-responsive">
                                 <pre><code class="language-json">{
   "status": "success",
-  "message": "Login successful",
+  "message": "Authentication successful",
   "user": {
-    "id": 123,
+    "userId": 123,
+    "username": "username123",
     "email": "user@example.com",
     "role": "user"
   }
@@ -613,10 +597,15 @@ async function fetchData() {
                                 <span class="badge method-badge badge-post me-2">POST</span>
                                 <h4 class="mb-0">/auth/register</h4>
                             </div>
-                            <p>Creates a new user account.</p>
+                            <p>Creates a new user account. <strong>(Requires API key with POST permission)</strong></p>
                             
                             <div class="endpoint-url mb-3">
-                                <code>POST https://cei326-omada1.cut.ac.cy/api/auth/register</code>
+                                <code>POST https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=auth&action=register</code>
+                            </div>
+                            
+                            <h5>Headers</h5>
+                            <div class="table-responsive">
+                                <pre><code class="language-http">X-API-Key: YOUR_API_KEY</code></pre>
                             </div>
                             
                             <h5>Request Body</h5>
@@ -634,9 +623,10 @@ async function fetchData() {
   "status": "success",
   "message": "Registration successful",
   "user": {
-    "id": 124,
+    "userId": 124,
     "username": "newuser",
-    "email": "newuser@example.com"
+    "email": "newuser@example.com",
+    "role": "user"
   }
 }</code></pre>
                             </div>
@@ -818,14 +808,10 @@ async function fetchData() {
                                 <code>PUT https://cei326-omada1.cut.ac.cy/api/users/123</code>
                             </div>
                             
-                            <div class="alert alert-warning mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
-                            </div>
                             
                             <h5>Request Body</h5>
                             <div class="table-responsive">
-                                <pre><code class="language-json">{
+                            <pre><code class="language-json">{
   "username": "updated_username",
   "email": "updated_email@example.com"
 }</code></pre>
@@ -849,11 +835,7 @@ async function fetchData() {
                             <div class="endpoint-url mb-3">
                                 <code>DELETE https://cei326-omada1.cut.ac.cy/api/users/123</code>
                             </div>
-                            
-                            <div class="alert alert-warning mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
-                            </div>
+                        
                             
                             <h5>Response</h5>
                             <div class="table-responsive">
@@ -874,7 +856,7 @@ async function fetchData() {
                             <p>Returns a list of data entries for the authenticated user.</p>
                             
                             <div class="endpoint-url mb-3">
-                                <code>GET https://cei326-omada1.cut.ac.cy/api/data</code>
+                                <code>GET https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=data</code>
                             </div>
                             
                             <h5>Query Parameters</h5>
@@ -959,7 +941,7 @@ async function fetchData() {
                             <p>Returns a specific data entry.</p>
                             
                             <div class="endpoint-url mb-3">
-                                <code>GET https://cei326-omada1.cut.ac.cy/api/data/42</code>
+                                <code>GET https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=data&id=42</code>
                             </div>
                             
                             <h5>Response</h5>
@@ -979,37 +961,36 @@ async function fetchData() {
                                 <span class="badge method-badge badge-post me-2">POST</span>
                                 <h4 class="mb-0">/data</h4>
                             </div>
-                            <p>Creates a new data entry. <strong>(Not available with API key - session authentication only)</strong></p>
+                            <p>Creates a new user record. <strong>(Requires API key with POST permission)</strong></p>
                             
                             <div class="endpoint-url mb-3">
-                                <code>POST https://cei326-omada1.cut.ac.cy/api/data</code>
+                                <code>POST https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=data</code>
                             </div>
-                            
-                            <div class="alert alert-warning mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
+
+                            <h5>Headers</h5>
+                            <div class="table-responsive">
+                                <pre><code class="language-http">X-API-Key: YOUR_API_KEY</code></pre>
                             </div>
                             
                             <h5>Request Body</h5>
                             <div class="table-responsive">
                                 <pre><code class="language-json">{
-  "username": "New user",
+  "username": "new_user",
   "email": "new@example.com",
-  "password": "secure_password",
-  "role": "user"
+  "password": "secure_password"
 }</code></pre>
                             </div>
                             
                             <h5>Response</h5>
                             <div class="table-responsive">
                                 <pre><code class="language-json">{
-  "message": "Data entry created successfully",
+  "status": "success",
+  "message": "Data created successfully",
   "data": {
     "userId": 51,
-    "username": "New user",
+    "username": "new_user",
     "email": "new@example.com",
-    "role": "user",
-    "dateCreated": "2023-06-15T09:12:34Z"
+    "role": "user"
   }
 }</code></pre>
                             </div>
@@ -1020,35 +1001,38 @@ async function fetchData() {
                                 <span class="badge method-badge badge-put me-2">PUT</span>
                                 <h4 class="mb-0">/data/{id}</h4>
                             </div>
-                            <p>Updates a data entry. <strong>(Not available with API key - session authentication only)</strong></p>
+                            <p>Updates a user record. <strong>(Requires API key with PUT permission)</strong></p>
                             
                             <div class="endpoint-url mb-3">
-                                <code>PUT https://cei326-omada1.cut.ac.cy/api/data/51</code>
+                                <code>PUT https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=data</code>
                             </div>
-                            
-                            <div class="alert alert-warning mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
+
+                            <h5>Headers</h5>
+                            <div class="table-responsive">
+                                <pre><code class="language-http">X-API-Key: YOUR_API_KEY</code></pre>
                             </div>
                             
                             <h5>Request Body</h5>
                             <div class="table-responsive">
                                 <pre><code class="language-json">{
-  "username": "Updated username",
-  "email": "updated@example.com"
+  "id": 51,
+  "username": "updated_username",
+  "email": "updated@example.com", 
+  "password": "new_password",
+  "role": "user"
 }</code></pre>
                             </div>
                             
                             <h5>Response</h5>
                             <div class="table-responsive">
                                 <pre><code class="language-json">{
-  "message": "Data entry updated successfully",
+  "status": "success",
+  "message": "Data updated successfully",
   "data": {
     "userId": 51,
-    "username": "Updated username",
+    "username": "updated_username",
     "email": "updated@example.com",
-    "role": "user",
-    "dateCreated": "2023-06-15T09:12:34Z"
+    "role": "user"
   }
 }</code></pre>
                             </div>
@@ -1059,21 +1043,23 @@ async function fetchData() {
                                 <span class="badge method-badge badge-delete me-2">DELETE</span>
                                 <h4 class="mb-0">/data/{id}</h4>
                             </div>
-                            <p>Deletes a data entry. <strong>(Not available with API key - session authentication only)</strong></p>
+                            <p>Deletes a data entry. <strong>(Requires API key with DELETE permission)</strong></p>
                             
                             <div class="endpoint-url mb-3">
-                                <code>DELETE https://cei326-omada1.cut.ac.cy/api/data/51</code>
+                                <code>DELETE https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=data&id=51</code>
                             </div>
-                            
-                            <div class="alert alert-warning mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
+            
+                            <h5>Headers</h5>
+                            <div class="table-responsive">
+                                <pre><code class="language-http">X-API-Key: YOUR_API_KEY</code></pre>
                             </div>
                             
                             <h5>Response</h5>
                             <div class="table-responsive">
                                 <pre><code class="language-json">{
-  "message": "Data entry deleted successfully"
+  "status": "success",
+  "message": "Data deleted successfully",
+  "id": 51
 }</code></pre>
                             </div>
                         </div>
@@ -1130,11 +1116,7 @@ async function fetchData() {
                             <div class="endpoint-url mb-3">
                                 <code>POST https://cei326-omada1.cut.ac.cy/api/api-keys</code>
                             </div>
-                            
-                            <div class="alert alert-warning mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
-                            </div>
+
                             
                             <h5>Request Body</h5>
                             <div class="table-responsive">
@@ -1170,11 +1152,7 @@ async function fetchData() {
                             <div class="endpoint-url mb-3">
                                 <code>DELETE https://cei326-omada1.cut.ac.cy/api/api-keys/3</code>
                             </div>
-                            
-                            <div class="alert alert-warning mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Note:</strong> This endpoint is not accessible using API key authentication due to read-only permissions.
-                            </div>
+             
                             
                             <h5>Response</h5>
                             <div class="table-responsive">
@@ -1192,7 +1170,7 @@ async function fetchData() {
                             <p>Verifies that your API key is valid and returns information about your account.</p>
                             
                             <div class="endpoint-url mb-3">
-                                <code>GET https://cei326-omada1.cut.ac.cy/api/verify</code>
+                                <code>GET https://cei326-omada1.cut.ac.cy/api/index.php?endpoint=verify</code>
                             </div>
                             
                             <div class="alert alert-info mb-3">
@@ -1207,10 +1185,13 @@ async function fetchData() {
   "data": {
     "user_id": 123,
     "username": "username",
-    "role": "user",
-    "permissions": "read",
-    "key_name": "Development Key",
-    "expires_at": "2023-07-01T10:00:00Z"
+    "email": "user@example.com",
+    "permissions": {
+      "get": true,
+      "post": false,
+      "put": false,
+      "delete": false
+    }
   }
 }</code></pre>
                             </div>
@@ -1218,39 +1199,9 @@ async function fetchData() {
                     </div>
                 </section>
                 
-                <section id="section-webhooks">
-                    <h2 class="section-title">Webhooks</h2>
-                    <p>Webhooks allow you to receive real-time notifications when specific events occur in your account. Coming soon.</p>
-                    
-                    <div class="alert alert-secondary">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Webhook functionality is currently in development and will be available in a future update.
-                    </div>
-                </section>
                 
-                <section id="section-changelog">
-                    <h2 class="section-title">Changelog</h2>
-                    <div class="timeline">
-                        <div class="mb-4">
-                            <h5><span class="badge bg-primary me-2">v1.1.0</span> April 2025</h5>
-                            <ul>
-                                <li>All API keys now have read-only permissions</li>
-                                <li>Updated error handling for permissions-related issues</li>
-                                <li>Improved documentation</li>
-                            </ul>
-                        </div>
-                        <div class="mb-4">
-                            <h5><span class="badge bg-primary me-2">v1.0.0</span> June 2023</h5>
-                            <ul>
-                                <li>Initial API release</li>
-                                <li>Authentication endpoints</li>
-                                <li>User management</li>
-                                <li>Data management</li>
-                                <li>API key generation and management</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
+                
+                
                 
                 <div class="alert alert-secondary mt-5 mb-3">
                     <div class="d-flex align-items-center">
@@ -1378,4 +1329,3 @@ async function fetchData() {
     </script>
 </body>
 </html>
-
