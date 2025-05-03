@@ -50,7 +50,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
 
                     <li class="nav-item">
                         <a href="<?php echo $baseUrl?>user-api-keys.php" class="nav-link <?php echo $currentPage == 'user-api-keys.php' ? 'active' : ''; ?>">
-                            <i class="fas fa-cog me-2"></i> API
+                            <i class="fas fa-key"></i> My API Keys
                         </a>
                     </li>
 
