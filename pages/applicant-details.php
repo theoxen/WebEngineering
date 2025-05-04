@@ -32,13 +32,13 @@ $result = $mysqli->query($sql);
 
 if ($result && $result->num_rows > 0) {
     // Categories table exists
-    $sql = "SELECT r.*, c.categoryName 
+    $sql = "SELECT r.*, c.fields 
             FROM rankinglist r 
             JOIN categories c ON r.categoryID = c.categoryID 
             WHERE r.id = ?";
 } else {
     // No categories table, just query rankinglist
-    $sql = "SELECT r.*, 'Unknown' as categoryName 
+    $sql = "SELECT r.*, 'Unknown' as fields 
             FROM rankinglist r 
             WHERE r.id = ?";
 }
@@ -178,7 +178,7 @@ $mysqli->close();
                     <div class="profile-info">
                         <h1><?php echo htmlspecialchars($applicantDetails['fullName']); ?></h1>
                         <div class="d-flex align-items-center mb-2">
-                            <span class="badge bg-primary me-2"><?php echo htmlspecialchars($applicantDetails['categoryName']); ?></span>
+                            <span class="badge bg-primary me-2"><?php echo htmlspecialchars($applicantDetails['fields']); ?></span>
                             <span class="badge bg-success">Αρ. Αίτησης: <?php echo $applicantDetails['appNum']; ?></span>
                         </div>
                         <p class="text-muted mb-0">Κατάταξη: <?php echo $applicantDetails['ranking']; ?></p>
@@ -251,7 +251,7 @@ $mysqli->close();
                             </div>
                             <div class="card-body text-center">
                                 <div class="ranking-box">#<?php echo $applicantDetails['ranking']; ?></div>
-                                <p class="text-muted">Στην κατηγορία <?php echo htmlspecialchars($applicantDetails['categoryName']); ?></p>
+                                <p class="text-muted">Στην κατηγορία <?php echo htmlspecialchars($applicantDetails['fields']); ?></p>
                                 
                                 <hr>
                                 
