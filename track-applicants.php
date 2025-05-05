@@ -39,13 +39,13 @@ function getApplicantData($mysqli, $applicantID) {
     
     if ($result && $result->num_rows > 0) {
         // Categories table exists
-        $sql = "SELECT r.*, c.categoryName 
+        $sql = "SELECT r.*, c.fields 
                 FROM rankinglist r 
                 JOIN categories c ON r.categoryID = c.categoryID 
                 WHERE r.id = ?";
     } else {
         // No categories table, just query rankinglist
-        $sql = "SELECT r.*, 'Unknown' as categoryName 
+        $sql = "SELECT r.*, 'Unknown' as fields 
                 FROM rankinglist r 
                 WHERE r.id = ?";
     }
