@@ -13,6 +13,14 @@ if (!$categoryID) {
     exit;
 }
 
+// Get the selected limit (default to 50)
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+// Validate the limit to only allow 25, 50, or 100
+if (!in_array($limit, [25, 50, 100])) {
+    $limit = 50; // Default to 50 if invalid
+}
+
 // Connect to the database
 require_once "../database/db_connect.php";
 
@@ -30,9 +38,9 @@ if (!$category) {
 }
 
 // Query to get candidates for the category
-$query = "SELECT * FROM rankinglist WHERE categoryID = ?";
+$query = "SELECT * FROM rankinglist WHERE categoryID = ? ORDER BY ranking ASC LIMIT ?";
 $stmt = $mysqli->prepare($query);
-$stmt->bind_param("i", $categoryID);
+$stmt->bind_param("ii", $categoryID, $limit);
 $stmt->execute();
 $result = $stmt->get_result();
 $candidates = $result->fetch_all(MYSQLI_ASSOC);
@@ -77,7 +85,7 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
         </div>
         
         <?php if (!empty($category['file_path'])): ?>
-        <div class="pdf-container">
+        <!-- <div class="pdf-container">
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title">Προβολή Αρχείου PDF</h5>
@@ -92,11 +100,20 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
                     </a>
                 </div>
             </div>
-        </div>
+        </div> -->
         <?php else: ?>
 
         <?php endif; ?>
         
+        <div class="mb-3 d-flex align-items-center">
+            <span class="me-2">Show entries:</span>
+            <select id="entriesPerPage" class="form-select form-select-sm" style="width: auto;">
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+
         <div class="table-responsive mt-4">
             <table class="table table-bordered">
                 <thead>
@@ -152,5 +169,35 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the entries per page dropdown
+            const entriesDropdown = document.getElementById('entriesPerPage');
+            
+            // Add change event listener
+            entriesDropdown.addEventListener('change', function() {
+                // Get current URL
+                const url = new URL(window.location.href);
+                
+                // Update or add the limit parameter
+                url.searchParams.set('limit', this.value);
+                
+                // If using pagination, reset to page 1
+                if(url.searchParams.has('page')) {
+                    url.searchParams.set('page', '1');
+                }
+                
+                // Navigate to the updated URL
+                window.location.href = url.toString();
+            });
+            
+            // Set dropdown to current limit value from URL if exists
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentLimit = urlParams.get('limit');
+            if(currentLimit) {
+                entriesDropdown.value = currentLimit;
+            }
+        });
+    </script>
 </body>
 </html>
