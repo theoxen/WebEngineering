@@ -9,19 +9,39 @@ function handleDataRequest($method, $pathSegments) {
     
     // Get database connection
     $db = DatabaseHelper::getInstance();
-    
-    // Ensure user is authenticated
-    requireAuth();
-    $userId = $_SESSION['user_id'];
-    
+
+    // API key authentication 
+    $apiKeyData = validateApiKey();
+    if (!$apiKeyData) {
+        sendError(401, "Unauthorized");
+        exit;
+    }
+
+   // Check if the API key has the correct permission for this method
+    if ($method === 'GET' && !$apiKeyData['permissions']['get']) {
+        sendError(403, "Method not allowed. This API key does not have GET permission.");
+        exit;
+    } else if ($method === 'POST' && !$apiKeyData['permissions']['post']) {
+        sendError(403, "Method not allowed. This API key does not have POST permission.");
+        exit;
+    } else if ($method === 'PUT' && !$apiKeyData['permissions']['put']) {
+        sendError(403, "Method not allowed. This API key does not have PUT permission.");
+        exit;
+    } else if ($method === 'DELETE' && !$apiKeyData['permissions']['delete']) {
+        sendError(403, "Method not allowed. This API key does not have DELETE permission.");
+        exit;
+    }
+
+    $userId = $apiKeyData['user_id']; // Get the user ID from the API key data
+
     switch ($method) {
         case 'GET':
             if ($dataId) {
                 // Get specific data entry
                 $data = $db->fetchOne(
-                    "SELECT * FROM data_entries WHERE id = ? AND (user_id = ? OR is_public = 1)",
-                    "ii", 
-                    [$dataId, $userId]
+                    "SELECT * FROM users WHERE userId = ?",
+                    "i", 
+                    [$dataId]
                 );
                 
                 if ($data) {
@@ -46,22 +66,22 @@ function handleDataRequest($method, $pathSegments) {
                 $order = isset($_GET['order']) && strtolower($_GET['order']) === 'asc' ? 'ASC' : 'DESC';
                 
                 // Validate sort field (prevent SQL injection)
-                $allowedSortFields = ['id', 'title', 'created_at', 'updated_at'];
+                $allowedSortFields = ['userId', 'email', 'username', 'dateCreated'];
                 if (!in_array($sort, $allowedSortFields)) {
-                    $sort = 'created_at';
+                    $sort = 'dateCreated';
                 }
-                
+
                 // Build query for user's data or public data
-                $sql = "SELECT * FROM data_entries 
-                       WHERE user_id = ? OR is_public = 1 
-                       ORDER BY $sort $order 
-                       LIMIT ? OFFSET ?";
-                
+                $sql = "SELECT * FROM users 
+                    WHERE userId = ?
+                    ORDER BY $sort $order 
+                    LIMIT ? OFFSET ?";
+
                 $data = $db->fetchAll($sql, "iii", [$userId, $limit, $offset]);
-                
+
                 // Get total count for pagination
                 $totalCount = $db->fetchOne(
-                    "SELECT COUNT(*) AS total FROM data_entries WHERE user_id = ? OR is_public = 1",
+                    "SELECT COUNT(*) AS total FROM users WHERE userId = ?",
                     "i", 
                     [$userId]
                 )['total'];
@@ -96,21 +116,20 @@ function handleDataRequest($method, $pathSegments) {
             // Set default values
             $description = $data['description'] ?? '';
             $status = $data['status'] ?? 'active';
-            $isPublic = isset($data['is_public']) ? (int)$data['is_public'] : 0;
             $tags = isset($data['tags']) ? json_encode($data['tags']) : '[]';
             
             // Insert data entry
             $dataId = $db->insert(
-                "INSERT INTO data_entries (user_id, title, description, status, is_public, tags) 
-                VALUES (?, ?, ?, ?, ?, ?)",
-                "issssi",
-                [$userId, $data['title'], $description, $status, $isPublic, $tags]
+                "INSERT INTO users (userId, email, role, username) 
+                VALUES (?, ?, ?, ?)",
+                "isss",
+                [$userId, $data['email'], $data['role'] ?? 'user', $data['username']]
             );
             
             if ($dataId) {
                 // Get the created entry
                 $createdData = $db->fetchOne(
-                    "SELECT * FROM data_entries WHERE id = ?", 
+                    "SELECT * FROM users WHERE userId = ?", 
                     "i", 
                     [$dataId]
                 );
@@ -132,7 +151,7 @@ function handleDataRequest($method, $pathSegments) {
             
             // Check if user owns this data entry
             $existingData = $db->fetchOne(
-                "SELECT user_id FROM data_entries WHERE id = ?", 
+                "SELECT user_id FROM users WHERE userId = ?", 
                 "i", 
                 [$dataId]
             );
@@ -152,50 +171,35 @@ function handleDataRequest($method, $pathSegments) {
             $types = "";
             $values = [];
             
-            if (isset($data['title'])) {
-                $updateFields[] = "title = ?";
+            if (isset($data['email'])) {
+                $updateFields[] = "email = ?";
                 $types .= "s";
-                $values[] = $data['title'];
+                $values[] = $data['email'];
             }
             
-            if (isset($data['description'])) {
-                $updateFields[] = "description = ?";
+            if (isset($data['username'])) {
+                $updateFields[] = "username = ?";
                 $types .= "s";
-                $values[] = $data['description'];
+                $values[] = $data['username'];
             }
             
-            if (isset($data['status'])) {
-                $updateFields[] = "status = ?";
+            if (isset($data['role'])) {
+                $updateFields[] = "role = ?";
                 $types .= "s";
-                $values[] = $data['status'];
+                $values[] = $data['role'];
             }
-            
-            if (isset($data['is_public'])) {
-                $updateFields[] = "is_public = ?";
-                $types .= "i";
-                $values[] = (int)$data['is_public'];
-            }
-            
-            if (isset($data['tags'])) {
-                $updateFields[] = "tags = ?";
-                $types .= "s";
-                $values[] = json_encode($data['tags']);
-            }
-            
-            // Always update the updated_at timestamp
-            $updateFields[] = "updated_at = NOW()";
             
             if (!empty($updateFields)) {
                 $values[] = $dataId;
                 $types .= "i";
                 
-                $sql = "UPDATE data_entries SET " . implode(", ", $updateFields) . " WHERE id = ?";
+                $sql = "UPDATE users SET " . implode(", ", $updateFields) . " WHERE userId = ?";
                 $result = $db->executeQuery($sql, $types, $values);
                 
                 if ($result['success']) {
                     // Get the updated entry
                     $updatedData = $db->fetchOne(
-                        "SELECT * FROM data_entries WHERE id = ?", 
+                        "SELECT * FROM users WHERE userId = ?", 
                         "i", 
                         [$dataId]
                     );
@@ -219,7 +223,7 @@ function handleDataRequest($method, $pathSegments) {
             
             // Check if user owns this data entry
             $existingData = $db->fetchOne(
-                "SELECT user_id FROM data_entries WHERE id = ?", 
+                "SELECT userId FROM users WHERE userId = ?", 
                 "i", 
                 [$dataId]
             );
@@ -228,11 +232,11 @@ function handleDataRequest($method, $pathSegments) {
                 sendError(404, "Data not found");
             }
             
-            if ($existingData['user_id'] != $userId && $_SESSION['role'] != 'admin') {
+            if ($existingData['userId'] != $userId && $_SESSION['role'] != 'admin') {
                 sendError(403, "You don't have permission to delete this data");
             }
             
-            $result = $db->executeQuery("DELETE FROM data_entries WHERE id = ?", "i", [$dataId]);
+            $result = $db->executeQuery("DELETE FROM users WHERE userId = ?", "i", [$dataId]);
             
             if ($result['success']) {
                 echo json_encode(['message' => 'Data entry deleted successfully']);

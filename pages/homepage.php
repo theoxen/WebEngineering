@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-
+include '../database/db_connect.php';
 // Check if we're returning from applicant-details.php with preserved search parameters
 if (isset($_GET['return']) && $_GET['return'] == 'search' && !isset($_POST['searchApplicants']) && isset($_SESSION['last_search'])) {
     // Restore the previous search from session
@@ -11,9 +11,15 @@ if (isset($_GET['return']) && $_GET['return'] == 'search' && !isset($_POST['sear
     $_POST['searchApplicants'] = true; // Force search execution
 }
 
-// Save search parameters to session when searching
-if (isset($_POST['searchApplicants'])) {
+// Save search parameters to session when searching or when category filter changes
+if (isset($_POST['searchApplicants']) || isset($_POST['categoryFilter'])) {
     $_SESSION['last_search'] = $_POST;
+    
+    // If only the category filter was changed (without clicking search)
+    // add the searchApplicants key to ensure the search is executed when returning
+    if (!isset($_POST['searchApplicants'])) {
+        $_SESSION['last_search']['searchApplicants'] = true;
+    }
 }
 
 
@@ -405,7 +411,7 @@ $startYear = 2016;
     <?php
     // Include sidebar
     include_once('../components/sidebar/sidebar.php');
-    include '../database/db_connect.php';
+
     // // Database connection
     // $servername = "localhost";
     // $username = "root"; 
@@ -430,7 +436,7 @@ $startYear = 2016;
 
         if ($result && $result->num_rows > 0) {
             // Categories table exists
-            $sql = "SELECT t.*, r.*, c.categoryName, t.trackingID, t.isOwnCandidate 
+            $sql = "SELECT t.*, r.*, c.fields, t.trackingID, t.isOwnCandidate 
                     FROM trackings t
                     JOIN rankinglist r ON (r.fullName = t.candidateFullName 
                                     AND r.birthdayDate = t.candidateBirthdayDate 
@@ -439,7 +445,7 @@ $startYear = 2016;
                     WHERE t.userID = ?";
         } else {
             // No categories table, just query rankinglist
-            $sql = "SELECT t.*, r.*, 'Unknown' as categoryName 
+            $sql = "SELECT t.*, r.*, 'Unknown' as fields 
                     FROM trackings t
                     JOIN rankinglist r ON (r.fullName = t.candidateFullName 
                                        AND r.birthdayDate = t.candidateBirthdayDate
@@ -454,9 +460,9 @@ $startYear = 2016;
 
         if ($result && $result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                // Make sure categoryName exists
-                if (!isset($row['categoryName'])) {
-                    $row['categoryName'] = 'N/A';
+                // Make sure fields exists
+                if (!isset($row['fields'])) {
+                    $row['fields'] = 'N/A';
                 }
                 $_SESSION['tracked_applicants'][] = $row;
             }
@@ -474,6 +480,9 @@ if (isset($_POST['searchApplicants'])) {
     $registrationFrom = isset($_POST['registrationFrom']) && !empty($_POST['registrationFrom']) ? $mysqli->real_escape_string($_POST['registrationFrom']) : '';
     $registrationTo = isset($_POST['registrationTo']) && !empty($_POST['registrationTo']) ? $mysqli->real_escape_string($_POST['registrationTo']) : '';
     
+    // Get category filter
+    $categoryFilter = isset($_POST['categoryFilter']) && !empty($_POST['categoryFilter']) ? $mysqli->real_escape_string($_POST['categoryFilter']) : '';
+    
     // Check if categories table exists
     $sql = "SHOW TABLES LIKE 'categories'";
     $result = $mysqli->query($sql);
@@ -481,13 +490,18 @@ if (isset($_POST['searchApplicants'])) {
     
     if ($categoriesExist) {
         // Base SQL with categories
-        $sql = "SELECT r.*, c.categoryName 
+        $sql = "SELECT r.*, c.fields 
                FROM rankinglist r 
                JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
                
+        // Add category filter if selected
+        if (!empty($categoryFilter)) {
+            $sql .= " AND r.categoryID = '$categoryFilter'";
+        }
+        
         // Add search conditions - now including category name in the search
         if (!empty($searchTerm)) {
-            $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.categoryName LIKE '%$searchTerm%')";
+            $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.fields LIKE '%$searchTerm%')";
         }
         
         // Add birthday date filter
@@ -510,7 +524,7 @@ if (isset($_POST['searchApplicants'])) {
         $sql .= " ORDER BY r.ranking ASC LIMIT 50";
     } else {
         // Base SQL without categories
-        $sql = "SELECT r.*, 'Unknown' as categoryName 
+        $sql = "SELECT r.*, 'Unknown' as fields 
                FROM rankinglist r WHERE 1=1";
                
         // Add search conditions - without category search since table doesn't exist
@@ -571,11 +585,11 @@ if (isset($_POST['searchApplicants'])) {
                     <h5 class="mb-0 text-center"><i class="fas fa-search me-2"></i> Αναζήτηση Υποψηφίων</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="" id="searchForm">
+                    <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" id="searchForm">
                         <!-- Search input at top, full width -->
                         <div class="mb-4">
                             <input type="text" class="form-control form-control-lg" name="searchTerm" 
-                                placeholder="Αναζήτηση με ονοματεπώνυμο, αριθμό αίτησης ή κατηγορία..." 
+                                placeholder="Αναζήτηση με ονοματεπώνυμο ή αριθμό αίτησης..." 
                                 value="<?php echo isset($_POST['searchTerm']) ? htmlspecialchars($_POST['searchTerm']) : ''; ?>">
                         </div>
                         
@@ -628,6 +642,37 @@ if (isset($_POST['searchApplicants'])) {
                             </div>
                         </div>
                         
+                        <!-- Category Dropdown - New Section -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Κατηγορία Υποψηφίων:</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-filter"></i></span>
+                                <select class="form-select" name="categoryFilter" id="categoryFilter">
+                                    <option value="">-- Επιλέξτε Κατηγορία --</option>
+                                    <?php
+                                    // Check if categories table exists and fetch categories
+                                    $sql = "SHOW TABLES LIKE 'categories'";
+                                    $result = $mysqli->query($sql);
+                                    
+                                    if ($result && $result->num_rows > 0) {
+                                        // Categories table exists, fetch all categories
+                                        $sql = "SELECT categoryID, fields FROM categories ORDER BY fields";
+                                        $categoryResult = $mysqli->query($sql);
+                                        
+                                        if ($categoryResult && $categoryResult->num_rows > 0) {
+                                            while ($category = $categoryResult->fetch_assoc()) {
+                                                $selected = (isset($_POST['categoryFilter']) && $_POST['categoryFilter'] == $category['categoryID']) ? 'selected' : '';
+                                                echo "<option value='{$category['categoryID']}' {$selected}>" . 
+                                                     htmlspecialchars($category['fields']) . "</option>";
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                            <small class="text-muted">Επιλέξτε μια κατηγορία για να εμφανιστούν οι αντίστοιχοι υποψήφιοι</small>
+                        </div>
+                        
                         <!-- Search button below filters, centered -->
                         <div class="text-center mb-4">
                             <button type="submit" name="searchApplicants" class="btn btn-primary px-5">
@@ -643,8 +688,9 @@ if (isset($_POST['searchApplicants'])) {
                         $hasSearchTerm = !empty($_POST['searchTerm']);
                         $hasBirthdayFilter = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']);
                         $hasRegDateFilter = !empty($_POST['registrationFrom']) || !empty($_POST['registrationTo']);
+                        $hasCategoryFilter = !empty($_POST['categoryFilter']);
                         
-                        if ($isSearch && ($hasSearchTerm || $hasBirthdayFilter || $hasRegDateFilter)) {
+                        if ($isSearch && ($hasSearchTerm || $hasBirthdayFilter || $hasRegDateFilter || $hasCategoryFilter)) {
                             echo 'Αποτελέσματα Αναζήτησης';
                         } else {
                             echo 'Λίστα Υποψηφίων';
@@ -652,32 +698,98 @@ if (isset($_POST['searchApplicants'])) {
                         ?>
                     </h5>                        
                         <?php
-                        // Get applicants to display (either search results or default list)
+                        // Get applicants to display (either search results or filtered by category)
                         $displayApplicants = [];
-                        
-                        if (isset($_POST['searchApplicants'])) {
-                            // Use the search results
-                            $displayApplicants = $searchResults;
-                        } else {
-                            // Otherwise, get a default list of applicants (limited to 50)
+
+                        // Check if we have a category filter or search parameters
+                        $categoryFilter = isset($_POST['categoryFilter']) && !empty($_POST['categoryFilter']) ? 
+                                        $mysqli->real_escape_string($_POST['categoryFilter']) : '';
+                        $hasSearchTerm = !empty($_POST['searchTerm']);
+                        $hasBirthdayFilter = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']);
+                        $hasRegDateFilter = !empty($_POST['registrationFrom']) || !empty($_POST['registrationTo']);
+
+                        // Only fetch results if any filter is applied (category, search term, or date filters)
+                        if (!empty($categoryFilter) || $hasSearchTerm || $hasBirthdayFilter || $hasRegDateFilter) {
+                            // Build the SQL query based on all applied filters
                             $sql = "SHOW TABLES LIKE 'categories'";
                             $result = $mysqli->query($sql);
+                            $categoriesExist = ($result && $result->num_rows > 0);
                             
-                            if ($result && $result->num_rows > 0) {
-                                // Categories table exists
-                                $sql = "SELECT r.*, c.categoryName 
-                                       FROM rankinglist r 
-                                       JOIN categories c ON r.categoryID = c.categoryID 
-                                       ORDER BY r.ranking ASC
-                                       LIMIT 50";
+                            if ($categoriesExist) {
+                                // Base SQL with categories
+                                $sql = "SELECT r.*, c.fields 
+                                    FROM rankinglist r 
+                                    JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
+                                    
+                                // Add category filter if selected
+                                if (!empty($categoryFilter)) {
+                                    $sql .= " AND r.categoryID = '$categoryFilter'";
+                                }
+                                
+                                // Add search conditions
+                                if (!empty($_POST['searchTerm'])) {
+                                    $searchTerm = $mysqli->real_escape_string($_POST['searchTerm']);
+                                    $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.fields LIKE '%$searchTerm%')";
+                                }
+                                
+                                // Add birthday date filter
+                                if (!empty($_POST['birthdayFrom'])) {
+                                    $birthdayFrom = $mysqli->real_escape_string($_POST['birthdayFrom']);
+                                    $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
+                                }
+                                if (!empty($_POST['birthdayTo'])) {
+                                    $birthdayTo = $mysqli->real_escape_string($_POST['birthdayTo']);
+                                    $sql .= " AND r.birthdayDate <= '$birthdayTo'";
+                                }
+                                
+                                // Add registration date filter
+                                if (!empty($_POST['registrationFrom'])) {
+                                    $registrationFrom = $mysqli->real_escape_string($_POST['registrationFrom']);
+                                    $sql .= " AND r.registrationDate >= '$registrationFrom'";
+                                }
+                                if (!empty($_POST['registrationTo'])) {
+                                    $registrationTo = $mysqli->real_escape_string($_POST['registrationTo']);
+                                    $sql .= " AND r.registrationDate <= '$registrationTo'";
+                                }
+                                
+                                // Add ordering and limit
+                                $sql .= " ORDER BY r.ranking ASC LIMIT 50";
                             } else {
-                                // No categories table, just query rankinglist
-                                $sql = "SELECT r.*, 'Unknown' as categoryName 
-                                       FROM rankinglist r 
-                                       ORDER BY r.ranking ASC
-                                       LIMIT 50";
+                                // Base SQL without categories
+                                $sql = "SELECT r.*, 'Unknown' as fields 
+                                    FROM rankinglist r WHERE 1=1";
+                                    
+                                // Add search conditions
+                                if (!empty($_POST['searchTerm'])) {
+                                    $searchTerm = $mysqli->real_escape_string($_POST['searchTerm']);
+                                    $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
+                                }
+                                
+                                // Add birthday date filter
+                                if (!empty($_POST['birthdayFrom'])) {
+                                    $birthdayFrom = $mysqli->real_escape_string($_POST['birthdayFrom']);
+                                    $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
+                                }
+                                if (!empty($_POST['birthdayTo'])) {
+                                    $birthdayTo = $mysqli->real_escape_string($_POST['birthdayTo']);
+                                    $sql .= " AND r.birthdayDate <= '$birthdayTo'";
+                                }
+                                
+                                // Add registration date filter
+                                if (!empty($_POST['registrationFrom'])) {
+                                    $registrationFrom = $mysqli->real_escape_string($_POST['registrationFrom']);
+                                    $sql .= " AND r.registrationDate >= '$registrationFrom'";
+                                }
+                                if (!empty($_POST['registrationTo'])) {
+                                    $registrationTo = $mysqli->real_escape_string($_POST['registrationTo']);
+                                    $sql .= " AND r.registrationDate <= '$registrationTo'";
+                                }
+                                
+                                // Add ordering and limit
+                                $sql .= " ORDER BY r.ranking ASC LIMIT 50";
                             }
                             
+                            // Execute query
                             $result = $mysqli->query($sql);
                             
                             if ($result && $result->num_rows > 0) {
@@ -725,7 +837,7 @@ if (isset($_POST['searchApplicants'])) {
                                             <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
                                             <td><?php echo $applicant['appNum']; ?></td>
                                             <td><?php echo number_format($applicant['points'], 2); ?></td>
-                                            <td><?php echo isset($applicant['categoryName']) ? htmlspecialchars($applicant['categoryName']) : 'N/A'; ?></td>
+                                            <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
                                             <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
                                             <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
                                             <td>
@@ -755,7 +867,11 @@ if (isset($_POST['searchApplicants'])) {
                         </form>
                         <?php else: ?>
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i> Δεν βρέθηκαν υποψήφιοι.
+                            <?php if (empty($categoryFilter) && !$hasSearchTerm && !$hasBirthdayFilter && !$hasRegDateFilter): ?>
+                                <i class="fas fa-info-circle me-2"></i> Παρακαλώ εφαρμόστε κάποιο φίλτρο αναζήτησης ή επιλέξτε μια κατηγορία για να εμφανιστούν αποτελέσματα.
+                            <?php else: ?>
+                                <i class="fas fa-info-circle me-2"></i> Δεν βρέθηκαν υποψήφιοι με τα επιλεγμένα κριτήρια.
+                            <?php endif; ?>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -800,7 +916,7 @@ if (isset($_POST['searchApplicants'])) {
                     <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
                     <td><?php echo $applicant['appNum']; ?></td>
                     <td><?php echo number_format($applicant['points'], 2); ?></td>
-                    <td><?php echo isset($applicant['categoryName']) ? htmlspecialchars($applicant['categoryName']) : 'N/A'; ?></td>
+                    <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
                     <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
                     <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
                     <td>
@@ -1090,6 +1206,11 @@ if (isset($_POST['searchApplicants'])) {
           '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
           '</div>').insertAfter('.page-header').delay(3000).fadeOut();
     }
+    
+    // Auto-submit form when category dropdown changes
+    $('#categoryFilter').change(function() {
+        $('#searchForm').submit();
+    });
 });
     </script>
 </body>

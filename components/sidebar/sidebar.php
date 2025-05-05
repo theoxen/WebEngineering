@@ -49,8 +49,8 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link <?= $pageTitle === 'API Keys' ? 'active' : '' ?>" href="api.php">
-                            <i class="fas fa-key"></i> API Keys
+                        <a href="<?php echo $baseUrl?>user-api-keys.php" class="nav-link <?php echo $currentPage == 'user-api-keys.php' ? 'active' : ''; ?>">
+                            <i class="fas fa-key"></i> My API Keys
                         </a>
                     </li>
 
@@ -61,6 +61,11 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                         <li class="nav-item">
                             <a href="<?php echo $baseUrl?>admin/dashboard.php" class="nav-link <?php echo strpos($currentPage, 'admin/') !== false ? 'active' : ''; ?>">
                                 <i class="fas fa-tachometer-alt me-2"></i> Admin Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                        <a href="<?php echo $baseUrl?>admin/api.php" class="nav-link <?php echo strpos($currentPage, 'admin/') !== false ? 'active' : ''; ?>">
+                                <i class="fas fa-key"></i> API Keys
                             </a>
                         </li>
                     <?php endif; ?>
