@@ -303,6 +303,17 @@ $startYear = 2016;
             overflow: hidden;
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
         }
+
+        .action-buttons {
+            white-space: nowrap;
+            width: 1%;
+            text-align: center;
+        }
+
+        .action-buttons .btn {
+            display: inline-flex;
+            margin: 0 2px;
+        }
         
         .search-tracking-section .card-header {
             padding: 1rem 1.5rem;
@@ -401,6 +412,10 @@ $startYear = 2016;
 
             .text-end {
                 align-self: flex-end;
+            }
+
+            .action-buttons {
+                min-width: 90px;
             }
 
         }
@@ -674,12 +689,7 @@ if (isset($_POST['searchApplicants'])) {
                             <small class="text-muted">Επιλέξτε μια κατηγορία για να εμφανιστούν οι αντίστοιχοι υποψήφιοι</small>
                         </div>
                         
-                        <!-- Search button below filters, centered -->
-                        <div class="text-center mb-4">
-                            <button type="submit" name="searchApplicants" class="btn btn-primary px-5">
-                                <i class="fas fa-search me-2"></i> Αναζήτηση
-                            </button>
-                        </div>
+                      
 
                         <div class="text-center mb-4 d-flex justify-content-center gap-3">
                             <button type="submit" name="searchApplicants" class="btn btn-primary px-5">
@@ -858,20 +868,13 @@ if (isset($_POST['searchApplicants'])) {
                                             <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
                                             <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
                                             <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
-                                            <td>
-                                                <?php if ($isTracked): ?>
-                                                    <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
-                                                        <i class="fas fa-user-minus"></i>
-                                                    </button>
-                                                <?php else: ?>
-                                                    <button type="button" class="btn btn-sm btn-primary track-single" data-id="<?php echo $applicant['id']; ?>">
-                                                        <i class="fas fa-user-plus"></i>
-                                                    </button>
-                                                <?php endif; ?>
-                                                <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-info-circle"></i>
-                                                </a>
-                                            </td>
+                                            <td class="action-buttons">
+                                            
+                                            
+                                            <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
+                                                <i class="fas fa-info-circle"></i>
+                                            </a>
+                                        </td>
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
@@ -937,13 +940,13 @@ if (isset($_POST['searchApplicants'])) {
                     <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
                     <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
                     <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
-                    <td>
-                        <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
-                            <i class="fas fa-info-circle"></i>
-                        </a>
+                    <td class="action-buttons">
                         <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
                             <i class="fas fa-user-minus"></i>
                         </button>
+                        <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
+                            <i class="fas fa-info-circle"></i>
+                        </a>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -1113,44 +1116,179 @@ if (isset($_POST['searchApplicants'])) {
     });
     
     // Individual track button
-    $('.track-single').click(function() {
+    $('.track-single').click(function(e) {
+        e.preventDefault();
         const applicantID = $(this).data('id');
+        const $button = $(this);
+        const $row = $button.closest('tr');
         
         $.ajax({
             url: '../track-applicants.php',
             method: 'POST',
+            dataType: 'json',
             data: {
                 track_single: true,
                 applicantID: applicantID
             },
             success: function(response) {
                 if (response.status === 'success') {
-                    // Reload the page to show updated tracked list
-                    location.reload();
+                    // Update the button appearance directly
+                    $button.removeClass('btn-primary').addClass('btn-danger');
+                    $button.removeClass('track-single').addClass('untrack-btn');
+                    $button.html('<i class="fas fa-user-minus"></i>');
+                    $row.addClass('table-light');
+                    
+                    // Check the checkbox
+                    $row.find('.applicant-check').prop('checked', true);
+                    
+                    // Use AJAX to update tracked section without page reload
+                    $.post('get-tracked-section.php', {}, function(data) {
+                        $('.card-header.bg-success').closest('.card').find('.card-body').html(data);
+                        // Rebind event handlers for newly added elements
+                        bindTrackedEvents();
+                    });
                 }
+            },
+            error: function() {
+                alert('Προέκυψε σφάλμα κατά την προσθήκη του υποψηφίου');
             }
         });
     });
     
     // Untrack button functionality
-    $('.untrack-btn').click(function() {
+    $(document).on('click', '.untrack-btn', function(e) {
+        e.preventDefault();
         const applicantID = $(this).data('id');
+        const $button = $(this);
+        const $row = $button.closest('tr');
+        const isInTrackedSection = $row.closest('.card').find('.card-header').hasClass('bg-success');
         
         $.ajax({
             url: '../track-applicants.php',
             method: 'POST',
+            dataType: 'json',
             data: {
                 untrack: true,
                 applicantID: applicantID
             },
             success: function(response) {
                 if (response.status === 'success') {
-                    // Reload the page to update tracked list
-                    location.reload();
+                    if (isInTrackedSection) {
+                        // If in tracked section, remove the row
+                        $row.fadeOut(300, function() {
+                            $(this).remove();
+                            
+                            // If no more tracked rows, show empty message
+                            if ($('.card-header.bg-success').closest('.card').find('tbody tr').length === 0) {
+                                $('.card-header.bg-success').closest('.card').find('.card-body').html(
+                                    '<div class="alert alert-info">' +
+                                    '<i class="fas fa-info-circle me-2"></i> Δεν έχετε προσθέσει ακόμη υποψηφίους για παρακολούθηση.' +
+                                    '</div>'
+                                );
+                            }
+                        });
+                        
+                        // Update search results display if the row exists there
+                        const $searchRow = $('.search-results .applicant-check[value="' + applicantID + '"]').closest('tr');
+                        if ($searchRow.length) {
+                            $searchRow.removeClass('table-light');
+                            $searchRow.find('.applicant-check').prop('checked', false);
+                            $searchRow.find('.untrack-btn')
+                                .removeClass('btn-danger').addClass('btn-primary')
+                                .removeClass('untrack-btn').addClass('track-single')
+                                .html('<i class="fas fa-user-plus"></i>');
+                        }
+                    } else {
+                        // If in search results, update button appearance
+                        $button.removeClass('btn-danger').addClass('btn-primary');
+                        $button.removeClass('untrack-btn').addClass('track-single');
+                        $button.html('<i class="fas fa-user-plus"></i>');
+                        $row.removeClass('table-light');
+                        
+                        // Uncheck the checkbox
+                        $row.find('.applicant-check').prop('checked', false);
+                        
+                        // Update tracked section
+                        $.post('get-tracked-section.php', {}, function(data) {
+                            $('.card-header.bg-success').closest('.card').find('.card-body').html(data);
+                            // Rebind event handlers for newly added elements
+                            bindTrackedEvents();
+                        });
+                    }
                 }
+            },
+            error: function() {
+                alert('Προέκυψε σφάλμα κατά την αφαίρεση του υποψηφίου');
             }
         });
     });
+
+    function bindTrackedEvents() {
+        // Handle own candidate checkbox change
+        $('.own-candidate-check').change(function() {
+            const trackingID = $(this).data('id');
+            const isChecked = $(this).prop('checked');
+            
+            // If checking a candidate
+            if (isChecked) {
+                // Disable other checkboxes and use tooltips
+                $('.own-candidate-check:not(:checked)').prop('disabled', true);
+                $('.own-candidate-check:not(:checked)').attr('title', 'Αποεπιλέξτε τον υπάρχοντα υποψήφιο πρώτα');
+                
+                // Initialize Bootstrap tooltips for newly disabled checkboxes
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('.own-candidate-check:not(:checked)'));
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+                
+                // Add info message if it doesn't exist
+                if ($('#own-candidate-info').length === 0) {
+            $('.card-header.bg-success').closest('.card').find('.card-body').prepend(
+                '<div id="own-candidate-info" class="alert alert-info mb-3">' +
+                '<i class="fas fa-info-circle me-2"></i> ' +
+                'Μόνο ένας υποψήφιος μπορεί να επισημανθεί ως "Δικός μου". Για να επιλέξετε διαφορετικό υποψήφιο, αποεπιλέξτε πρώτα τον τρέχοντα.' +
+                '</div>'
+            );
+        }
+            } else {
+                // If unchecking, re-enable all checkboxes and remove tooltips
+                $('.own-candidate-check').prop('disabled', false);
+                $('.own-candidate-check').removeAttr('title');
+                
+                // Dispose tooltips
+                $('.own-candidate-check').each(function() {
+                    var tooltip = bootstrap.Tooltip.getInstance(this);
+                    if (tooltip) {
+                        tooltip.dispose();
+                    }
+                });
+                
+                // Remove info message
+                $('#own-candidate-info').remove();
+            }
+            
+            // Toggle the table-success class
+            $(this).closest('tr').toggleClass('table-success', isChecked);
+            
+            // Send AJAX request to update database
+            $.ajax({
+                url: '../toggle-own-candidate.php',
+                method: 'POST',
+                data: {
+                    trackingID: trackingID,
+                    isOwn: isChecked
+                },
+                success: function(response) {
+                    if (response.status !== 'success') {
+                        alert('Προέκυψε σφάλμα κατά την ενημέρωση');
+                    }
+                },
+                error: function() {
+                    alert('Προέκυψε σφάλμα επικοινωνίας με τον διακομιστή');
+                }
+            });
+        });
+    }
 
     // Initialize own candidate checkboxes - disable other checkboxes if one is already checked
     if ($('.own-candidate-check:checked').length > 0) {
@@ -1163,76 +1301,10 @@ if (isset($_POST['searchApplicants'])) {
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
-        
-        
     }
 
-    // Handle own candidate checkbox change
-    $('.own-candidate-check').change(function() {
-        const trackingID = $(this).data('id');
-        const isChecked = $(this).prop('checked');
-        
-        // If checking a candidate
-        if (isChecked) {
-            // Disable other checkboxes and use tooltips
-            $('.own-candidate-check:not(:checked)').prop('disabled', true);
-            $('.own-candidate-check:not(:checked)').attr('title', 'Αποεπιλέξτε τον υπάρχοντα υποψήφιο πρώτα');
-            
-            // Initialize Bootstrap tooltips for newly disabled checkboxes
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('.own-candidate-check:not(:checked)'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-            
-            // Add info message if it doesn't exist
-            if ($('#own-candidate-info').length === 0) {
-                $('<div id="own-candidate-info" class="alert alert-info mb-3">' +
-                  '<i class="fas fa-info-circle me-2"></i> ' +
-                  'Μόνο ένας υποψήφιος μπορεί να επισημανθεί ως "Δικός μου". Για να επιλέξετε διαφορετικό υποψήφιο, αποεπιλέξτε πρώτα τον τρέχοντα.' +
-                  '</div>').insertBefore('.table-responsive');
-            }
-        } else {
-            // If unchecking, re-enable all checkboxes and remove tooltips
-            $('.own-candidate-check').prop('disabled', false);
-            $('.own-candidate-check').removeAttr('title');
-            
-            // Dispose tooltips
-            $('.own-candidate-check').each(function() {
-                var tooltip = bootstrap.Tooltip.getInstance(this);
-                if (tooltip) {
-                    tooltip.dispose();
-                }
-            });
-            
-            // Remove info message
-            $('#own-candidate-info').remove();
-        }
-        
-        // Toggle the table-success class
-        $(this).closest('tr').toggleClass('table-success', isChecked);
-        
-        // Send AJAX request to update database
-        $.ajax({
-            url: '../toggle-own-candidate.php',
-            method: 'POST',
-            data: {
-                trackingID: trackingID,
-                isOwn: isChecked
-            },
-            success: function(response) {
-                if (response.status !== 'success') {
-                    alert('Προέκυψε σφάλμα κατά την ενημέρωση');
-                    // Reload to restore correct state
-                    location.reload();
-                }
-            },
-            error: function() {
-                alert('Προέκυψε σφάλμα επικοινωνίας με τον διακομιστή');
-                // Reload to restore correct state
-                location.reload();
-            }
-        });
-    });
+    // Initial binding of tracked events
+    bindTrackedEvents();
     
     // Show success message if redirected with success parameter
     if (window.location.search.includes('tracked=success')) {
@@ -1246,6 +1318,20 @@ if (isset($_POST['searchApplicants'])) {
     $('#categoryFilter').change(function() {
         $('#searchForm').submit();
     });
+});
+
+$('#trackForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    // Check if any applicants are selected
+    if ($('.applicant-check:checked').length === 0) {
+        // No applicants selected - show alert
+        alert('Παρακαλώ επιλέξτε τουλάχιστον έναν υποψήφιο');
+        return false;
+    }
+    
+    // Applicants are selected - proceed with form submission
+    this.submit();
 });
     </script>
 </body>
