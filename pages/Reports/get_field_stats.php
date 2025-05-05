@@ -19,7 +19,8 @@ $query = "SELECT
             ROUND(MAX(r.points), 1) as max_points,
             ROUND(MIN(r.points), 1) as min_points,
             ROUND(AVG(r.experience), 1) as avg_experience,
-            ROUND(AVG(r.titleGrade), 1) as avg_grade
+            ROUND(AVG(r.titleGrade), 1) as avg_grade,
+            COUNT(DISTINCT r.fullName) as unique_candidates
           FROM categories c
           JOIN rankinglist r ON c.categoryID = r.categoryID
           $conditions";

@@ -83,6 +83,31 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+        .candidate-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .candidate-row:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+    </style>
 </head>
 
 <body>
@@ -169,23 +194,27 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 </div>
             </div>
 
-            <!-- User Activity Table -->
+            <!-- New Candidate Entries Table with Search -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Recent Candidate Entries</h5>
+                    <h5 class="card-title">Candidate Entries</h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
+                    <div class="search-box">
+                        <input type="text" id="searchTable" class="form-control" placeholder="Search candidates...">
+                    </div>
+                    <div class="table-container">
                         <table class="table table-hover">
-                            <thead>
+                            <thead class="sticky-header">
                                 <tr>
-                                    <th>Full Name</th>
+                                    <th>Name</th>
                                     <th>Field</th>
                                     <th>Type</th>
                                     <th>Entry Date</th>
                                     <th>Points</th>
                                     <th>Experience</th>
-                                    <th>Days in List</th>
+                                    <th>Days Listed</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -193,7 +222,10 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                     $entry_date = new DateTime($candidate['registrationDate']);
                                     $days_listed = $entry_date->diff(new DateTime())->days;
                                 ?>
-                                <tr>
+                                <tr class="candidate-row" 
+                                    data-name="<?php echo htmlspecialchars($candidate['fullName']); ?>"
+                                    data-field="<?php echo htmlspecialchars($candidate['fields']); ?>"
+                                    data-type="<?php echo htmlspecialchars($candidate['type']); ?>">
                                     <td><?php echo htmlspecialchars($candidate['fullName']); ?></td>
                                     <td><?php echo htmlspecialchars($candidate['fields']); ?></td>
                                     <td><?php echo htmlspecialchars($candidate['type']); ?></td>
@@ -201,6 +233,12 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                     <td><?php echo number_format($candidate['points'], 1); ?></td>
                                     <td><?php echo number_format($candidate['experience'], 1); ?> years</td>
                                     <td><?php echo $days_listed; ?> days</td>
+                                    <td>
+                                        <a href="/WebEngineering/pages/applicant-details.php?name=<?php echo urlencode($candidate['fullName']); ?>&field=<?php echo urlencode($candidate['fields']); ?>&type=<?php echo urlencode($candidate['type']); ?>" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </a>
+                                    </td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -286,15 +324,13 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     });
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Date validation
         const startDate = document.getElementById('start_date');
         const endDate = document.getElementById('end_date');
-
-        // Set max date to today
         const today = new Date().toISOString().split('T')[0];
         startDate.max = today;
         endDate.max = today;
 
-        // Validate date range
         function validateDates() {
             if(startDate.value && endDate.value) {
                 if(startDate.value > endDate.value) {
@@ -307,12 +343,46 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         startDate.addEventListener('change', validateDates);
         endDate.addEventListener('change', validateDates);
 
-        // Add form validation
         document.querySelector('form').addEventListener('submit', function(e) {
             if(!startDate.value || !endDate.value) {
                 e.preventDefault();
                 alert('Please select both start and end dates');
             }
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById('searchTable');
+        const tableRows = document.querySelectorAll('.candidate-row');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            tableRows.forEach(row => {
+                const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const field = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const type = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                
+                const matches = name.includes(searchTerm) || 
+                              field.includes(searchTerm) || 
+                              type.includes(searchTerm);
+                
+                row.style.display = matches ? '' : 'none';
+            });
+        });
+
+        // Row click handler
+        tableRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {
+                    return;
+                }
+                
+                const name = this.dataset.name;
+                const field = this.dataset.field;
+                const type = this.dataset.type;
+                
+                window.location.href = `/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`;
+            });
         });
     });
     </script>
