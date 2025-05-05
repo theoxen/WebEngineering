@@ -13,12 +13,12 @@ if (!$categoryID) {
     exit;
 }
 
-// Get the selected limit (default to 50)
+// Get limit from URL parameter (default to 50)
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 
 // Validate the limit to only allow 25, 50, or 100
 if (!in_array($limit, [25, 50, 100])) {
-    $limit = 50; // Default to 50 if invalid
+    $limit = 50;
 }
 
 // Connect to the database
@@ -38,12 +38,15 @@ if (!$category) {
 }
 
 // Query to get candidates for the category
-$query = "SELECT * FROM rankinglist WHERE categoryID = ? ORDER BY ranking ASC LIMIT ?";
-$stmt = $mysqli->prepare($query);
-$stmt->bind_param("ii", $categoryID, $limit);
+$sql = "SELECT * FROM rankinglist WHERE categoryID = ?";
+$stmt = $mysqli->prepare($sql);
+$stmt->bind_param("i", $categoryID);
 $stmt->execute();
 $result = $stmt->get_result();
 $candidates = $result->fetch_all(MYSQLI_ASSOC);
+
+// Apply limit here if you're not using LIMIT in SQL
+$candidates = array_slice($candidates, 0, $limit);
 
 $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['year'];
 ?>
@@ -170,32 +173,25 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Add this script to make the entriesPerPage dropdown functional
         document.addEventListener('DOMContentLoaded', function() {
-            // Get the entries per page dropdown
-            const entriesDropdown = document.getElementById('entriesPerPage');
-            
-            // Add change event listener
-            entriesDropdown.addEventListener('change', function() {
-                // Get current URL
-                const url = new URL(window.location.href);
+            const entriesSelect = document.getElementById('entriesPerPage');
+            if (entriesSelect) {
+                entriesSelect.addEventListener('change', function() {
+                    // Get current URL and parameters
+                    const url = new URL(window.location.href);
+                    // Set the limit parameter
+                    url.searchParams.set('limit', this.value);
+                    // Redirect to the new URL
+                    window.location.href = url.toString();
+                });
                 
-                // Update or add the limit parameter
-                url.searchParams.set('limit', this.value);
-                
-                // If using pagination, reset to page 1
-                if(url.searchParams.has('page')) {
-                    url.searchParams.set('page', '1');
+                // Set the dropdown to match the current limit parameter
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentLimit = urlParams.get('limit');
+                if (currentLimit && (currentLimit === '25' || currentLimit === '50' || currentLimit === '100')) {
+                    entriesSelect.value = currentLimit;
                 }
-                
-                // Navigate to the updated URL
-                window.location.href = url.toString();
-            });
-            
-            // Set dropdown to current limit value from URL if exists
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentLimit = urlParams.get('limit');
-            if(currentLimit) {
-                entriesDropdown.value = currentLimit;
             }
         });
     </script>
