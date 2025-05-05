@@ -17,7 +17,7 @@ if (!$year || !$season) {
 require_once "../database/db_connect.php";
 
 // Query to get categories for this season
-$stmt = $mysqli->prepare("SELECT categoryID, year, season, type, fields, file_path FROM categories WHERE year = ? AND season = ? ORDER BY type, fields");
+$stmt = $mysqli->prepare("SELECT categoryID, year, season, type, fields FROM categories WHERE year = ? AND season = ? ORDER BY type, fields");
 $stmt->bind_param("is", $year, $season);
 $stmt->execute();
 $result = $stmt->get_result();

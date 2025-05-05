@@ -29,6 +29,14 @@ if (!$category) {
     exit;
 }
 
+// Query to get candidates for the category
+$query = "SELECT * FROM rankinglist WHERE categoryID = ?";
+$stmt = $mysqli->prepare($query);
+$stmt->bind_param("i", $categoryID);
+$stmt->execute();
+$result = $stmt->get_result();
+$candidates = $result->fetch_all(MYSQLI_ASSOC);
+
 $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['year'];
 ?>
 
@@ -86,11 +94,53 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
             </div>
         </div>
         <?php else: ?>
-        <div class="alert alert-warning text-center">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            Δεν υπάρχει διαθέσιμο αρχείο για αυτή την κατηγορία.
-        </div>
+
         <?php endif; ?>
+        
+        <div class="table-responsive mt-4">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Ranking</th>
+                        <th>Full Name</th>
+                        <th>Application Number</th>
+                        <th>Points</th>
+                        <th>Title Date</th>
+                        <th>Title Grade</th>
+                        <th>Extra Qualifications</th>
+                        <th>Experience</th>
+                        <th>Army</th>
+                        <th>Registration Date</th>
+                        <th>Birthday Date</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    if (!empty($candidates)) {
+                        foreach ($candidates as $candidate) {
+                            echo "<tr>";
+                            echo "<td>" . htmlspecialchars($candidate['ranking']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['fullName']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['appNum']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['points']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['titleDate']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['titleGrade']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['extraQualifications']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['experience']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['army']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['registrationDate']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['birthdayDate']) . "</td>";
+                            echo "<td>" . htmlspecialchars($candidate['notes']) . "</td>";
+                            echo "</tr>";
+                        }
+                    } else {
+                        echo "<tr><td colspan='12' class='text-center'>Δεν υπάρχουν δεδομένα για αυτή την κατηγορία.</td></tr>";
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
         
         <div class="text-center mt-4 mb-5">
             <a href="season-categories.php?year=<?php echo $category['year']; ?>&season=<?php echo urlencode($category['season']); ?>" 
