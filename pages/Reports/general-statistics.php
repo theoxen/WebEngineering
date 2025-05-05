@@ -115,6 +115,30 @@ $field_type_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Add this in the <style> section -->
+    <style>
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+        .clickable-row {
+            cursor: pointer;
+        }
+        .clickable-row:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+    </style>
 </head>
 
 <body>
@@ -207,9 +231,13 @@ $field_type_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
                     <h5 class="card-title mb-0">Category Statistics</h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
+                    <!-- Add this before the table -->
+                    <div class="search-box">
+                        <input type="text" id="searchTable" class="form-control" placeholder="Search rankings...">
+                    </div>
+                    <div class="table-container">
                         <table class="table table-hover">
-                            <thead>
+                            <thead class="sticky-header">
                                 <tr>
                                     <th>Field</th>
                                     <th>Type</th>
@@ -234,6 +262,8 @@ $field_type_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
                                     <td><?php echo number_format($stat['avg_points'], 1); ?></td>
                                     <td><?php echo number_format($stat['max_points'], 1); ?></td>
                                     <td><?php echo number_format($stat['min_points'], 1); ?></td>
+                                    <td>
+                                    </td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -497,5 +527,38 @@ $field_type_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const searchInput = document.getElementById('searchTable');
+    const tableRows = document.querySelectorAll('.clickable-row');
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Row click handler
+    tableRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Don't trigger if clicking a link or button
+            if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {
+                return;
+            }
+            
+            const name = this.dataset.name;
+            const field = this.dataset.field;
+            const type = this.dataset.type;
+            
+            window.location.href = `/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`;
+        });
+    });
+});
+</script>
 </body>
 </html>

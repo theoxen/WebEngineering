@@ -255,6 +255,24 @@ $pageTitle = "Select Report";
                         </div>
                     </div>
                 </div>
+
+                <!-- Tracking Report -->
+                <div class="col-xl-4 col-md-6 mb-4">
+                    <div class="card report-card">
+                        <div class="card-body text-center p-5">
+                            <i class="fas fa-user-clock report-icon"></i>
+                            <h3 class="report-title">My Tracking Report</h3>
+                            <p class="report-description">
+                                View detailed statistics and updates for all candidates you are tracking.
+                            </p>
+                            <form action="tracking-report.php" method="GET">
+                                <button type="submit" class="btn btn-generate w-100">
+                                    View Tracking Report <i class="fas fa-binoculars ms-2"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
 
 

@@ -41,13 +41,15 @@ $stmt->execute();
 $result = $stmt->get_result();
 $previous = $result->fetch_assoc();
 
-// Update the comparison query
+// Fix the query to include fields and type
 $query = "SELECT 
             r1.fullName as name,
             r1.ranking as old_rank,
             r2.ranking as new_rank,
             r1.points as old_points,
-            r2.points as new_points
+            r2.points as new_points,
+            c1.fields,
+            c1.type
           FROM rankinglist r1
           LEFT JOIN rankinglist r2 ON r1.fullName = r2.fullName
           JOIN categories c1 ON r1.categoryID = c1.categoryID
@@ -110,6 +112,19 @@ foreach ($rankings as $rank) {
         .stats-declined { border-left-color: #e74a3b; }
         .stats-same { border-left-color: #858796; }
         .stats-missing { border-left-color: #f6c23e; }
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+        }
     </style>
 </head>
 
@@ -169,9 +184,12 @@ foreach ($rankings as $rank) {
             <!-- Rankings Table -->
             <div class="card">
                 <div class="card-body">
-                    <div class="table-responsive">
+                    <div class="search-box">
+                        <input type="text" id="searchTable" class="form-control" placeholder="Search candidates...">
+                    </div>
+                    <div class="table-container">
                         <table class="table table-hover">
-                            <thead>
+                            <thead class="sticky-header">
                                 <tr>
                                     <th>Name</th>
                                     <th>Previous Rank</th>
@@ -199,19 +217,43 @@ foreach ($rankings as $rank) {
                                                ($rank_diff < 0 ? '↓' : '→');
                                     }
                                 ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($rank['name']); ?></td>
+                                <tr class="<?php echo $class; ?>">
+                                    <td>
+                                        <a href="/WebEngineering/pages/rankingList.php?field=<?php echo urlencode($rank['fields']); ?>&type=<?php echo urlencode($rank['type']); ?>&season=<?php echo urlencode($selected_season); ?>&year=<?php echo urlencode($selected_year); ?>#<?php echo urlencode($rank['name']); ?>" 
+                                           class="text-primary text-decoration-none">
+                                            <?php echo htmlspecialchars($rank['name']); ?>
+                                        </a>
+                                    </td>
                                     <td><?php echo $rank['old_rank']; ?></td>
                                     <td><?php echo $rank['new_rank'] ?? 'Not Listed'; ?></td>
-                                    <td class="<?php echo $class; ?>">
-                                        <?php echo $icon . ' ' . 
-                                            ($rank_diff === 'N/A' ? '' : abs($rank_diff)); ?>
+                                    <td>
+                                        <?php if ($rank_diff !== 'N/A'): ?>
+                                            <span class="<?php echo $class; ?>">
+                                                <?php echo $icon; ?> 
+                                                <?php echo abs($rank_diff); ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="missing">×</span>
+                                        <?php endif; ?>
                                     </td>
-                                    <td><?php echo $rank['old_points']; ?></td>
-                                    <td><?php echo $rank['new_points'] ?? 'N/A'; ?></td>
-                                    <td class="<?php echo $class; ?>">
-                                        <?php echo $points_diff === 'N/A' ? 'N/A' : 
-                                            sprintf('%+.1f', $points_diff); ?>
+                                    <td><?php echo number_format($rank['old_points'], 1); ?></td>
+                                    <td>
+                                        <?php echo $rank['new_points'] ? number_format($rank['new_points'], 1) : 'N/A'; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($points_diff !== 'N/A'): ?>
+                                            <span class="<?php echo $class; ?>">
+                                                <?php echo sprintf('%+.1f', $points_diff); ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="missing">N/A</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <a href="/WebEngineering/pages/applicant-details.php?name=<?php echo urlencode($rank['name']); ?>&field=<?php echo urlencode($rank['fields']); ?>&type=<?php echo urlencode($rank['type']); ?>" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </a>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -225,5 +267,60 @@ foreach ($rankings as $rank) {
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Search functionality
+        const searchInput = document.getElementById('searchTable');
+        const tableRows = document.querySelectorAll('tbody tr');
+
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Enhance row clicks to show more details
+        tableRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Don't trigger if clicking on a link
+                if (e.target.tagName === 'A') return;
+                
+                const name = this.querySelector('td:first-child').textContent.trim();
+                const field = this.querySelector('td:nth-child(2)').textContent.trim();
+                const type = this.querySelector('td:nth-child(3)').textContent.trim();
+                
+                window.location.href = `/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`;
+            });
+
+            // Add hover style
+            row.style.cursor = 'pointer';
+        });
+    });
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchTable');
+        const tableRows = document.querySelectorAll('tbody tr');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            tableRows.forEach(row => {
+                const name = row.querySelector('td:first-child').textContent.toLowerCase();
+                const points = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+                const rank = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                
+                const matches = name.includes(searchTerm) || 
+                              points.includes(searchTerm) || 
+                              rank.includes(searchTerm);
+                
+                row.style.display = matches ? '' : 'none';
+            });
+        });
+    });
+    </script>
 </body>
 </html>

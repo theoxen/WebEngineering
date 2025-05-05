@@ -54,7 +54,37 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                         </a>
                     </li>
 
-                    
+                    <!-- /////////////////////////////////////////////////////////////////////////////-->
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#reportsSubmenu">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Reports</span>
+                            <i class="fas fa-angle-down ms-auto"></i>
+                        </a>
+                        <div class="collapse" id="reportsSubmenu">
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a href="/WebEngineering/pages/Reports/select-report.php" class="nav-link">
+                                        <i class="fas fa-file-alt"></i>
+                                        <span>Select Report</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/WebEngineering/pages/Reports/general-statistics.php" class="nav-link">
+                                        <i class="fas fa-chart-bar"></i>
+                                        <span>General Statistics</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/WebEngineering/pages/Reports/user-statistics.php" class="nav-link">
+                                        <i class="fas fa-users"></i>
+                                        <span>User Statistics</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <!-- /////////////////////////////////////////////////////////////////////////// -->
                     <?php if ($isAdmin): ?>
                         <!-- Admin only options -->
                         <li class="nav-heading mt-3 mb-1 text-uppercase ps-3 small fw-bold text-muted">Admin</li>
