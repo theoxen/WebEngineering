@@ -649,6 +649,7 @@ if (isset($_POST['searchApplicants'])) {
                                 <span class="input-group-text"><i class="fas fa-filter"></i></span>
                                 <select class="form-select" name="categoryFilter" id="categoryFilter">
                                     <option value="">-- Επιλέξτε Κατηγορία --</option>
+                                    <option value="all" <?php echo (isset($_POST['categoryFilter']) && $_POST['categoryFilter'] == 'all') ? 'selected' : ''; ?>>Όλοι οι Υποψήφιοι</option>
                                     <?php
                                     // Check if categories table exists and fetch categories
                                     $sql = "SHOW TABLES LIKE 'categories'";
@@ -663,7 +664,7 @@ if (isset($_POST['searchApplicants'])) {
                                             while ($category = $categoryResult->fetch_assoc()) {
                                                 $selected = (isset($_POST['categoryFilter']) && $_POST['categoryFilter'] == $category['categoryID']) ? 'selected' : '';
                                                 echo "<option value='{$category['categoryID']}' {$selected}>" . 
-                                                     htmlspecialchars($category['fields']) . "</option>";
+                                                    htmlspecialchars($category['fields']) . "</option>";
                                             }
                                         }
                                     }
@@ -677,6 +678,15 @@ if (isset($_POST['searchApplicants'])) {
                         <div class="text-center mb-4">
                             <button type="submit" name="searchApplicants" class="btn btn-primary px-5">
                                 <i class="fas fa-search me-2"></i> Αναζήτηση
+                            </button>
+                        </div>
+
+                        <div class="text-center mb-4 d-flex justify-content-center gap-3">
+                            <button type="submit" name="searchApplicants" class="btn btn-primary px-5">
+                                <i class="fas fa-search me-2"></i> Αναζήτηση
+                            </button>
+                            <button type="button" id="clearFilters" class="btn btn-outline-secondary px-4">
+                                <i class="fas fa-eraser me-2"></i> Καθαρισμός Φίλτρων
                             </button>
                         </div>
                     </form>
@@ -717,13 +727,21 @@ if (isset($_POST['searchApplicants'])) {
                             
                             if ($categoriesExist) {
                                 // Base SQL with categories
-                                $sql = "SELECT r.*, c.fields 
-                                    FROM rankinglist r 
-                                    JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
-                                    
-                                // Add category filter if selected
-                                if (!empty($categoryFilter)) {
-                                    $sql .= " AND r.categoryID = '$categoryFilter'";
+                                if ($categoryFilter == 'all') {
+                                    // Special case - show all applicants
+                                    $sql = "SELECT r.*, c.fields 
+                                          FROM rankinglist r 
+                                          LEFT JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
+                                } else {
+                                    // Normal filtering by specific category
+                                    $sql = "SELECT r.*, c.fields 
+                                          FROM rankinglist r 
+                                          JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
+                                          
+                                    // Add category filter if selected (and not "all")
+                                    if (!empty($categoryFilter)) {
+                                        $sql .= " AND r.categoryID = '$categoryFilter'";
+                                    }
                                 }
                                 
                                 // Add search conditions
@@ -1075,6 +1093,23 @@ if (isset($_POST['searchApplicants'])) {
     // Select all checkbox functionality
     $('#selectAll').change(function() {
         $('.applicant-check').prop('checked', $(this).prop('checked'));
+    });
+
+    $('#clearFilters').click(function() {
+    // Clear the text input
+    $('input[name="searchTerm"]').val('');
+    
+    // Clear date fields
+    $('input[name="birthdayFrom"]').val('');
+    $('input[name="birthdayTo"]').val('');
+    $('input[name="registrationFrom"]').val('');
+    $('input[name="registrationTo"]').val('');
+    
+    // Reset category dropdown to default
+    $('#categoryFilter').val('');
+    
+    // Submit the form to refresh results
+    $('#searchForm').submit();
     });
     
     // Individual track button
