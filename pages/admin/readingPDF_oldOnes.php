@@ -10,8 +10,8 @@ require_once __DIR__ . '/../../database/db_connect.php';
 $categoriesQuery = "
     SELECT categoryID, pdf_content 
     FROM categories 
-    WHERE (year > 2022) 
-       OR (year = 2022 AND season = 'Ιούνιος')
+    WHERE (year < 2022) 
+       OR (year = 2022 AND season = 'Φεβρουάριος')
 ";
 $categoriesResult = $mysqli->query($categoriesQuery);
 
@@ -44,10 +44,10 @@ if ($categoriesResult->num_rows > 0) {
         }
 
         $text = $pdfContent;
-        echo "Extracted text for categoryID $categoryID: " . substr($text, 0, 500); // Log first 500 characters
+       // echo "Extracted text for categoryID $categoryID: " . substr($text, 0, 500); // Log first 500 characters
 
         $lines = explode("\n", $text);
-        echo "Extracted lines: " . json_encode($lines);
+       // echo "Extracted lines: " . json_encode($lines);
 
         if (empty($lines)) {
             echo "No lines extracted from the text content for categoryID $categoryID.";
@@ -56,9 +56,12 @@ if ($categoriesResult->num_rows > 0) {
 
         $rankinglist = [];
         foreach ($lines as $line) {
-            $parsedData = parseLine($line);
-            if (!empty($parsedData)) {
-                $rankinglist[] = $parsedData;
+            // Only process lines with more than 30 characters
+            if (strlen($line) > 30) {
+                $parsedData = parseLine($line);
+                if (!empty($parsedData)) {
+                    $rankinglist[] = $parsedData;
+                }
             }
         }
 
@@ -83,12 +86,6 @@ if ($categoriesResult->num_rows > 0) {
             // Debug: Log the applicant data
             echo "Applicant Data: " . json_encode($applicant);
 
-            // Ensure the ranking is valid (line starts with a number and is not followed by a "/")
-            if (!is_numeric($applicant['ranking']) || strpos($applicant['ranking'], '/') !== false) {
-                echo "Skipping invalid applicant: " . json_encode($applicant);
-                continue;
-            }
-
             // Convert dates from DD/MM/YYYY to YYYY-MM-DD
             $applicant['titleDate'] = !empty($applicant['titleDate']) ? 
                 DateTime::createFromFormat('d/m/Y', $applicant['titleDate'])->format('Y-m-d') : null;
@@ -101,7 +98,6 @@ if ($categoriesResult->num_rows > 0) {
 
             // Debug: Log the formatted data
             echo "Formatted Applicant Data: " . json_encode($applicant);
-
 
             $insertStmt->bind_param(
                 "issdssddssssi",
@@ -155,9 +151,13 @@ function parseLine($line) {
     $result = [];
     $cursor = 0;
 
-    // Parse ranking
-    preg_match('/^\d+/', $line, $matches);
-    $result['ranking'] = isset($matches[0]) ? (int)$matches[0] : null;
+    // Parse notes
+    preg_match('/^[\p{Greek}]+.*\.$/u', substr($line, $cursor), $matches);
+    if (isset($matches[0]) && trim($matches[0]) !== '<>') {
+        $result['notes'] = trim($matches[0]);
+    } else {
+        $result['notes'] = '';
+    }
     $cursor += strlen($matches[0] ?? '');
 
     // Parse fullName (Greek letters and spaces)
@@ -186,13 +186,18 @@ function parseLine($line) {
     $cursor += strlen($matches[0] ?? '');
 
     // Parse extraQualifications
-    preg_match('/(\d+)/', substr($line, $cursor), $matches);
+    preg_match('/(\d{1,2})/', substr($line, $cursor), $matches);
     $result['extraQualifications'] = isset($matches[1]) ? (int)$matches[1] : null;
     $cursor += strlen($matches[0] ?? '');
 
     // Parse experience
     preg_match('/(\d{1,2},\d)/', substr($line, $cursor), $matches);
     $result['experience'] = isset($matches[1]) ? (float)str_replace(',', '.', $matches[1]) : null;
+    $cursor += strlen($matches[0] ?? '');
+
+    // Parse ranking
+    preg_match('/^\d+/', $line, $matches);
+    $result['ranking'] = isset($matches[0]) ? (int)$matches[0] : null;
     $cursor += strlen($matches[0] ?? '');
 
     // Parse army
@@ -210,9 +215,7 @@ function parseLine($line) {
     $result['birthdayDate'] = $matches[1] ?? null;
     $cursor += strlen($matches[0] ?? '');
 
-    // Parse notes
-    preg_match('/[\p{Greek}\.]+/u', substr($line, $cursor), $matches);
-    $result['notes'] = isset($matches[0]) ? trim($matches[0]) : '';
+   
 
     return $result;
 }
