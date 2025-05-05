@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-
+include '../database/db_connect.php';
 // Check if we're returning from applicant-details.php with preserved search parameters
 if (isset($_GET['return']) && $_GET['return'] == 'search' && !isset($_POST['searchApplicants']) && isset($_SESSION['last_search'])) {
     // Restore the previous search from session
@@ -405,7 +405,7 @@ $startYear = 2016;
     <?php
     // Include sidebar
     include_once('../components/sidebar/sidebar.php');
-    include '../database/db_connect.php';
+
     // // Database connection
     // $servername = "localhost";
     // $username = "root"; 
