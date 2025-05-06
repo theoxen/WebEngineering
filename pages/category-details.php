@@ -13,6 +13,10 @@ if (!$categoryID) {
     exit;
 }
 
+// Get current page from URL (default to 1)
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+
 // Get limit from URL parameter (default to 50)
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 
@@ -20,6 +24,12 @@ $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 if (!in_array($limit, [25, 50, 100])) {
     $limit = 50;
 }
+
+// Calculate offset for SQL pagination
+$offset = ($page - 1) * $limit;
+
+// Get search parameter
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 // Connect to the database
 require_once "../database/db_connect.php";
@@ -37,16 +47,53 @@ if (!$category) {
     exit;
 }
 
-// Query to get candidates for the category
+// Query to get total number of candidates for pagination
+$countSql = "SELECT COUNT(*) as total FROM rankinglist WHERE categoryID = ?";
+$countParams = [$categoryID];
+$countTypes = "i";
+
+// Add search condition if provided
+if (!empty($search)) {
+    $countSql .= " AND fullName LIKE ?";
+    $countParams[] = "%$search%";
+    $countTypes .= "s";
+}
+
+$countStmt = $mysqli->prepare($countSql);
+$countStmt->bind_param($countTypes, ...$countParams);
+$countStmt->execute();
+$countResult = $countStmt->get_result();
+$totalCandidates = $countResult->fetch_assoc()['total'];
+$totalPages = ceil($totalCandidates / $limit);
+
+// If requested page is greater than total pages, redirect to last page
+if ($page > $totalPages && $totalPages > 0) {
+    header("Location: category-details.php?id=$categoryID&limit=$limit&page=$totalPages" . (!empty($search) ? "&search=".urlencode($search) : ""));
+    exit;
+}
+
+// Query to get candidates for the category with pagination
 $sql = "SELECT * FROM rankinglist WHERE categoryID = ?";
+$params = [$categoryID];
+$types = "i";
+
+// Add search condition if provided
+if (!empty($search)) {
+    $sql .= " AND fullName LIKE ?";
+    $params[] = "%$search%";
+    $types .= "s";
+}
+
+$sql .= " ORDER BY ranking ASC LIMIT ? OFFSET ?";
+$params[] = $limit;
+$params[] = $offset;
+$types .= "ii";
+
 $stmt = $mysqli->prepare($sql);
-$stmt->bind_param("i", $categoryID);
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
 $candidates = $result->fetch_all(MYSQLI_ASSOC);
-
-// Apply limit here if you're not using LIMIT in SQL
-$candidates = array_slice($candidates, 0, $limit);
 
 $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['year'];
 ?>
@@ -87,6 +134,9 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
             </p>
         </div>
         
+        <h1 class="my-4"><?php echo htmlspecialchars($category['fields'] ?? ''); ?></h1>
+        <p><?php echo htmlspecialchars($category['type'] ?? '') . ' - ' . htmlspecialchars($category['season'] ?? '') . ' ' . htmlspecialchars($category['year'] ?? ''); ?></p>
+
         <?php if (!empty($category['file_path'])): ?>
         <!-- <div class="pdf-container">
             <div class="card mb-4">
@@ -108,6 +158,26 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
 
         <?php endif; ?>
         
+        <!-- Search form -->
+        <div class="mb-3">
+            <form method="get" action="" class="d-flex">
+                <input type="hidden" name="id" value="<?php echo $categoryID; ?>">
+                <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search" placeholder="Search by name..." 
+                           value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
+                    <a href="?id=<?php echo $categoryID; ?>&limit=<?php echo $limit; ?>" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                    <?php endif; ?>
+                </div>
+            </form>
+        </div>
+
         <div class="mb-3 d-flex align-items-center">
             <span class="me-2">Show entries:</span>
             <select id="entriesPerPage" class="form-select form-select-sm" style="width: auto;">
@@ -117,8 +187,77 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
             </select>
         </div>
 
-        <div class="table-responsive mt-4">
-            <table class="table table-bordered">
+        <?php if ($totalPages > 0): ?>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <span class="text-muted">Showing <?php echo ($offset + 1); ?>-<?php echo min($offset + $limit, $totalCandidates); ?> of <?php echo $totalCandidates; ?> entries</span>
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0">
+                    <!-- First page -->
+                    <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?id=<?php echo $categoryID; ?>&limit=<?php echo $limit; ?>&page=1" aria-label="First">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    
+                    <!-- Previous page -->
+                    <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?id=<?php echo $categoryID; ?>&limit=<?php echo $limit; ?>&page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>" aria-label="Previous">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                    
+                    <!-- Page numbers -->
+                    <?php
+                    // Show a range of pages centered around the current page
+                    $startPage = max(1, $page - 2);
+                    $endPage = min($totalPages, $page + 2);
+                    
+                    // Always show first page
+                    if ($startPage > 1) {
+                        echo '<li class="page-item"><a class="page-link" href="?id=' . $categoryID . '&limit=' . $limit . '&page=1">1</a></li>';
+                        if ($startPage > 2) {
+                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+                    }
+                    
+                    // Page numbers
+                    for ($i = $startPage; $i <= $endPage; $i++) {
+                        echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '">
+                            <a class="page-link" href="?id=' . $categoryID . '&limit=' . $limit . '&page=' . $i . '">' . $i . '</a>
+                        </li>';
+                    }
+                    
+                    // Always show last page
+                    if ($endPage < $totalPages) {
+                        if ($endPage < $totalPages - 1) {
+                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+                        echo '<li class="page-item"><a class="page-link" href="?id=' . $categoryID . '&limit=' . $limit . '&page=' . $totalPages . '">' . $totalPages . '</a></li>';
+                    }
+                    ?>
+                    
+                    <!-- Next page -->
+                    <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?id=<?php echo $categoryID; ?>&limit=<?php echo $limit; ?>&page=<?php echo $page + 1; ?>" aria-label="Next">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    
+                    <!-- Last page -->
+                    <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?id=<?php echo $categoryID; ?>&limit=<?php echo $limit; ?>&page=<?php echo $totalPages; ?>" aria-label="Last">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <?php endif; ?>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
                 <thead>
                     <tr>
                         <th>Ranking</th>
@@ -161,6 +300,74 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
                 </tbody>
             </table>
         </div>
+
+        <?php if ($totalPages > 0): ?>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+                <span class="text-muted">Showing <?php echo ($offset + 1); ?>-<?php echo min($offset + $limit, $totalCandidates); ?> of <?php echo $totalCandidates; ?> entries</span>
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0">
+                    <!-- First page -->
+                    <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?id=<?php echo $categoryID; ?>&limit=<?php echo $limit; ?>&page=1" aria-label="First">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    
+                    <!-- Previous page -->
+                    <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?id=<?php echo $categoryID; ?>&limit=<?php echo $limit; ?>&page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>" aria-label="Previous">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                    
+                    <!-- Page numbers -->
+                    <?php
+                    $startPage = max(1, $page - 2);
+                    $endPage = min($totalPages, $page + 2);
+                    
+                    // Always show first page
+                    if ($startPage > 1) {
+                        echo '<li class="page-item"><a class="page-link" href="?id=' . $categoryID . '&limit=' . $limit . '&page=1">1</a></li>';
+                        if ($startPage > 2) {
+                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+                    }
+                    
+                    // Page numbers
+                    for ($i = $startPage; $i <= $endPage; $i++) {
+                        echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '">
+                            <a class="page-link" href="?id=' . $categoryID . '&limit=' . $limit . '&page=' . $i . '">' . $i . '</a>
+                        </li>';
+                    }
+                    
+                    // Always show last page
+                    if ($endPage < $totalPages) {
+                        if ($endPage < $totalPages - 1) {
+                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+                        echo '<li class="page-item"><a class="page-link" href="?id=' . $categoryID . '&limit=' . $limit . '&page=' . $totalPages . '">' . $totalPages . '</a></li>';
+                    }
+                    ?>
+                    
+                    <!-- Next page -->
+                    <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?id=<?php echo $categoryID; ?>&limit=<?php echo $limit; ?>&page=<?php echo $page + 1; ?>" aria-label="Next">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    
+                    <!-- Last page -->
+                    <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?id=<?php echo $categoryID; ?>&limit=<?php echo $limit; ?>&page=<?php echo $totalPages; ?>" aria-label="Last">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <?php endif; ?>
         
         <div class="text-center mt-4 mb-5">
             <a href="season-categories.php?year=<?php echo $category['year']; ?>&season=<?php echo urlencode($category['season']); ?>" 
@@ -173,7 +380,6 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Add this script to make the entriesPerPage dropdown functional
         document.addEventListener('DOMContentLoaded', function() {
             const entriesSelect = document.getElementById('entriesPerPage');
             if (entriesSelect) {
@@ -182,6 +388,8 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
                     const url = new URL(window.location.href);
                     // Set the limit parameter
                     url.searchParams.set('limit', this.value);
+                    // Reset to page 1 when changing entries per page
+                    url.searchParams.set('page', 1);
                     // Redirect to the new URL
                     window.location.href = url.toString();
                 });

@@ -439,8 +439,7 @@ $startYear = 2016;
             $sql = "SELECT t.*, r.*, c.fields, t.trackingID, t.isOwnCandidate 
                     FROM trackings t
                     JOIN rankinglist r ON (r.fullName = t.candidateFullName 
-                                    AND r.birthdayDate = t.candidateBirthdayDate 
-                                    AND r.appNum = t.appNum)
+                                    AND r.birthdayDate = t.candidateBirthdayDate)
                     LEFT JOIN categories c ON r.categoryID = c.categoryID
                     WHERE t.userID = ?";
         } else {
