@@ -268,14 +268,21 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
                             <th>Ranking</th>
                             <th>Full Name</th>
                             <th>App Number</th>
+                            <th>Points</th>
+                            <th>Title Date</th>
+                            <th>Title Grade</th>
+                            <th>Extra Qualifications</th>
+                            <th>Experience</th>
+                            <th>Army</th>
                             <th>Birthday</th>
                             <th>Registration Date</th>
+                            <th>Notes</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($candidates)): ?>
                             <tr>
-                                <td colspan="5" class="text-center">No candidates found</td>
+                                <td colspan="12" class="text-center">No candidates found</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($candidates as $candidate): ?>
@@ -283,8 +290,15 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
                                     <td><?php echo htmlspecialchars($candidate['ranking']); ?></td>
                                     <td><?php echo htmlspecialchars($candidate['fullName']); ?></td>
                                     <td><?php echo htmlspecialchars($candidate['appNum']); ?></td>
+                                    <td><?php echo htmlspecialchars($candidate['points']); ?></td>
+                                    <td><?php echo htmlspecialchars($candidate['titleDate']); ?></td>
+                                    <td><?php echo htmlspecialchars($candidate['titleGrade']); ?></td>
+                                    <td><?php echo htmlspecialchars($candidate['extraQualifications']); ?></td>
+                                    <td><?php echo htmlspecialchars($candidate['experience']); ?> years</td>
+                                    <td><?php echo htmlspecialchars($candidate['army']); ?></td>
                                     <td><?php echo htmlspecialchars($candidate['birthdayDate']); ?></td>
                                     <td><?php echo htmlspecialchars($candidate['registrationDate']); ?></td>
+                                    <td><?php echo htmlspecialchars($candidate['notes']); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
