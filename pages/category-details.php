@@ -170,8 +170,93 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
                     <span class="text-muted">Showing <?php echo ($offset + 1); ?>-<?php echo min($offset + $limit, $totalCandidates); ?> of <?php echo $totalCandidates; ?> entries</span>
                 </div>
                 <nav aria-label="Page navigation">
-                    <!-- Pagination controls -->
-                    <!-- ...existing pagination code... -->
+                    <ul class="pagination">
+                        <!-- First page -->
+                        <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                            <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=1&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        
+                        <!-- Previous page -->
+                        <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                            <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=<?php echo $page-1; ?>&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        
+                        <!-- Page numbers with consistent display pattern -->
+                        <?php 
+                        // Always show 5 pages total if possible
+                        $totalPagesToShow = 5;
+                        
+                        // First page is always visible
+                        ?>
+                        <li class="page-item <?php echo 1 == $page ? 'active' : ''; ?>">
+                            <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=1&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                1
+                            </a>
+                        </li>
+                        
+                        <?php
+                        // Calculate the range of pages to show
+                        $startPage = max(2, $page - 1);
+                        $endPage = min($totalPages - 1, $page + 1);
+                        
+                        // Show ellipsis after page 1 if needed
+                        if ($startPage > 2): ?>
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        <?php endif; ?>
+                        
+                        <?php 
+                        // Show middle pages
+                        for ($i = $startPage; $i <= $endPage; $i++): 
+                            if ($i > 1 && $i < $totalPages): // Skip first and last page as they're always shown separately
+                        ?>
+                            <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                                <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=<?php echo $i; ?>&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                    <?php echo $i; ?>
+                                </a>
+                            </li>
+                        <?php 
+                            endif;
+                        endfor; 
+                        ?>
+                        
+                        <?php 
+                        // Show ellipsis before last page if needed
+                        if ($endPage < $totalPages - 1 && $totalPages > 1): ?>
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        <?php endif; ?>
+                        
+                        <?php 
+                        // Last page is always visible if there's more than one page
+                        if ($totalPages > 1): ?>
+                            <li class="page-item <?php echo $totalPages == $page ? 'active' : ''; ?>">
+                                <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=<?php echo $totalPages; ?>&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                    <?php echo $totalPages; ?>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                        
+                        <!-- Next page -->
+                        <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                            <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=<?php echo $page+1; ?>&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        
+                        <!-- Last page -->
+                        <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                            <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=<?php echo $totalPages; ?>&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    </ul>
                 </nav>
             </div>
             <?php endif; ?>
@@ -213,7 +298,49 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
                     <span class="text-muted">Showing <?php echo ($offset + 1); ?>-<?php echo min($offset + $limit, $totalCandidates); ?> of <?php echo $totalCandidates; ?> entries</span>
                 </div>
                 <nav aria-label="Page navigation">
-                    <!-- Bottom pagination controls - same as top -->
+                    <ul class="pagination">
+                        <!-- First page -->
+                        <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                            <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=1&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        
+                        <!-- Previous page -->
+                        <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                            <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=<?php echo $page-1; ?>&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        
+                        <!-- Page numbers -->
+                        <?php 
+                        $startPage = max(1, $page - 2);
+                        $endPage = min($totalPages, $page + 2);
+                        
+                        for ($i = $startPage; $i <= $endPage; $i++): 
+                        ?>
+                            <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                                <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=<?php echo $i; ?>&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                    <?php echo $i; ?>
+                                </a>
+                            </li>
+                        <?php endfor; ?>
+                        
+                        <!-- Next page -->
+                        <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                            <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=<?php echo $page+1; ?>&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        
+                        <!-- Last page -->
+                        <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                            <a class="page-link" href="?id=<?php echo $categoryID; ?>&page=<?php echo $totalPages; ?>&limit=<?php echo $limit; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    </ul>
                 </nav>
             </div>
             <?php endif; ?>
