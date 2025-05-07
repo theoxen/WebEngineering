@@ -295,7 +295,15 @@ $pageTitle = $category['type'] . " - " . $category['season'] . " " . $category['
                                     <td><?php echo htmlspecialchars($candidate['titleGrade']); ?></td>
                                     <td><?php echo htmlspecialchars($candidate['extraQualifications']); ?></td>
                                     <td><?php echo htmlspecialchars($candidate['experience']); ?> years</td>
-                                    <td><?php echo htmlspecialchars($candidate['army']); ?></td>
+                                    <td>
+                                        <?php 
+                                            if (isset($candidate['army'])) {
+                                                echo (intval($candidate['army']) === 1) ? 'Yes' : 'No';
+                                            } else {
+                                                echo 'N/A';
+                                            }
+                                        ?>
+                                    </td>
                                     <td><?php echo htmlspecialchars($candidate['birthdayDate']); ?></td>
                                     <td><?php echo htmlspecialchars($candidate['registrationDate']); ?></td>
                                     <td><?php echo htmlspecialchars($candidate['notes']); ?></td>
