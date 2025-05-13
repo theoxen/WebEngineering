@@ -454,8 +454,7 @@ $startYear = 2016;
             $sql = "SELECT t.*, r.*, c.fields, t.trackingID, t.isOwnCandidate 
                     FROM trackings t
                     JOIN rankinglist r ON (r.fullName = t.candidateFullName 
-                                    AND r.birthdayDate = t.candidateBirthdayDate 
-                                    AND r.appNum = t.appNum)
+                                    AND r.birthdayDate = t.candidateBirthdayDate)
                     LEFT JOIN categories c ON r.categoryID = c.categoryID
                     WHERE t.userID = ?";
         } else {
@@ -664,7 +663,7 @@ if (isset($_POST['searchApplicants'])) {
                                 <span class="input-group-text"><i class="fas fa-filter"></i></span>
                                 <select class="form-select" name="categoryFilter" id="categoryFilter">
                                     <option value="">-- Επιλέξτε Κατηγορία --</option>
-                                    <option value="all" <?php echo (isset($_POST['categoryFilter']) && $_POST['categoryFilter'] == 'all') ? 'selected' : ''; ?>>Όλοι οι Υποψήφιοι</option>
+                                    
                                     <?php
                                     // Check if categories table exists and fetch categories
                                     $sql = "SHOW TABLES LIKE 'categories'";
