@@ -151,12 +151,11 @@ function parseLine($line) {
     $result = [];
     $cursor = 0;
 
-    // Parse notes
-    preg_match('/^[\p{Greek}]+.*\.$/u', substr($line, $cursor), $matches);
-    if (isset($matches[0]) && trim($matches[0]) !== '<>') {
-        $result['notes'] = trim($matches[0]);
+    preg_match('/^(Π\.Κ\.|<>)$/u', substr($line, $cursor), $matches);
+    if (isset($matches[0]) && trim($matches[0]) === 'Π.Κ.') {
+        $result['notes'] = 'Π.Κ.'; // Save the valid note
     } else {
-        $result['notes'] = '';
+        $result['notes'] = ''; // Treat "<>" or no match as an empty note
     }
     $cursor += strlen($matches[0] ?? '');
 
@@ -171,7 +170,7 @@ function parseLine($line) {
     $cursor += strlen($matches[0] ?? '');
 
     // Parse points
-    preg_match('/\s*(\d{1,2},\d{2})/', substr($line, $cursor), $matches);
+    preg_match('/(\d{1,2},\d{2})/', substr($line, $cursor), $matches);
     $result['points'] = isset($matches[1]) ? (float)str_replace(',', '.', $matches[1]) : null;
     $cursor += strlen($matches[0] ?? '');
 
