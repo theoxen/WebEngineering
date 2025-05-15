@@ -64,20 +64,20 @@ function getApplicantData($mysqli, $applicantID) {
 
 // Function to add tracking to database - using the actual trackings table structure
 function addTrackingToDatabase($mysqli, $userId, $applicantData) {
-    // Check if tracking already exists - now checking by name, birthday AND application number
+    // Check if tracking already exists - now checking by name and birthday only
     $sql = "SELECT trackingID FROM trackings 
-            WHERE userID = ? AND candidateFullName = ? AND candidateBirthdayDate = ? AND appNum = ?";
+            WHERE userID = ? AND candidateFullName = ? AND candidateBirthdayDate = ?";
     $stmt = $mysqli->prepare($sql);
-    $stmt->bind_param("isss", $userId, $applicantData['fullName'], $applicantData['birthdayDate'], $applicantData['appNum']);
+    $stmt->bind_param("iss", $userId, $applicantData['fullName'], $applicantData['birthdayDate']);
     $stmt->execute();
     $result = $stmt->get_result();
     
     if ($result->num_rows == 0) {
-        // Insert new tracking record - now including appNum
-        $sql = "INSERT INTO trackings (userID, candidateFullName, candidateBirthdayDate, candidateTitleDate, appNum, isOwnCandidate) 
-                VALUES (?, ?, ?, ?, ?, 0)";
+        // Insert new tracking record - without appNum
+        $sql = "INSERT INTO trackings (userID, candidateFullName, candidateBirthdayDate, candidateTitleDate, isOwnCandidate) 
+                VALUES (?, ?, ?, ?, 0)";
         $stmt = $mysqli->prepare($sql);
-        $stmt->bind_param("issss", $userId, $applicantData['fullName'], $applicantData['birthdayDate'], $applicantData['titleDate'], $applicantData['appNum']);
+        $stmt->bind_param("isss", $userId, $applicantData['fullName'], $applicantData['birthdayDate'], $applicantData['titleDate']);
         return $stmt->execute();
     }
     
@@ -87,9 +87,9 @@ function addTrackingToDatabase($mysqli, $userId, $applicantData) {
 // Function to remove tracking from database
 function removeTrackingFromDatabase($mysqli, $userId, $applicantData) {
     $sql = "DELETE FROM trackings 
-            WHERE userID = ? AND candidateFullName = ? AND candidateBirthdayDate = ? AND appNum = ?";
+            WHERE userID = ? AND candidateFullName = ? AND candidateBirthdayDate = ?";
     $stmt = $mysqli->prepare($sql);
-    $stmt->bind_param("isss", $userId, $applicantData['fullName'], $applicantData['birthdayDate'], $applicantData['appNum']);
+    $stmt->bind_param("iss", $userId, $applicantData['fullName'], $applicantData['birthdayDate']);
     $stmt->execute();
     return $stmt->affected_rows > 0;
 }
