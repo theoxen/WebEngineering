@@ -54,6 +54,12 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                         </a>
                     </li>
 
+                    <li class="nav-item">
+                        <a href="<?php echo $baseUrl?>admin/upload-file.php" class="nav-link <?php echo $currentPage, 'upload-file.php' ? 'active' : ''; ?>">
+                            <i class="fas fa-upload"></i> Upload File
+                        </a>
+                    </li>
+
                     <!-- /////////////////////////////////////////////////////////////////////////////-->
                     <li class="nav-item">
                         <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#reportsSubmenu">

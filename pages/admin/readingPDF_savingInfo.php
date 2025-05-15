@@ -10,8 +10,6 @@ require_once __DIR__ . '/../../database/db_connect.php';
 $categoriesQuery = "
     SELECT categoryID, pdf_content 
     FROM categories 
-    WHERE (year > 2022) 
-       OR (year = 2022 AND season = 'Ιούνιος')
 ";
 $categoriesResult = $mysqli->query($categoriesQuery);
 
@@ -34,39 +32,43 @@ if ($categoriesResult->num_rows > 0) {
             $deleteStmt = $mysqli->prepare($deleteQuery);
             $deleteStmt->bind_param("i", $categoryID);
             $deleteStmt->execute();
-            echo "Deleted all records in rankinglist for categoryID $categoryID.<br>";
+          //  echo "Deleted all records in rankinglist for categoryID $categoryID.<br>";
         }
 
         // Process the text content for this categoryID
         if (empty($pdfContent)) {
-            echo "No text content found for categoryID $categoryID.";
+            //echo "No text content found for categoryID $categoryID.";
             continue;
         }
 
         $text = $pdfContent;
-        echo "Extracted text for categoryID $categoryID: " . substr($text, 0, 500); // Log first 500 characters
+        //echo "Extracted text for categoryID $categoryID: " . substr($text, 0, 500); // Log first 500 characters
 
         $lines = explode("\n", $text);
-        echo "Extracted lines: " . json_encode($lines);
+       // echo "Extracted lines: " . json_encode($lines);
 
         if (empty($lines)) {
-            echo "No lines extracted from the text content for categoryID $categoryID.";
+          //  echo "No lines extracted from the text content for categoryID $categoryID.";
             continue;
         }
 
         $rankinglist = [];
         foreach ($lines as $line) {
-            $parsedData = parseLine($line);
-            if (!empty($parsedData)) {
-                $rankinglist[] = $parsedData;
+            // Only process lines starting with a number and having more than 30 characters
+            if (mb_strlen($line, 'UTF-8') > 30 && preg_match('/^\d+/', $line)) {
+                echo "Read line: " . htmlspecialchars($line) . "<br>";
+                $parsedData = parseLine($line);
+                if (!empty($parsedData)) {
+                    $rankinglist[] = $parsedData;
+                }
             }
         }
 
         // Debug: Log the entire ranking list
-        echo "Ranking List: " . json_encode($rankinglist);
+      //  echo "Ranking List: " . json_encode($rankinglist);
 
         if (empty($rankinglist)) {
-            echo "No valid data extracted from the text content for categoryID $categoryID.";
+           // echo "No valid data extracted from the text content for categoryID $categoryID.";
             continue;
         }
 
@@ -75,19 +77,13 @@ if ($categoriesResult->num_rows > 0) {
         $insertStmt = $mysqli->prepare($insertQuery);
 
         if (!$insertStmt) {
-            echo "Failed to prepare insert statement: " . $mysqli->error;
+            //echo "Failed to prepare insert statement: " . $mysqli->error;
             continue;
         }
 
         foreach ($rankinglist as $applicant) {
             // Debug: Log the applicant data
-            echo "Applicant Data: " . json_encode($applicant);
-
-            // Ensure the ranking is valid (line starts with a number and is not followed by a "/")
-            if (!is_numeric($applicant['ranking']) || strpos($applicant['ranking'], '/') !== false) {
-                echo "Skipping invalid applicant: " . json_encode($applicant);
-                continue;
-            }
+          //  echo "Applicant Data: " . json_encode($applicant);
 
             // Convert dates from DD/MM/YYYY to YYYY-MM-DD
             $applicant['titleDate'] = !empty($applicant['titleDate']) ? 
@@ -100,8 +96,7 @@ if ($categoriesResult->num_rows > 0) {
                 DateTime::createFromFormat('d/m/Y', $applicant['birthdayDate'])->format('Y-m-d') : null;
 
             // Debug: Log the formatted data
-            echo "Formatted Applicant Data: " . json_encode($applicant);
-
+           // echo "Formatted Applicant Data: " . json_encode($applicant);
 
             $insertStmt->bind_param(
                 "issdssddssssi",
@@ -121,14 +116,14 @@ if ($categoriesResult->num_rows > 0) {
             );
 
             if (!$insertStmt->execute()) {
-                echo "Failed to execute insert statement for categoryID $categoryID: <br>" . $insertStmt->error;
+               // echo "Failed to execute insert statement for categoryID $categoryID: <br>" . $insertStmt->error;
             } else {
-                echo "Successfully inserted data for categoryID $categoryID.<br>";
+               // echo "Successfully inserted data for categoryID $categoryID.<br>";
             }
         }
 
         $insertStmt->close();
-        echo "Data processing completed.<br>";
+        //echo "Data processing completed.<br>";
     }
 }
 
