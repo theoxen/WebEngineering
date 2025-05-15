@@ -534,8 +534,16 @@ if (isset($_POST['searchApplicants'])) {
             $sql .= " AND r.registrationDate <= '$registrationTo'";
         }
         
-        // Add ordering and limit
-        $sql .= " ORDER BY r.ranking ASC LIMIT 50";
+        // Get limit from URL parameter (default to 50)
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+        // Validate the limit to only allow 25, 50, or 100
+        if (!in_array($limit, [25, 50, 100])) {
+            $limit = 50;
+        }
+
+        // Add the LIMIT clause to your SQL query
+        $sql .= " ORDER BY r.ranking ASC LIMIT $limit";
     } else {
         // Base SQL without categories
         $sql = "SELECT r.*, 'Unknown' as fields 
@@ -562,8 +570,16 @@ if (isset($_POST['searchApplicants'])) {
             $sql .= " AND r.registrationDate <= '$registrationTo'";
         }
         
-        // Add ordering and limit
-        $sql .= " ORDER BY r.ranking ASC LIMIT 50";
+        // Get limit from URL parameter (default to 50)
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+        // Validate the limit to only allow 25, 50, or 100
+        if (!in_array($limit, [25, 50, 100])) {
+            $limit = 50;
+        }
+
+        // Add the LIMIT clause to your SQL query
+        $sql .= " ORDER BY r.ranking ASC LIMIT $limit";
     }
     
     // Execute query
@@ -779,8 +795,16 @@ if (isset($_POST['searchApplicants'])) {
                                     $sql .= " AND r.registrationDate <= '$registrationTo'";
                                 }
                                 
-                                // Add ordering and limit
-                                $sql .= " ORDER BY r.ranking ASC LIMIT 50";
+                                // Get limit from URL parameter (default to 50)
+                                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+                                // Validate the limit to only allow 25, 50, or 100
+                                if (!in_array($limit, [25, 50, 100])) {
+                                    $limit = 50;
+                                }
+
+                                // Add the LIMIT clause to your SQL query
+                                $sql .= " ORDER BY r.ranking ASC LIMIT $limit";
                             } else {
                                 // Base SQL without categories
                                 $sql = "SELECT r.*, 'Unknown' as fields 
@@ -812,8 +836,16 @@ if (isset($_POST['searchApplicants'])) {
                                     $sql .= " AND r.registrationDate <= '$registrationTo'";
                                 }
                                 
-                                // Add ordering and limit
-                                $sql .= " ORDER BY r.ranking ASC LIMIT 50";
+                                // Get limit from URL parameter (default to 50)
+                                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+                                // Validate the limit to only allow 25, 50, or 100
+                                if (!in_array($limit, [25, 50, 100])) {
+                                    $limit = 50;
+                                }
+
+                                // Add the LIMIT clause to your SQL query
+                                $sql .= " ORDER BY r.ranking ASC LIMIT $limit";
                             }
                             
                             // Execute query
@@ -830,6 +862,14 @@ if (isset($_POST['searchApplicants'])) {
                         ?>
                         <form method="POST" action="../track-applicants.php" id="trackForm">
                             <div class="table-responsive table-fixed-height">
+                                <div class="mb-3 d-flex align-items-center">
+                                    <span class="me-2">Show entries:</span>
+                                    <select id="entriesPerPage" class="form-select form-select-sm" style="width: auto;">
+                                        <option value="25">25</option>
+                                        <option value="50" selected>50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
                                 <table class="table table-hover">
                                     <thead class="table-light">
                                         <tr>

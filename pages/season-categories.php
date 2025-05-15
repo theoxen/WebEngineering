@@ -17,7 +17,7 @@ if (!$year || !$season) {
 require_once "../database/db_connect.php";
 
 // Query to get categories for this season
-$stmt = $mysqli->prepare("SELECT categoryID, year, season, type, fields, file_path FROM categories WHERE year = ? AND season = ? ORDER BY type, fields");
+$stmt = $mysqli->prepare("SELECT categoryID, year, season, type, fields FROM categories WHERE year = ? AND season = ? ORDER BY type, fields");
 $stmt->bind_param("is", $year, $season);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -211,29 +211,10 @@ while ($category = $result->fetch_assoc()) {
                     <div class="group-content">
                         <?php foreach ($groupData['categories'] as $category): ?>
                             <div class="category-item">
-                                <button type="button" class="category-button" onclick="toggleDropdown(<?php echo $category['categoryID']; ?>)">
+                                <button type="button" class="category-button" onclick="redirectToCategory(<?php echo $category['categoryID']; ?>)">
                                     <span class="category-name"><?php echo htmlspecialchars($category['fields']); ?></span>
-                                    <i class="fas fa-chevron-down"></i>
+                                    <i class="fas fa-chevron-right"></i>
                                 </button>
-                                <div id="dropdown-<?php echo $category['categoryID']; ?>" class="category-dropdown">
-                                    <a class="dropdown-item" href="category-details.php?id=<?php echo $category['categoryID']; ?>">
-                                        <i class="fas fa-eye me-2"></i> Προβολή Καταλόγου
-                                    </a>
-                                    <?php if (!empty($category['file_path'])): ?>
-                                    <a class="dropdown-item" href="<?php echo htmlspecialchars($category['file_path']); ?>" target="_blank">
-                                        <i class="fas fa-file-pdf me-2"></i> Άνοιγμα PDF
-                                    </a>
-                                    <a class="dropdown-item" href="download.php?id=<?php echo $category['categoryID']; ?>">
-                                        <i class="fas fa-download me-2"></i> Κατέβασμα PDF
-                                    </a>
-                                    <?php endif; ?>
-                                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item text-danger" href="admin/edit-category.php?id=<?php echo $category['categoryID']; ?>">
-                                        <i class="fas fa-edit me-2"></i> Επεξεργασία
-                                    </a>
-                                    <?php endif; ?>
-                                </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -335,6 +316,12 @@ while ($category = $result->fetch_assoc()) {
                 });
             }
         });
+
+        // Function to redirect to category details
+        function redirectToCategory(categoryId) {
+            // Redirect to the same link as "Προβολή Καταλόγου"
+            window.location.href = `category-details.php?id=${categoryId}`;
+        }
     </script>
 </body>
 </html>
