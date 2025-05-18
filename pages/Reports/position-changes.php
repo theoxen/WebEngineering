@@ -16,6 +16,11 @@ $type = $_GET['type'] ?? '';
 $selected_season = $_GET['season'] ?? '';
 $selected_year = $_GET['year'] ?? '';
 
+// Pagination settings
+$records_per_page = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $records_per_page;
+
 // Replace the latest season query with previous season logic
 $query = "SELECT year, season 
           FROM categories 
@@ -57,13 +62,15 @@ $query = "SELECT
           WHERE c1.year = ? AND c1.season = ?
           AND c1.fields = ? AND c1.type = ?
           AND c2.year = ? AND c2.season = ?
-          ORDER BY r1.ranking ASC";
+          ORDER BY r1.ranking ASC
+          LIMIT ? OFFSET ?";
 
 $stmt = $mysqli->prepare($query);
-$stmt->bind_param("ssssss", 
+$stmt->bind_param("ssssssii", 
     $previous['year'], $previous['season'],  // Previous season
     $field, $type,
-    $selected_year, $selected_season        // Selected season
+    $selected_year, $selected_season,        // Selected season
+    $records_per_page, $offset
 );
 $stmt->execute();
 $result = $stmt->get_result();
@@ -85,6 +92,27 @@ foreach ($rankings as $rank) {
         else $same++;
     }
 }
+
+// Add after your main data query in each report
+$count_query = "SELECT COUNT(*) as total FROM rankinglist r1 
+                JOIN categories c1 ON r1.categoryID = c1.categoryID 
+                LEFT JOIN rankinglist r2 ON r1.fullName = r2.fullName 
+                LEFT JOIN categories c2 ON r2.categoryID = c2.categoryID
+                WHERE c1.year = ? 
+                AND c1.season = ? 
+                AND c1.fields = ? 
+                AND c1.type = ?";
+
+$stmt = $mysqli->prepare($count_query);
+$stmt->bind_param("ssss", 
+    $previous['year'], 
+    $previous['season'], 
+    $field, 
+    $type
+);
+$stmt->execute();
+$total_records = $stmt->get_result()->fetch_assoc()['total'];
+$total_pages = ceil($total_records / $records_per_page);
 ?>
 
 <!DOCTYPE html>
@@ -100,6 +128,31 @@ foreach ($rankings as $rank) {
     <link rel="stylesheet" href="../../components/sidebar/sidebar.css">
     
     <style>
+        /* Main content wrapper */
+        .content-wrapper {
+            margin-left: 250px; /* Match sidebar width */
+            padding: 30px;
+            transition: margin-left 0.3s;
+        }
+
+        /* Container adjustments */
+        .container {
+            max-width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        /* Responsive behavior */
+        @media (max-width: 767.98px) {
+            .content-wrapper {
+                margin-left: 0;
+                padding: 15px;
+                width: 100%;
+            }
+        }
+
         .stats-card {
             border-left: 4px solid;
             margin-bottom: 1rem;
@@ -124,6 +177,25 @@ foreach ($rankings as $rank) {
             top: 0;
             background: #fff;
             z-index: 1;
+        }
+
+        /* Pagination styles */
+        .pagination {
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .page-link {
+            color: var(--primary-color);
+        }
+
+        .page-link:hover {
+            color: #2e59d9;
         }
     </style>
 </head>
@@ -260,8 +332,58 @@ foreach ($rankings as $rank) {
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Previous</a>
+                            </li>
+                            <li class="page-item active" aria-current="page">
+                                <a class="page-link" href="#">1</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">2</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">3</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
+
+            <!-- Add after the table in each report -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    <?php if($page > 1): ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=<?php echo $page-1; ?><?php echo isset($_GET['field']) ? '&field='.$_GET['field'] : ''; ?><?php echo isset($_GET['type']) ? '&type='.$_GET['type'] : ''; ?>" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <?php for($i = 1; $i <= $total_pages; $i++): ?>
+                        <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                            <a class="page-link" href="?page=<?php echo $i; ?><?php echo isset($_GET['field']) ? '&field='.$_GET['field'] : ''; ?><?php echo isset($_GET['type']) ? '&type='.$_GET['type'] : ''; ?>">
+                                <?php echo $i; ?>
+                            </a>
+                        </li>
+                    <?php endfor; ?>
+                    
+                    <?php if($page < $total_pages): ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=<?php echo $page+1; ?><?php echo isset($_GET['field']) ? '&field='.$_GET['field'] : ''; ?><?php echo isset($_GET['type']) ? '&type='.$_GET['type'] : ''; ?>" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </nav>
         </div>
     </div>
 
@@ -304,21 +426,23 @@ foreach ($rankings as $rank) {
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('searchTable');
         const tableRows = document.querySelectorAll('tbody tr');
+        const pagination = document.querySelector('.pagination');
 
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
+            let visibleRows = 0;
             
             tableRows.forEach(row => {
-                const name = row.querySelector('td:first-child').textContent.toLowerCase();
-                const points = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
-                const rank = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                
-                const matches = name.includes(searchTerm) || 
-                              points.includes(searchTerm) || 
-                              rank.includes(searchTerm);
-                
-                row.style.display = matches ? '' : 'none';
+                const text = row.textContent.toLowerCase();
+                const visible = text.includes(searchTerm);
+                row.style.display = visible ? '' : 'none';
+                if (visible) visibleRows++;
             });
+
+            // Hide pagination when searching
+            if (pagination) {
+                pagination.style.display = searchTerm ? 'none' : '';
+            }
         });
     });
     </script>

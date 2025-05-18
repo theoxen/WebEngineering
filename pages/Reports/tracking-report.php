@@ -132,6 +132,38 @@ foreach ($trends as $trend) {
     <link rel="stylesheet" href="../../components/sidebar/sidebar.css">
     
     <style>
+        .table {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 600;
+    border-top: none;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+}
+
+.own-candidate {
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.tracked-candidate {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.ranking-change {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
         .own-candidate {
             background-color: rgba(28, 200, 138, 0.1);
         }
@@ -156,7 +188,8 @@ foreach ($trends as $trend) {
         }
         .table-container {
             max-height: 600px;
-            overflow-y: auto;
+            overflow-y: hidden; /* Changed from auto to hidden */
+            margin-bottom: 1rem;
         }
         .sticky-header th {
             position: sticky;
@@ -164,6 +197,72 @@ foreach ($trends as $trend) {
             background: #fff;
             z-index: 1;
             box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+        .content-wrapper {
+            padding: 20px;
+            margin-left: 240px; /* Matches sidebar width */
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header {
+            padding: 1.5rem 0;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .sticky-header th {
+            background-color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .search-box {
+            max-width: 300px;
+            margin-bottom: 1rem;
+        }
+
+        .pagination-info {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.page-link {
+    color: #4e73df;
+    border-radius: 0.2rem;
+    margin: 0 2px;
+}
+
+.page-link:hover {
+    color: #224abe;
+    background-color: #eaecf4;
+}
+
+.page-item.disabled .page-link {
+    color: #858796;
+}
+
+.page-item.active .page-link {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+        @media (max-width: 768px) {
+            .content-wrapper {
+                margin-left: 0;
+                padding: 15px;
+            }
         }
     </style>
 </head>
@@ -179,32 +278,47 @@ foreach ($trends as $trend) {
             </div>
 
             <!-- Statistics Cards -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <h6>Total Tracked</h6>
-                            <h3><?php echo $stats['total_tracked']; ?></h3>
-                        </div>
-                    </div>
+            <div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-muted mb-1">Total Tracked</h6>
+                    <h3 class="mb-0"><?php echo $stats['total_tracked']; ?></h3>
                 </div>
-                <div class="col-md-4">
-                    <div class="card bg-success text-white">
-                        <div class="card-body">
-                            <h6>Own Candidates</h6>
-                            <h3><?php echo $stats['own_candidates']; ?></h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <h6>Fields Tracked</h6>
-                            <h3><?php echo $stats['unique_fields']; ?></h3>
-                        </div>
-                    </div>
+                <div class="text-primary">
+                    <i class="fas fa-users fa-2x"></i>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-muted mb-1">Own Candidates</h6>
+                    <h3 class="mb-0"><?php echo $stats['own_candidates']; ?></h3>
+                </div>
+                <div class="text-success">
+                    <i class="fas fa-user-check fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-muted mb-1">Fields Tracked</h6>
+                    <h3 class="mb-0"><?php echo $stats['unique_fields']; ?></h3>
+                </div>
+                <div class="text-info">
+                    <i class="fas fa-graduation-cap fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- Performance Graphs -->
             <div class="row mb-4">
@@ -324,6 +438,23 @@ foreach ($trends as $trend) {
                             </tbody>
                         </table>
                     </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="pagination-info">
+        Showing <span id="pageStart">1</span> to <span id="pageEnd">10</span> of <span id="totalItems">0</span> entries
+    </div>
+    <ul class="pagination mb-0">
+        <li class="page-item" id="previousPage">
+            <button class="page-link" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </button>
+        </li>
+        <li class="page-item" id="nextPage">
+            <button class="page-link" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </button>
+        </li>
+    </ul>
+</div>
                 </div>
             </div>
         </div>
@@ -367,7 +498,29 @@ foreach ($trends as $trend) {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'nearest',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15
+                        }
+                    }
+                },
                 scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    },
                     y: {
                         min: 70,
                         max: 100,
@@ -411,7 +564,29 @@ foreach ($trends as $trend) {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'nearest',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15
+                        }
+                    }
+                },
                 scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    },
                     y: {
                         reverse: true,
                         title: {
@@ -438,43 +613,83 @@ foreach ($trends as $trend) {
             }
         });
 
-        // Search functionality
-        const searchInput = document.getElementById('searchTable');
-        const tableRows = document.querySelectorAll('tbody tr');
+        // Pagination functionality
+const rowsPerPage = 10;
+let currentPage = 1;
+let filteredRows = [];
 
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase().trim();
-            
-            tableRows.forEach(row => {
-                const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-                const field = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                const type = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                
-                const matches = name.includes(searchTerm) || 
-                              field.includes(searchTerm) || 
-                              type.includes(searchTerm);
-                
-                row.style.display = matches ? '' : 'none';
-            });
-        });
+const searchInput = document.getElementById('searchTable');
+const tableRows = document.querySelectorAll('tbody tr');
 
-        // Make rows clickable
-        tableRows.forEach(row => {
-            row.style.cursor = 'pointer';
-            row.addEventListener('click', function(e) {
-                // Don't trigger if clicking a link or button
-                if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || 
-                    e.target.closest('a') || e.target.closest('button')) {
-                    return;
-                }
-                
-                const name = this.dataset.name;
-                const field = this.dataset.field;
-                const type = this.dataset.type;
-                
-                window.location.href = `/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`;
-            });
-        });
+function updatePagination() {
+    const totalRows = filteredRows.length;
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = Math.min(start + rowsPerPage, totalRows);
+
+    // Update pagination info
+    document.getElementById('pageStart').textContent = totalRows ? start + 1 : 0;
+    document.getElementById('pageEnd').textContent = end;
+    document.getElementById('totalItems').textContent = totalRows;
+
+    // Update buttons state
+    document.getElementById('previousPage').classList.toggle('disabled', currentPage === 1);
+    document.getElementById('nextPage').classList.toggle('disabled', currentPage === totalPages || totalRows === 0);
+
+    // Show/hide rows
+    tableRows.forEach(row => row.style.display = 'none');
+    filteredRows.slice(start, end).forEach(row => row.style.display = '');
+}
+
+// Initialize pagination
+filteredRows = Array.from(tableRows);
+updatePagination();
+
+// Search with pagination
+searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase().trim();
+    filteredRows = Array.from(tableRows).filter(row => {
+        const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+        const field = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const type = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+        return name.includes(searchTerm) || 
+               field.includes(searchTerm) || 
+               type.includes(searchTerm);
+    });
+    currentPage = 1;
+    updatePagination();
+});
+
+// Pagination controls
+document.getElementById('previousPage').addEventListener('click', () => {
+    if (currentPage > 1) {
+        currentPage--;
+        updatePagination();
+    }
+});
+document.getElementById('nextPage').addEventListener('click', () => {
+    const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+    if (currentPage < totalPages) {
+        currentPage++;
+        updatePagination();
+    }
+});
+
+// Make rows clickable
+tableRows.forEach(row => {
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', function(e) {
+        // Don't trigger if clicking a link or button
+        if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || 
+            e.target.closest('a') || e.target.closest('button')) {
+            return;
+        }
+        const name = this.dataset.name;
+        const field = this.dataset.field;
+        const type = this.dataset.type;
+        window.location.href = `/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`;
+    });
+});
     });
     </script>
 </body>

@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check if user is logged in
+// Check if user is logged in 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
@@ -45,7 +45,17 @@ $pageTitle = "Select Report";
         }
 
         .content-wrapper {
+            margin-left: 250px; /* Match sidebar width */
             padding: 30px;
+            transition: margin-left 0.3s;
+        }
+
+        /* Responsive behavior */
+        @media (max-width: 767.98px) {
+            .content-wrapper {
+                margin-left: 0;
+                padding: 15px;
+            }
         }
 
         .page-header {
@@ -130,7 +140,7 @@ $pageTitle = "Select Report";
     <?php include_once('../../components/sidebar/sidebar.php'); ?>
 
     <div class="content-wrapper">
-        <div class="container">
+        <div class="container-fluid">
             <div class="page-header">
                 <h1 class="page-title">Select Report</h1>
                 <p class="text-muted">Choose a report type to generate</p>
@@ -274,7 +284,8 @@ $pageTitle = "Select Report";
                     </div>
                 </div>
             </div>
-
+        </div>
+    </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -58,22 +58,11 @@ $experience_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
 
 // 4. Points Range Distribution
 $query = "SELECT 
-            CASE 
-                WHEN points >= 90 THEN '90-100'
-                WHEN points >= 80 THEN '80-89'
-                WHEN points >= 70 THEN '70-79'
-                ELSE 'Below 70'
-            END as point_range,
-            COUNT(*) as count
-          FROM rankinglist
-          GROUP BY 
-            CASE 
-                WHEN points >= 90 THEN '90-100'
-                WHEN points >= 80 THEN '80-89'
-                WHEN points >= 70 THEN '70-79'
-                ELSE 'Below 70'
-            END
-          ORDER BY point_range DESC";
+    CONCAT(FLOOR(points), '-', FLOOR(points)+1) as point_range,
+    COUNT(*) as count
+  FROM rankinglist
+  GROUP BY FLOOR(points)
+  ORDER BY point_range ASC";
 $points_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
 
 // 5. Yearly Trends
@@ -137,6 +126,35 @@ $field_type_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
         }
         .clickable-row:hover {
             background-color: rgba(0,0,0,0.05);
+        }
+
+        /* Responsive sidebar/content layout */
+        .content-wrapper {
+            margin-left: 250px; /* Sidebar width */
+            padding: 30px 15px 50px 15px;
+            max-width: 100%;
+            transition: margin-left 0.3s;
+        }
+        .container {
+            max-width: 100%;
+        }
+        @media (max-width: 990px) {
+            .content-wrapper {
+                margin-left: 0;
+                padding: 15px 5px 50px 5px;
+            }
+        }
+        @media (max-width: 767.98px) {
+            .content-wrapper {
+                margin-left: 0;
+                padding: 10px 2px 30px 2px;
+            }
+        }
+        /* Make charts responsive in their cards */
+        .card-body > canvas {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100%;
         }
     </style>
 </head>
@@ -248,7 +266,7 @@ $field_type_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
                                     <th>Min Points</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="categoryStatsBody">
                                 <?php foreach ($category_stats as $stat): ?>
                                 <tr style="cursor: pointer;" class="field-row" 
                                     data-field="<?php echo htmlspecialchars($stat['fields']); ?>"
@@ -268,6 +286,24 @@ $field_type_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        <!-- Pagination controls -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="pagination-info">
+                                Showing <span id="pageStart">1</span> to <span id="pageEnd">10</span> of <span id="totalItems">0</span> entries
+                            </div>
+                            <ul class="pagination mb-0">
+                                <li class="page-item" id="previousPage">
+                                    <button class="page-link" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </button>
+                                </li>
+                                <li class="page-item" id="nextPage">
+                                    <button class="page-link" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -280,25 +316,45 @@ $field_type_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
     <script>
     // Points Distribution Chart
     new Chart(document.getElementById('pointsChart'), {
-        type: 'pie',
+        type: 'bar',
         data: {
             labels: <?php echo json_encode(array_column($points_stats, 'point_range')); ?>,
             datasets: [{
+                label: 'Number of Candidates',
                 data: <?php echo json_encode(array_column($points_stats, 'count')); ?>,
-                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e']
+                backgroundColor: '#4e73df'
             }]
         },
         options: {
             responsive: true,
             plugins: {
-                legend: {
-                    position: 'bottom'
-                },
+                legend: { display: false },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
                             return `Candidates: ${Math.round(context.raw)}`;
                         }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Candidates'
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) {
+                            return Math.round(value);
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Points Range'
                     }
                 }
             }
@@ -530,32 +586,86 @@ $field_type_stats = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Search functionality
+    // Search functionality for the main table
     const searchInput = document.getElementById('searchTable');
-    const tableRows = document.querySelectorAll('.clickable-row');
+    const tableRows = document.querySelectorAll('.field-row');
 
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase().trim();
-        
         tableRows.forEach(row => {
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(searchTerm) ? '' : 'none';
         });
     });
 
-    // Row click handler
+    // Row click handler for the main table
     tableRows.forEach(row => {
         row.addEventListener('click', function(e) {
             // Don't trigger if clicking a link or button
             if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {
                 return;
             }
-            
-            const name = this.dataset.name;
             const field = this.dataset.field;
             const type = this.dataset.type;
-            
-            window.location.href = `/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`;
+            const season = this.dataset.season;
+            const year = this.dataset.year;
+
+            // Show modal and fetch stats as before
+            const modal = new bootstrap.Modal(document.getElementById('fieldDetailsModal'));
+            modal.show();
+
+            document.querySelector('.modal-title').textContent =
+                `${field} (${type}) - ${season} ${year}`;
+
+            fetch(`get_field_stats.php?field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}&season=${encodeURIComponent(season)}&year=${encodeURIComponent(year)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update statistics table
+                    document.getElementById('fieldStats').innerHTML =
+                        Object.entries(data.stats)
+                            .map(([key, value]) => `<tr><td>${key}</td><td>${value}</td></tr>`)
+                            .join('');
+
+                    // Update charts
+                    if (modalPointsChart) modalPointsChart.destroy();
+                    if (modalExperienceChart) modalExperienceChart.destroy();
+
+                    modalPointsChart = new Chart(document.getElementById('modalPointsChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: data.pointsDistribution.labels,
+                            datasets: [{
+                                data: data.pointsDistribution.data,
+                                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e']
+                            }]
+                        }
+                    });
+
+                    modalExperienceChart = new Chart(document.getElementById('modalExperienceChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: data.experienceDistribution.labels,
+                            datasets: [{
+                                label: 'Number of Candidates',
+                                data: data.experienceDistribution.data,
+                                backgroundColor: '#36b9cc'
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { stepSize: 1 }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('fieldStats').innerHTML =
+                        '<tr><td colspan="2" class="text-danger">Error loading statistics</td></tr>';
+                });
         });
     });
 });

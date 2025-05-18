@@ -85,6 +85,44 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+        /* Main content wrapper */
+        .content-wrapper {
+            margin-left: 250px; /* Match sidebar width */
+            padding: 30px;
+            transition: margin-left 0.3s;
+        }
+
+        /* Container adjustments */
+        .container {
+            max-width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        /* Responsive behavior */
+        @media (max-width: 767.98px) {
+            .content-wrapper {
+                margin-left: 0;
+                padding: 15px;
+                width: 100%;
+            }
+        }
+
+        /* Improve chart responsiveness */
+        .card {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
         .table-container {
             max-height: 600px;
             overflow-y: auto;
@@ -115,29 +153,6 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
     <div class="content-wrapper">
         <div class="container">
-            <!-- Date range selector form -->
-            <div class="mb-4">
-                <form class="card" method="GET">
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" name="start_date" id="start_date" 
-                                       value="<?php echo date('Y-m-d', strtotime($start_date)); ?>" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" name="end_date" id="end_date" 
-                                       value="<?php echo date('Y-m-d', strtotime($end_date)); ?>" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">&nbsp;</label>
-                                <button type="submit" class="btn btn-primary d-block">Update Report</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
 
             <!-- Page header with date range -->
             <div class="page-header mb-4">
@@ -361,10 +376,14 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
                 const field = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
                 const type = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                const date = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                const points = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
                 
                 const matches = name.includes(searchTerm) || 
-                              field.includes(searchTerm) || 
-                              type.includes(searchTerm);
+                               field.includes(searchTerm) || 
+                               type.includes(searchTerm) ||
+                               date.includes(searchTerm) ||
+                               points.includes(searchTerm);
                 
                 row.style.display = matches ? '' : 'none';
             });
