@@ -8,8 +8,44 @@ set_time_limit(500);
 require_once __DIR__ . '/../../database/db_connect.php';
 
 if (!isset($_POST['process_category'])) {
-    $categoriesListQuery = "SELECT categoryID, fields, type, season, year FROM categories ORDER BY categoryID ASC";
-    $categoriesListResult = $mysqli->query($categoriesListQuery);
+    // Get distinct years and seasons for filters
+    $yearsQuery = "SELECT DISTINCT year FROM categories ORDER BY year DESC";
+    $yearsResult = $mysqli->query($yearsQuery);
+    
+    $seasonsQuery = "SELECT DISTINCT season FROM categories ORDER BY season";
+    $seasonsResult = $mysqli->query($seasonsQuery);
+    
+    // Build query with optional filters
+    $categoriesListQuery = "SELECT categoryID, fields, type, season, year FROM categories WHERE 1=1";
+    
+    // Apply filters if provided
+    $filterYear = isset($_GET['filter_year']) && !empty($_GET['filter_year']) ? $_GET['filter_year'] : null;
+    $filterSeason = isset($_GET['filter_season']) && !empty($_GET['filter_season']) ? $_GET['filter_season'] : null;
+    
+    $filterParams = [];
+    if ($filterYear) {
+        $categoriesListQuery .= " AND year = ?";
+        $filterParams[] = $filterYear;
+    }
+    
+    if ($filterSeason) {
+        $categoriesListQuery .= " AND season = ?";
+        $filterParams[] = $filterSeason;
+    }
+    
+    // Changed the ORDER BY clause to prioritize categoryID
+    $categoriesListQuery .= " ORDER BY categoryID ASC";
+    
+    // Prepare and execute the query with potential filters
+    $stmt = $mysqli->prepare($categoriesListQuery);
+    
+    if (!empty($filterParams)) {
+        $types = str_repeat('s', count($filterParams));
+        $stmt->bind_param($types, ...$filterParams);
+    }
+    
+    $stmt->execute();
+    $categoriesListResult = $stmt->get_result();
     ?>
     <!DOCTYPE html>
     <html lang="en">
@@ -22,6 +58,42 @@ if (!isset($_POST['process_category'])) {
     <body>
         <div class="container mt-4">
             <h1>Process PDF Data by Category</h1>
+            
+            <!-- Filter Form -->
+            <form method="get" class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label for="filter_year" class="form-label">Filter by Year:</label>
+                    <select name="filter_year" id="filter_year" class="form-select">
+                        <option value="">All Years</option>
+                        <?php while ($year = $yearsResult->fetch_assoc()): ?>
+                            <option value="<?= $year['year'] ?>" <?= ($filterYear == $year['year']) ? 'selected' : '' ?>>
+                                <?= $year['year'] ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                    <label for="filter_season" class="form-label">Filter by Season:</label>
+                    <select name="filter_season" id="filter_season" class="form-select">
+                        <option value="">All Seasons</option>
+                        <?php while ($season = $seasonsResult->fetch_assoc()): ?>
+                            <option value="<?= $season['season'] ?>" <?= ($filterSeason == $season['season']) ? 'selected' : '' ?>>
+                                <?= $season['season'] ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-secondary">Apply Filters</button>
+                    <?php if ($filterYear || $filterSeason): ?>
+                        <a href="?" class="btn btn-outline-secondary ms-2">Clear Filters</a>
+                    <?php endif; ?>
+                </div>
+            </form>
+            
+            <!-- Process Form -->
             <form method="post" class="mt-4">
                 <div class="mb-3">
                     <label for="category_id" class="form-label">Select Category to Process:</label>
@@ -37,6 +109,14 @@ if (!isset($_POST['process_category'])) {
                 </div>
                 <button type="submit" name="process_category" class="btn btn-primary">Process Selected Category</button>
                 <button type="submit" name="process_all" class="btn btn-warning ms-2">Process All Categories</button>
+                
+                <!-- Pass filters to POST if applicable -->
+                <?php if ($filterYear): ?>
+                    <input type="hidden" name="filter_year" value="<?= htmlspecialchars($filterYear) ?>">
+                <?php endif; ?>
+                <?php if ($filterSeason): ?>
+                    <input type="hidden" name="filter_season" value="<?= htmlspecialchars($filterSeason) ?>">
+                <?php endif; ?>
             </form>
         </div>
     </body>
@@ -46,16 +126,45 @@ if (!isset($_POST['process_category'])) {
 }
 
 // Process categories (either specific one or all)
-$categoriesQuery = "SELECT categoryID, pdf_content FROM categories";
-if (isset($_POST['category_id']) && !empty($_POST['category_id']) && !isset($_POST['process_all'])) {
-    $categoryID = (int) $_POST['category_id'];
-    $categoriesQuery .= " WHERE categoryID = $categoryID";
-    echo "<div style='margin: 20px;'><h2>Processing Category ID: $categoryID</h2>";
-} else {
-    echo "<div style='margin: 20px;'><h2>Processing All Categories</h2>";
+$categoriesQuery = "SELECT categoryID, pdf_content FROM categories WHERE 1=1";
+$queryParams = [];
+$paramTypes = "";
+
+// Apply filters if present in POST (coming from the form)
+if (isset($_POST['filter_year']) && !empty($_POST['filter_year'])) {
+    $categoriesQuery .= " AND year = ?";
+    $queryParams[] = $_POST['filter_year'];
+    $paramTypes .= "s";
 }
 
-$categoriesResult = $mysqli->query($categoriesQuery);
+if (isset($_POST['filter_season']) && !empty($_POST['filter_season'])) {
+    $categoriesQuery .= " AND season = ?";
+    $queryParams[] = $_POST['filter_season'];
+    $paramTypes .= "s";
+}
+
+// Add category ID filter if processing a specific category
+if (isset($_POST['category_id']) && !empty($_POST['category_id']) && !isset($_POST['process_all'])) {
+    $categoryID = (int) $_POST['category_id'];
+    $categoriesQuery .= " AND categoryID = ?";
+    $queryParams[] = $categoryID;
+    $paramTypes .= "i";
+    echo "<div style='margin: 20px;'><h2>Processing Category ID: $categoryID</h2>";
+} else {
+    echo "<div style='margin: 20px;'><h2>Processing ";
+    echo (isset($_POST['filter_year']) || isset($_POST['filter_season'])) ? "Filtered" : "All";
+    echo " Categories</h2>";
+}
+
+// Prepare and execute the query
+$stmt = $mysqli->prepare($categoriesQuery);
+
+if (!empty($queryParams)) {
+    $stmt->bind_param($paramTypes, ...$queryParams);
+}
+
+$stmt->execute();
+$categoriesResult = $stmt->get_result();
 
 // Rest of your original code follows
 if ($categoriesResult->num_rows > 0) {
