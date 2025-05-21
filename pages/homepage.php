@@ -23,6 +23,8 @@ if (isset($_POST['searchApplicants']) || isset($_POST['categoryFilter'])) {
 }
 
 
+
+
 $pageTitle = "Κατάλογοι Διοριστέων";
 
 $currentYear = date("Y");

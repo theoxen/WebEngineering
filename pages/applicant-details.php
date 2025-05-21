@@ -87,6 +87,7 @@ while ($row = $historyRes->fetch_assoc()) {
 
 $mysqli->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -154,6 +155,17 @@ $mysqli->close();
             font-weight: bold;
             font-size: 1.5rem;
             margin: 1rem auto;
+        }
+
+        .custom-bottom-alert {
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 90vw;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.15);
         }
 
         .applicant-details-card .table-responsive {
@@ -302,16 +314,17 @@ $mysqli->close();
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
     $(document).ready(function() {
-        function showMessage(message, type) {
-            const alertDiv = $(`<div class="alert alert-${type} alert-dismissible fade show mt-3" role="alert">
-                                    ${message}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>`);
-            $('.content-wrapper .mb-4').after(alertDiv);
-            setTimeout(() => {
-                alertDiv.alert('close');
-            }, 3000);
-        }
+    function showMessage(message, type) {
+        const alertDiv = $(`<div class="alert alert-${type} custom-bottom-alert alert-dismissible fade show" role="alert">
+                                ${message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>`);
+        // Append to body so it overlays everything
+        $('body').append(alertDiv);
+        setTimeout(() => {
+            alertDiv.alert('close');
+        }, 5000);
+    }
         $('#trackBtn').click(function() {
             const applicantID = $(this).data('id');
             $.ajax({
