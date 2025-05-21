@@ -11,6 +11,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
+
+
 header('Content-Type: text/html; charset=utf-8'); // Set UTF-8 encoding
 include_once('../../database/db_connect.php');
 require '../../vendor/autoload.php'; // Include the PDF parser library
@@ -59,19 +61,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
             $pdfText = $pdf->getText(); // Extract text from the PDF
 
             // Get form data
-            $year = $_POST['year'];
+            $year = (int)$_POST['year'];
             $season = $_POST['season'];
             $type = $_POST['type'];
             $fields = $_POST['fields'] ?? ''; // Assuming you have a "fields" input in your form
 
             // Insert metadata into the database
             $stmt = $mysqli->prepare("
-                INSERT INTO categories (year, season, type, fields, file_path, pdf_content)
+                INSERT INTO `categories` (`year`, `season`, `type`, `fields`, `file_path`, `pdf_content`)
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
             if ($stmt) {
                 $stmt->bind_param(
-                    "ssssss", // Data types: s = string
+                    "isssss", // Data types: s = string
                     $year,
                     $season,
                     $type,
@@ -327,7 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
                     "Δομικών (Πολιτική Μηχανική Κατασκευές)", "Δομικών (Τοπογραφία)",
                     "Ηλεκτρολογία Εγκαταστάσεων", "Ηλεκτρολογίας (Γενική)", "Ηλεκτρολογίας (Ηλεκτρονική)",
                     "Ηλεκτρολογίας (Ρεύμα Ψηλής Έντασης)", "Ηλεκτρονικών (Επιδιόρθωση Τηλεοράσεων)",
-                    "Κεραμικής-Αγγειοπλαστικής", "Κοπτικής-Ραπτικής", "Μηχανικής Αυτοκινήτων",
+                    "Κεραμικής-Αγγειοπλαστικής", "Κοπτικής-Ραπτικής","Κομμωτικής (Α5-7)", "Μηχανικής Αυτοκινήτων",
                     "Μηχανικής Ηλεκτρονικών Υπολογιστών", "Μηχανολογίας (Γενική)",
                     "Μηχανολογίας (Γεωργική Μηχαν/Αρδεύσεις)", "Μηχανολογίας (Γεωργική Μηχανική)",
                     "Μηχανολογίας (Θερμοδυναμικής Ενέργειας)", "Μηχανολογίας (Μηχανική Παραγωγής)",

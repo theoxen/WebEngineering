@@ -16,7 +16,12 @@
         }
     ],
     "require": {
+<<<<<<< Updated upstream
         "php": ">=7.2"
+=======
+        "php": ">=7.2",
+        "ext-iconv": "*"
+>>>>>>> Stashed changes
     },
     "provide": {
         "ext-mbstring": "*"

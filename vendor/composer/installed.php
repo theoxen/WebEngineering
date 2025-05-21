@@ -2,6 +2,10 @@
     'root' => array(
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
+<<<<<<< Updated upstream
+=======
+        'reference' => '62cd8bbccd26d363bfcb115b3aa2e9c346691fe9',
+>>>>>>> Stashed changes
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,6 +17,10 @@
         '__root__' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
+<<<<<<< Updated upstream
+=======
+            'reference' => '62cd8bbccd26d363bfcb115b3aa2e9c346691fe9',
+>>>>>>> Stashed changes
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -29,8 +37,14 @@
             'dev_requirement' => false,
         ),
         'phpmailer/phpmailer' => array(
+<<<<<<< Updated upstream
             'pretty_version' => 'v6.9.3',
             'version' => '6.9.3.0',
+=======
+            'pretty_version' => 'v6.10.0',
+            'version' => '6.10.0.0',
+            'reference' => 'bf74d75a1fde6beaa34a0ddae2ec5fce0f72a144',
+>>>>>>> Stashed changes
             'type' => 'library',
             'install_path' => __DIR__ . '/../phpmailer/phpmailer',
             'aliases' => array(),
@@ -80,8 +94,14 @@
             'dev_requirement' => false,
         ),
         'symfony/polyfill-mbstring' => array(
+<<<<<<< Updated upstream
             'pretty_version' => 'v1.31.0',
             'version' => '1.31.0.0',
+=======
+            'pretty_version' => 'v1.32.0',
+            'version' => '1.32.0.0',
+            'reference' => '6d857f4d76bd4b343eac26d6b539585d2bc56493',
+>>>>>>> Stashed changes
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/polyfill-mbstring',
             'aliases' => array(),
