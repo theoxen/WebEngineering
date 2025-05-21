@@ -1,162 +1,139 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
+if (session_status() === PHP_SESSION_NONE) session_start();
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
-
 include_once('../../database/db_connect.php');
 
-// Get selected parameters
+// Get parameters from select form
 $field = $_GET['field'] ?? '';
 $type = $_GET['type'] ?? '';
-$selected_season = $_GET['season'] ?? '';
-$selected_year = $_GET['year'] ?? '';
 
-// Pagination settings
-$records_per_page = 10;
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$offset = ($page - 1) * $records_per_page;
-
-// Replace the latest season query with previous season logic
-$query = "SELECT year, season 
-          FROM categories 
-          WHERE (year < ? OR (year = ? AND 
-          CASE season 
-              WHEN 'Winter' THEN 1 
-              WHEN 'Summer' THEN 2 
-          END < 
-          CASE ? 
-              WHEN 'Winter' THEN 1 
-              WHEN 'Summer' THEN 2 
-          END))
-          ORDER BY year DESC, 
-          CASE season 
-              WHEN 'Winter' THEN 1 
-              WHEN 'Summer' THEN 2
-          END DESC 
-          LIMIT 1";
-
-$stmt = $mysqli->prepare($query);
-$stmt->bind_param("iss", $selected_year, $selected_year, $selected_season);
-$stmt->execute();
-$result = $stmt->get_result();
-$previous = $result->fetch_assoc();
-
-// Fix the query to include fields and type
-$query = "SELECT 
-            r1.fullName as name,
-            r1.ranking as old_rank,
-            r2.ranking as new_rank,
-            r1.points as old_points,
-            r2.points as new_points,
-            c1.fields,
-            c1.type
-          FROM rankinglist r1
-          LEFT JOIN rankinglist r2 ON r1.fullName = r2.fullName
-          JOIN categories c1 ON r1.categoryID = c1.categoryID
-          LEFT JOIN categories c2 ON r2.categoryID = c2.categoryID
-          WHERE c1.year = ? AND c1.season = ?
-          AND c1.fields = ? AND c1.type = ?
-          AND c2.year = ? AND c2.season = ?
-          ORDER BY r1.ranking ASC
-          LIMIT ? OFFSET ?";
-
-$stmt = $mysqli->prepare($query);
-$stmt->bind_param("ssssssii", 
-    $previous['year'], $previous['season'],  // Previous season
-    $field, $type,
-    $selected_year, $selected_season,        // Selected season
-    $records_per_page, $offset
+// Find the latest two semesters for this field/type
+$stmt = $mysqli->prepare(
+    "SELECT year, season, categoryID 
+     FROM categories 
+     WHERE fields = ? AND type = ?
+     ORDER BY year DESC, FIELD(season, 'Summer', 'Winter') DESC 
+     LIMIT 2"
 );
+$stmt->bind_param("ss", $field, $type);
 $stmt->execute();
 $result = $stmt->get_result();
-$rankings = $result->fetch_all(MYSQLI_ASSOC);
+$semesters = $result->fetch_all(MYSQLI_ASSOC);
 
-// Calculate statistics
-$total = count($rankings);
-$improved = 0;
-$declined = 0;
-$same = 0;
-$missing = 0;
+if (count($semesters) < 2) {
+    $error = "Not enough data for comparison - need at least two semesters.";
+    // Set default values
+    $current = ['year' => null, 'season' => null, 'categoryID' => null];
+    $previous = ['year' => null, 'season' => null, 'categoryID' => null];
+} else {
+    $current = $semesters[0];
+    $previous = $semesters[1];
+}
 
-foreach ($rankings as $rank) {
-    if (is_null($rank['new_rank'])) {
-        $missing++;
-    } else {
-        if ($rank['new_rank'] < $rank['old_rank']) $improved++;
-        elseif ($rank['new_rank'] > $rank['old_rank']) $declined++;
-        else $same++;
+// Get all unique candidate names in either semester
+$candidates = [];
+if (!empty($current['categoryID']) && !empty($previous['categoryID'])) {
+    $sql = "SELECT DISTINCT fullName 
+            FROM rankinglist 
+            WHERE categoryID IN (?, ?)";
+    $stmt = $mysqli->prepare($sql);
+    $stmt->bind_param("ii", $current['categoryID'], $previous['categoryID']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $candidates[] = $row['fullName'];
     }
 }
 
-// Add after your main data query in each report
-$count_query = "SELECT COUNT(*) as total FROM rankinglist r1 
-                JOIN categories c1 ON r1.categoryID = c1.categoryID 
-                LEFT JOIN rankinglist r2 ON r1.fullName = r2.fullName 
-                LEFT JOIN categories c2 ON r2.categoryID = c2.categoryID
-                WHERE c1.year = ? 
-                AND c1.season = ? 
-                AND c1.fields = ? 
-                AND c1.type = ?";
+// Build comparison data
+$rankings = [];
+foreach ($candidates as $name) {
+    // Get current semester data
+    $stmt = $mysqli->prepare(
+        "SELECT ranking, points, experience, titleGrade 
+         FROM rankinglist 
+         WHERE categoryID = ? AND fullName = ? 
+         LIMIT 1"
+    );
+    $stmt->bind_param("is", $current['categoryID'], $name);
+    $stmt->execute();
+    $current_data = $stmt->get_result()->fetch_assoc();
 
-$stmt = $mysqli->prepare($count_query);
-$stmt->bind_param("ssss", 
-    $previous['year'], 
-    $previous['season'], 
-    $field, 
-    $type
-);
-$stmt->execute();
-$total_records = $stmt->get_result()->fetch_assoc()['total'];
-$total_pages = ceil($total_records / $records_per_page);
+    // Get previous semester data
+    $stmt->bind_param("is", $previous['categoryID'], $name);
+    $stmt->execute();
+    $previous_data = $stmt->get_result()->fetch_assoc();
+
+    $rankings[] = [
+        'name' => $name,
+        'current_rank' => $current_data['ranking'] ?? null,
+        'prev_rank' => $previous_data['ranking'] ?? null,
+        'current_points' => $current_data['points'] ?? null,
+        'prev_points' => $previous_data['points'] ?? null,
+        'current_experience' => $current_data['experience'] ?? null,
+        'prev_experience' => $previous_data['experience'] ?? null,
+        'current_grade' => $current_data['titleGrade'] ?? null,
+        'prev_grade' => $previous_data['titleGrade'] ?? null
+    ];
+}
+
+// Calculate statistics
+$stats = [
+    'improved' => 0,
+    'declined' => 0,
+    'same' => 0,
+    'missing' => 0,
+    'total' => count($rankings),
+    'avg_point_change' => 0,
+    'max_improvement' => 0,
+    'max_decline' => 0
+];
+
+$point_changes = [];
+foreach ($rankings as $rank) {
+    if (is_null($rank['current_rank'])) continue;
+    
+    if (is_null($rank['prev_rank'])) {
+        $stats['missing']++;
+    } else {
+        $rank_diff = $rank['prev_rank'] - $rank['current_rank'];
+        if ($rank_diff > 0) $stats['improved']++;
+        elseif ($rank_diff < 0) $stats['declined']++;
+        else $stats['same']++;
+
+        if (!is_null($rank['current_points']) && !is_null($rank['prev_points'])) {
+            $point_diff = $rank['current_points'] - $rank['prev_points'];
+            $point_changes[] = $point_diff;
+            $stats['max_improvement'] = max($stats['max_improvement'], $point_diff);
+            $stats['max_decline'] = min($stats['max_decline'], $point_diff);
+        }
+    }
+}
+
+$stats['avg_point_change'] = !empty($point_changes) ? 
+    array_sum($point_changes) / count($point_changes) : 0;
+
+// Sort rankings by current rank
+usort($rankings, function($a, $b) {
+    if (is_null($a['current_rank'])) return 1;
+    if (is_null($b['current_rank'])) return -1;
+    return $a['current_rank'] - $b['current_rank'];
+});
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Position Changes Report</title>
-    
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../../components/sidebar/sidebar.css">
-    
     <style>
-        /* Main content wrapper */
-        .content-wrapper {
-            margin-left: 250px; /* Match sidebar width */
-            padding: 30px;
-            transition: margin-left 0.3s;
-        }
-
-        /* Container adjustments */
-        .container {
-            max-width: 100%;
-            padding-right: 15px;
-            padding-left: 15px;
-            margin-right: auto;
-            margin-left: auto;
-        }
-
-        /* Responsive behavior */
-        @media (max-width: 767.98px) {
-            .content-wrapper {
-                margin-left: 0;
-                padding: 15px;
-                width: 100%;
-            }
-        }
-
-        .stats-card {
-            border-left: 4px solid;
-            margin-bottom: 1rem;
-        }
+        .content-wrapper { margin-left: 250px; padding: 30px; }
+        @media (max-width: 767.98px) { .content-wrapper { margin-left: 0; padding: 15px; width: 100%; } }
+        .stats-card { border-left: 4px solid; margin-bottom: 1rem; }
         .improved { color: #1cc88a; }
         .declined { color: #e74a3b; }
         .same { color: #858796; }
@@ -165,286 +142,272 @@ $total_pages = ceil($total_records / $records_per_page);
         .stats-declined { border-left-color: #e74a3b; }
         .stats-same { border-left-color: #858796; }
         .stats-missing { border-left-color: #f6c23e; }
-        .table-container {
-            max-height: 600px;
-            overflow-y: auto;
+        .search-box { margin-bottom: 20px; }
+        .sticky-header th { position: sticky; top: 0; background: #fff; z-index: 1; }
+        .candidate-row { cursor: pointer; }
+        .pagination-info { 
+            color: #6c757d; 
+            font-size: 0.95rem; 
         }
-        .search-box {
-            margin-bottom: 20px;
+        .page-link { 
+            color: #4e73df; 
+            border-radius: 0.2rem; 
+            margin: 0 2px; 
         }
-        .sticky-header th {
-            position: sticky;
-            top: 0;
-            background: #fff;
-            z-index: 1;
+        .page-link:hover { 
+            color: #224abe; 
+            background-color: #eaecf4; 
         }
-
-        /* Pagination styles */
-        .pagination {
-            margin-top: 20px;
-            justify-content: center;
+        .page-item.disabled .page-link { 
+            color: #858796; 
         }
-
-        .page-item.active .page-link {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
+        .page-item.active .page-link { 
+            background-color: #4e73df; 
+            border-color: #4e73df; 
         }
-
-        .page-link {
-            color: var(--primary-color);
+        .btn-secondary {
+            background-color: #858796;
+            border-color: #858796;
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
         }
-
-        .page-link:hover {
-            color: #2e59d9;
+        
+        .btn-secondary:hover {
+            background-color: #717384;
+            border-color: #717384;
+            color: white;
         }
     </style>
 </head>
-
 <body>
-    <?php include_once('../../components/sidebar/sidebar.php'); ?>
-    
-    <div class="content-wrapper">
-        <div class="container">
-            <div class="page-header mb-4">
-                <h1 class="page-title">Position Changes Report</h1>
-                <p class="text-muted">
-                    Comparing <?php echo "{$previous['season']} {$previous['year']}"; ?> 
-                    to <?php echo "$selected_season $selected_year"; ?>
-                </p>
-                <div class="badge bg-primary mb-3">
-                    Field: <?php echo htmlspecialchars($field); ?> | 
-                    Type: <?php echo htmlspecialchars($type); ?>
-                </div>
+<?php include_once('../../components/sidebar/sidebar.php'); ?>
+<div class="content-wrapper">
+    <div class="container">
+        <!-- Add back button -->
+        <div class="mb-3">
+            <a href="select-report.php" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back
+            </a>
+        </div>
+        <div class="page-header mb-4">
+            <h1 class="page-title">Position Changes Report</h1>
+            <p class="text-muted">
+                Comparing <?= htmlspecialchars($current['season'] . ' ' . $current['year']) ?> 
+                to <?= htmlspecialchars($previous['season'] . ' ' . $previous['year']) ?>
+            </p>
+            <div class="badge bg-primary mb-3">
+                Field: <?= htmlspecialchars($field) ?> | Type: <?= htmlspecialchars($type) ?>
             </div>
-
-            <!-- Statistics Cards -->
-            <div class="row mb-4">
-                <div class="col-xl-3 col-md-6">
-                    <div class="card stats-card stats-improved">
-                        <div class="card-body">
-                            <h5>Improved Positions</h5>
-                            <h2><?php echo $improved; ?></h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card stats-card stats-declined">
-                        <div class="card-body">
-                            <h5>Declined Positions</h5>
-                            <h2><?php echo $declined; ?></h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card stats-card stats-same">
-                        <div class="card-body">
-                            <h5>Unchanged</h5>
-                            <h2><?php echo $same; ?></h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card stats-card stats-missing">
-                        <div class="card-body">
-                            <h5>No Longer Listed</h5>
-                            <h2><?php echo $missing; ?></h2>
-                        </div>
+        </div>
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card stats-card stats-improved">
+                    <div class="card-body">
+                        <h5>Improved Positions</h5>
+                        <h2><?= $stats['improved'] ?></h2>
                     </div>
                 </div>
             </div>
-
-            <!-- Rankings Table -->
-            <div class="card">
-                <div class="card-body">
-                    <div class="search-box">
-                        <input type="text" id="searchTable" class="form-control" placeholder="Search candidates...">
+            <div class="col-xl-3 col-md-6">
+                <div class="card stats-card stats-declined">
+                    <div class="card-body">
+                        <h5>Declined Positions</h5>
+                        <h2><?= $stats['declined'] ?></h2>
                     </div>
-                    <div class="table-container">
-                        <table class="table table-hover">
-                            <thead class="sticky-header">
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stats-card stats-same">
+                    <div class="card-body">
+                        <h5>Unchanged</h5>
+                        <h2><?= $stats['same'] ?></h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stats-card stats-missing">
+                    <div class="card-body">
+                        <h5>No Previous Entry</h5>
+                        <h2><?= $stats['missing'] ?></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Rankings Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="search-box">
+                    <input type="text" id="searchTable" class="form-control" placeholder="Search candidates...">
+                </div>
+                <div class="table-container">
+                    <table class="table table-hover">
+                        <thead class="sticky-header">
+                            <tr>
+                                <th>Name</th>
+                                <th>Current Rank</th>
+                                <th>Previous Rank</th>
+                                <th>Change</th>
+                                <th>Current Points</th>
+                                <th>Previous Points</th>
+                                <th>Points Change</th>
+                                <th>Profile</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($rankings)): ?>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Previous Rank</th>
-                                    <th>Current Rank</th>
-                                    <th>Change</th>
-                                    <th>Previous Points</th>
-                                    <th>Current Points</th>
-                                    <th>Points Change</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($rankings as $rank): 
-                                    $rank_diff = !is_null($rank['new_rank']) ? 
-                                        ($rank['old_rank'] - $rank['new_rank']) : 'N/A';
-                                    $points_diff = !is_null($rank['new_points']) ? 
-                                        ($rank['new_points'] - $rank['old_points']) : 'N/A';
-                                    
-                                    if ($rank_diff === 'N/A') {
-                                        $class = 'missing';
-                                        $icon = '×';
-                                    } else {
-                                        $class = $rank_diff > 0 ? 'improved' : 
-                                               ($rank_diff < 0 ? 'declined' : 'same');
-                                        $icon = $rank_diff > 0 ? '↑' : 
-                                               ($rank_diff < 0 ? '↓' : '→');
-                                    }
-                                ?>
-                                <tr class="<?php echo $class; ?>">
-                                    <td>
-                                        <a href="/WebEngineering/pages/rankingList.php?field=<?php echo urlencode($rank['fields']); ?>&type=<?php echo urlencode($rank['type']); ?>&season=<?php echo urlencode($selected_season); ?>&year=<?php echo urlencode($selected_year); ?>#<?php echo urlencode($rank['name']); ?>" 
-                                           class="text-primary text-decoration-none">
-                                            <?php echo htmlspecialchars($rank['name']); ?>
-                                        </a>
-                                    </td>
-                                    <td><?php echo $rank['old_rank']; ?></td>
-                                    <td><?php echo $rank['new_rank'] ?? 'Not Listed'; ?></td>
-                                    <td>
-                                        <?php if ($rank_diff !== 'N/A'): ?>
-                                            <span class="<?php echo $class; ?>">
-                                                <?php echo $icon; ?> 
-                                                <?php echo abs($rank_diff); ?>
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="missing">×</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td><?php echo number_format($rank['old_points'], 1); ?></td>
-                                    <td>
-                                        <?php echo $rank['new_points'] ? number_format($rank['new_points'], 1) : 'N/A'; ?>
-                                    </td>
-                                    <td>
-                                        <?php if ($points_diff !== 'N/A'): ?>
-                                            <span class="<?php echo $class; ?>">
-                                                <?php echo sprintf('%+.1f', $points_diff); ?>
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="missing">N/A</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <a href="/WebEngineering/pages/applicant-details.php?name=<?php echo urlencode($rank['name']); ?>&field=<?php echo urlencode($rank['fields']); ?>&type=<?php echo urlencode($rank['type']); ?>" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-info-circle"></i> Details
-                                        </a>
+                                    <td colspan="8" class="text-center text-muted">
+                                        No data found for the selected or previous semester for this field/type.
                                     </td>
                                 </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                            <?php else: foreach ($rankings as $rank): 
+                                $rank_diff = (!is_null($rank['current_rank']) && !is_null($rank['prev_rank'])) ? ($rank['prev_rank'] - $rank['current_rank']) : 'N/A';
+                                $points_diff = (!is_null($rank['current_points']) && !is_null($rank['prev_points'])) ? ($rank['current_points'] - $rank['prev_points']) : 'N/A';
+                                if ($rank_diff === 'N/A') {
+                                    $class = 'missing';
+                                    $icon = '×';
+                                } else {
+                                    $class = $rank_diff > 0 ? 'improved' : ($rank_diff < 0 ? 'declined' : 'same');
+                                    $icon = $rank_diff > 0 ? '↑' : ($rank_diff < 0 ? '↓' : '→');
+                                }
+                            ?>
+                            <tr class="candidate-row <?= $class; ?>"
+                                data-name="<?= htmlspecialchars($rank['name']) ?>"
+                                data-field="<?= htmlspecialchars($field) ?>"
+                                data-type="<?= htmlspecialchars($type) ?>">
+                                <td>
+                                    <a href="/WebEngineering/pages/applicant-details.php?name=<?= urlencode($rank['name']) ?>&field=<?= urlencode($field) ?>&type=<?= urlencode($type) ?>"
+                                       class="text-primary text-decoration-none" target="_blank">
+                                        <?= htmlspecialchars($rank['name']) ?>
+                                    </a>
+                                </td>
+                                <td><?= $rank['current_rank'] ?? 'N/A'; ?></td>
+                                <td><?= $rank['prev_rank'] ?? 'N/A'; ?></td>
+                                <td>
+                                    <?php if ($rank_diff !== 'N/A'): ?>
+                                        <span class="<?= $class; ?>">
+                                            <?= $icon; ?> <?= abs($rank_diff); ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="missing">×</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= !is_null($rank['current_points']) ? number_format($rank['current_points'], 1) : 'N/A'; ?></td>
+                                <td><?= !is_null($rank['prev_points']) ? number_format($rank['prev_points'], 1) : 'N/A'; ?></td>
+                                <td>
+                                    <?php if ($points_diff !== 'N/A'): ?>
+                                        <span class="<?= $class; ?>">
+                                            <?= sprintf('%+.1f', $points_diff); ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="missing">N/A</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <a href="/WebEngineering/pages/applicant-details.php?name=<?= urlencode($rank['name']) ?>&field=<?= urlencode($field) ?>&type=<?= urlencode($type) ?>"
+                                       class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="fas fa-info-circle"></i> Details
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="pagination-info">
+                        Showing <span id="pageStart">1</span> to <span id="pageEnd">10</span> of <span id="totalItems">0</span> entries
                     </div>
-
-                    <!-- Pagination -->
-                    <nav aria-label="Page navigation example">
-                        <ul class="pagination">
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" tabindex="-1">Previous</a>
-                            </li>
-                            <li class="page-item active" aria-current="page">
-                                <a class="page-link" href="#">1</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">2</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">3</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">Next</a>
-                            </li>
-                        </ul>
-                    </nav>
+                    <ul class="pagination mb-0">
+                        <li class="page-item" id="previousPage">
+                            <button class="page-link" aria-label="Previous"><span aria-hidden="true">&laquo;</span></button>
+                        </li>
+                        <li class="page-item" id="nextPage">
+                            <button class="page-link" aria-label="Next"><span aria-hidden="true">&raquo;</span></button>
+                        </li>
+                    </ul>
                 </div>
             </div>
-
-            <!-- Add after the table in each report -->
-            <nav aria-label="Page navigation">
-                <ul class="pagination">
-                    <?php if($page > 1): ?>
-                        <li class="page-item">
-                            <a class="page-link" href="?page=<?php echo $page-1; ?><?php echo isset($_GET['field']) ? '&field='.$_GET['field'] : ''; ?><?php echo isset($_GET['type']) ? '&type='.$_GET['type'] : ''; ?>" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <?php for($i = 1; $i <= $total_pages; $i++): ?>
-                        <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                            <a class="page-link" href="?page=<?php echo $i; ?><?php echo isset($_GET['field']) ? '&field='.$_GET['field'] : ''; ?><?php echo isset($_GET['type']) ? '&type='.$_GET['type'] : ''; ?>">
-                                <?php echo $i; ?>
-                            </a>
-                        </li>
-                    <?php endfor; ?>
-                    
-                    <?php if($page < $total_pages): ?>
-                        <li class="page-item">
-                            <a class="page-link" href="?page=<?php echo $page+1; ?><?php echo isset($_GET['field']) ? '&field='.$_GET['field'] : ''; ?><?php echo isset($_GET['type']) ? '&type='.$_GET['type'] : ''; ?>" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
         </div>
     </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rowsPerPage = 10;
+    let currentPage = 1;
+    let filteredRows = [];
+    const tableRows = Array.from(document.querySelectorAll('tbody tr'));
+    const searchInput = document.getElementById('searchTable');
+    const pageStart = document.getElementById('pageStart');
+    const pageEnd = document.getElementById('pageEnd');
+    const totalItems = document.getElementById('totalItems');
+    const previousPage = document.getElementById('previousPage');
+    const nextPage = document.getElementById('nextPage');
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Search functionality
-        const searchInput = document.getElementById('searchTable');
-        const tableRows = document.querySelectorAll('tbody tr');
+    function updatePagination() {
+        const totalRows = filteredRows.length;
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        if (currentPage > totalPages) currentPage = 1;
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = Math.min(start + rowsPerPage, totalRows);
+        
+        pageStart.textContent = totalRows ? start + 1 : 0;
+        pageEnd.textContent = end;
+        totalItems.textContent = totalRows;
+        
+        previousPage.classList.toggle('disabled', currentPage === 1);
+        nextPage.classList.toggle('disabled', currentPage === totalPages || totalRows === 0);
+        
+        tableRows.forEach(row => row.style.display = 'none');
+        filteredRows.slice(start, end).forEach(row => row.style.display = '');
+    }
 
-        searchInput.addEventListener('keyup', function() {
-            const searchTerm = this.value.toLowerCase();
-            
-            tableRows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
+    filteredRows = tableRows;
+    updatePagination();
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        filteredRows = tableRows.filter(row => {
+            const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+            const currentRank = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const prevRank = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            return name.includes(searchTerm) || 
+                   currentRank.includes(searchTerm) || 
+                   prevRank.includes(searchTerm);
         });
+        currentPage = 1;
+        updatePagination();
+    });
 
-        // Enhance row clicks to show more details
-        tableRows.forEach(row => {
-            row.addEventListener('click', function(e) {
-                // Don't trigger if clicking on a link
-                if (e.target.tagName === 'A') return;
-                
-                const name = this.querySelector('td:first-child').textContent.trim();
-                const field = this.querySelector('td:nth-child(2)').textContent.trim();
-                const type = this.querySelector('td:nth-child(3)').textContent.trim();
-                
-                window.location.href = `/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`;
-            });
+    previousPage.addEventListener('click', function() {
+        if (currentPage > 1) { 
+            currentPage--; 
+            updatePagination(); 
+        }
+    });
 
-            // Add hover style
-            row.style.cursor = 'pointer';
+    nextPage.addEventListener('click', function() {
+        const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+        if (currentPage < totalPages) { 
+            currentPage++; 
+            updatePagination(); 
+        }
+    });
+
+    // Existing click handler for rows
+    tableRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.closest('a') || e.target.closest('button')) return;
+            const name = this.dataset.name;
+            const field = this.dataset.field;
+            const type = this.dataset.type;
+            window.open(`/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`, '_blank');
         });
     });
-    </script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('searchTable');
-        const tableRows = document.querySelectorAll('tbody tr');
-        const pagination = document.querySelector('.pagination');
-
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase().trim();
-            let visibleRows = 0;
-            
-            tableRows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                const visible = text.includes(searchTerm);
-                row.style.display = visible ? '' : 'none';
-                if (visible) visibleRows++;
-            });
-
-            // Hide pagination when searching
-            if (pagination) {
-                pagination.style.display = searchTerm ? 'none' : '';
-            }
-        });
-    });
-    </script>
+});
+</script>
 </body>
 </html>

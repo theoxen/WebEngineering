@@ -3,16 +3,62 @@ header('Content-Type: text/html; charset=utf-8');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-
+set_time_limit(500);
 require_once __DIR__ . '/../../database/db_connect.php';
 
-// Fetch all categoryIDs and pdf_content from the categories table
-$categoriesQuery = "
-    SELECT categoryID, pdf_content 
-    FROM categories 
-";
+// Show form if no category is selected
+if (!isset($_POST['process_category'])) {
+    // Get all available categories
+    $categoriesListQuery = "SELECT categoryID, fields, type, season, year FROM categories ORDER BY year DESC, season DESC, type, fields";
+    $categoriesListResult = $mysqli->query($categoriesListQuery);
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Process PDF Data by Category</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="container mt-4">
+            <h1>Process PDF Data by Category</h1>
+            <form method="post" class="mt-4">
+                <div class="mb-3">
+                    <label for="category_id" class="form-label">Select Category to Process:</label>
+                    <select name="category_id" id="category_id" class="form-select" required>
+                        <option value="">-- Select Category --</option>
+                        <?php while ($cat = $categoriesListResult->fetch_assoc()): ?>
+                            <option value="<?= $cat['categoryID'] ?>">
+                                <?= htmlspecialchars($cat['fields']) ?> (<?= $cat['type'] ?>) - 
+                                <?= $cat['season'] ?> <?= $cat['year'] ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <button type="submit" name="process_category" class="btn btn-primary">Process Selected Category</button>
+                <button type="submit" name="process_all" class="btn btn-warning ms-2">Process All Categories</button>
+            </form>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
+// Process categories (either specific one or all)
+$categoriesQuery = "SELECT categoryID, pdf_content FROM categories";
+if (isset($_POST['category_id']) && !empty($_POST['category_id']) && !isset($_POST['process_all'])) {
+    $categoryID = (int) $_POST['category_id'];
+    $categoriesQuery .= " WHERE categoryID = $categoryID";
+    echo "<div style='margin: 20px;'><h2>Processing Category ID: $categoryID</h2>";
+} else {
+    echo "<div style='margin: 20px;'><h2>Processing All Categories</h2>";
+}
+
 $categoriesResult = $mysqli->query($categoriesQuery);
 
+// Rest of your original code follows
 if ($categoriesResult->num_rows > 0) {
     while ($category = $categoriesResult->fetch_assoc()) {
         $categoryID = $category['categoryID'];
@@ -32,15 +78,17 @@ if ($categoriesResult->num_rows > 0) {
             $deleteStmt = $mysqli->prepare($deleteQuery);
             $deleteStmt->bind_param("i", $categoryID);
             $deleteStmt->execute();
-          //  echo "Deleted all records in rankinglist for categoryID $categoryID.<br>";
+            echo "<p>Cleared existing data for category ID $categoryID.</p>";
         }
-
+        
         // Process the text content for this categoryID
         if (empty($pdfContent)) {
-            //echo "No text content found for categoryID $categoryID.";
+            echo "<p>No text content found for category ID $categoryID.</p>";
             continue;
         }
-
+        
+        echo "<p>Processing category ID $categoryID...</p>";
+        
         $text = $pdfContent;
         //echo "Extracted text for categoryID $categoryID: " . substr($text, 0, 500); // Log first 500 characters
 

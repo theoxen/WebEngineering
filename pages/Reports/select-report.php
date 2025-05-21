@@ -133,6 +133,19 @@ $pageTitle = "Select Report";
             color: var(--dark-color);
             font-size: 0.875rem;
         }
+
+        .table-container {
+            /* Remove max-height and overflow properties */
+            /* max-height: 600px; */
+            /* overflow-y: auto; */
+        }
+
+        /* Sticky header styles */
+        .sticky-header th { 
+            position: static; /* Change from sticky to static */
+            background: #fff;
+            z-index: 1; 
+        }
     </style>
 </head>
 
@@ -151,69 +164,53 @@ $pageTitle = "Select Report";
                 <!-- Position Changes Report -->
                 <div class="col-xl-4 col-md-6 mb-4">
                     <div class="card report-card">
-                        <div class="card-body text-center p-5">
-                            <i class="fas fa-exchange-alt report-icon"></i>
-                            <h3 class="report-title">Position Changes</h3>
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-chart-line report-icon"></i>
+                            <h3 class="report-title">Επιλογή Αναφοράς Θέσεων</h3>
                             <p class="report-description">
-                                Track position movements and ranking changes throughout the semester/season.
+                                Επιλέξτε στοιχεία για να δείτε τις αλλαγές θέσεων.
                             </p>
-                            <form action="position-changes.php" method="GET" class="text-start mb-3">
-                                <!-- Field Selection -->
+                            <form action="position-changes.php" method="get" id="selectReportForm" class="text-start">
                                 <div class="mb-3">
-                                    <label for="field" class="form-label">Field</label>
-                                    <select class="form-select" name="field" id="field" required>
+                                    <label for="year" class="form-label">Έτος</label>
+                                    <select name="year" id="year" class="form-select" required>
+                                        <option value="">-- Επιλέξτε έτος --</option>
                                         <?php
-                                        $query = "SELECT DISTINCT fields FROM categories ORDER BY fields";
-                                        $result = $mysqli->query($query);
-                                        while ($row = $result->fetch_assoc()) {
-                                            echo "<option value='" . htmlspecialchars($row['fields']) . "'>" . 
-                                                 htmlspecialchars($row['fields']) . "</option>";
+                                        $years = $mysqli->query("SELECT DISTINCT year FROM categories ORDER BY year DESC");
+                                        while ($row = $years->fetch_assoc()) {
+                                            echo "<option value=\"{$row['year']}\">{$row['year']}</option>";
                                         }
                                         ?>
                                     </select>
                                 </div>
-
-                                <!-- Type Selection -->
                                 <div class="mb-3">
-                                    <label for="type" class="form-label">Type</label>
-                                    <select class="form-select" name="type" id="type" required>
-                                        <?php
-                                        $query = "SELECT DISTINCT type FROM categories ORDER BY type";
-                                        $result = $mysqli->query($query);
-                                        while ($row = $result->fetch_assoc()) {
-                                            echo "<option value='" . htmlspecialchars($row['type']) . "'>" . 
-                                                 htmlspecialchars($row['type']) . "</option>";
-                                        }
-                                        ?>
+                                    <label for="season" class="form-label">Περίοδος</label>
+                                    <select name="season" id="season" class="form-select" required>
+                                        <option value="">-- Επιλέξτε περίοδο --</option>
+                                        <option value="Winter">Χειμώνας</option>
+                                        <option value="Summer">Καλοκαίρι</option>
                                     </select>
                                 </div>
-
-                                <!-- Season Selection -->
                                 <div class="mb-3">
-                                    <label for="season" class="form-label">Season</label>
-                                    <select class="form-select" name="season" id="season" required>
-                                        <option value="Winter">Winter</option>
-                                        <option value="Summer">Summer</option>
+                                    <label for="type" class="form-label">Τύπος</label>
+                                    <select name="type" id="type" class="form-select" required>
+                                        <option value="">-- Επιλέξτε τύπο --</option>
+                                        <option value="Δημοτική">Δημοτική</option>
+                                        <option value="Ειδική Εκπαίδευση">Ειδική Εκπαίδευση</option>
+                                        <option value="Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες">Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες</option>
+                                        <option value="Μέση Γενική">Μέση Γενική</option>
+                                        <option value="Μέση Τεχνική">Μέση Τεχνική</option>
+                                        <option value="Προδημοτική">Προδημοτική</option>
                                     </select>
                                 </div>
-
-                                <!-- Year Selection -->
                                 <div class="mb-3">
-                                    <label for="year" class="form-label">Year</label>
-                                    <select class="form-select" name="year" id="year" required>
-                                        <?php
-                                        $query = "SELECT DISTINCT year FROM categories ORDER BY year DESC";
-                                        $result = $mysqli->query($query);
-                                        while ($row = $result->fetch_assoc()) {
-                                            echo "<option value='" . htmlspecialchars($row['year']) . "'>" . 
-                                                 htmlspecialchars($row['year']) . "</option>";
-                                        }
-                                        ?>
+                                    <label for="field" class="form-label">Πεδίο</label>
+                                    <select name="field" id="field" class="form-select" required>
+                                        <option value="">-- Επιλέξτε πεδίο --</option>
                                     </select>
                                 </div>
-
-                                <button type="submit" class="btn btn-generate w-100">
-                                    Generate Report <i class="fas fa-arrow-right ms-2"></i>
+                                <button type="submit" class="btn btn-primary w-100 mt-2">
+                                    Προβολή Αναφοράς <i class="fas fa-arrow-right ms-2"></i>
                                 </button>
                             </form>
                         </div>
@@ -289,6 +286,68 @@ $pageTitle = "Select Report";
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeDropdown = document.getElementById('type');
+        const fieldDropdown = document.getElementById('field');
+        if (!typeDropdown || !fieldDropdown) return;
+                   const optionsMap = {
+                "Δημοτική": ["Δασκάλων"],
+                "Ειδική Εκπαίδευση": [
+                    "Ειδικός Εκπαιδευτικός (Ειδικής Γυμναστικής)",
+                    "Ειδικός Εκπαιδευτικός (Ειδικών Μαθησιακών, Νοητικών, Λειτουργικών και Προσαρμοστικών Δυσκολιών)",
+                    "Ειδικός Εκπαιδευτικός (Εκπαιδευτικής Ακουολογίας)",
+                    "Ειδικός Εκπαιδευτικός (Εργοθεραπείας)",
+                    "Ειδικός Εκπαιδευτικός (Κωφών)",
+                    "Ειδικός Εκπαιδευτικός (Λογοθεραπείας)",
+                    "Ειδικός Εκπαιδευτικός (Μουσικοθεραπείας)",
+                    "Ειδικός Εκπαιδευτικός (Τυφλών)",
+                    "Ειδικός Εκπαιδευτικός (Φυσιοθεραπείας)"
+                ],
+                "Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες": [
+                    "Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες (όλες οι ειδικότητες)"
+                ],
+                "Μέση Γενική": [
+                    "Αγγλικών", "Βιολογίας", "Γαλλικών", "Γερμανικών", "Γεωγραφίας", "Γεωλογίας",
+                    "Γεωπονίας", "Εμπορικών/Οικονομικών", "Θεατρολογίας", "Θρησκευτικών", "Ισπανικών",
+                    "Ιταλικών", "Μαθηματικών", "Μουσικής", "Οικιακής Οικονομίας", "Πληροφορικής/Επιστήμης Η.Υ.",
+                    "Ρωσσικών", "Συμβουλευτικής και Επαγγελματικής Αγωγής", "Τέχνης", "Τεχνολογίας",
+                    "Τεχνολογίας (χωρίς μαθήματα)", "Τουρκικών", "Φιλολογικών", "Φυσικής", "Φυσικής Αγωγής",
+                    "Φωτογραφικής Τέχνης", "Χημείας", "Ψυχολογίας"
+                ],
+                "Μέση Τεχνική": [
+                    "Αργυροχοΐας Χρυσοχοΐας", "Γεωπονίας (Ανθοκομία-Κηποτεχνία)", "Γεωπονίας (Γενική)",
+                    "Γεωπονίας (Ζωϊκή Παραγωγή)", "Γεωπονίας (Φυτική Παραγωγή)", "Γραφικών Τεχνών",
+                    "Διακοσμητικής", "Δομικών (Αρχιτεκτονική)", "Δομικών (Πολιτική Μηχανική Δομικά Έργα)",
+                    "Δομικών (Πολιτική Μηχανική Κατασκευές)", "Δομικών (Τοπογραφία)",
+                    "Ηλεκτρολογία Εγκαταστάσεων", "Ηλεκτρολογίας (Γενική)", "Ηλεκτρολογίας (Ηλεκτρονική)",
+                    "Ηλεκτρολογίας (Ρεύμα Ψηλής Έντασης)", "Ηλεκτρονικών (Επιδιόρθωση Τηλεοράσεων)",
+                    "Κεραμικής-Αγγειοπλαστικής", "Κοπτικής-Ραπτικής","Κομμωτικής (Α5-7)", "Μηχανικής Αυτοκινήτων",
+                    "Μηχανικής Ηλεκτρονικών Υπολογιστών", "Μηχανολογίας (Γενική)",
+                    "Μηχανολογίας (Γεωργική Μηχαν/Αρδεύσεις)", "Μηχανολογίας (Γεωργική Μηχανική)",
+                    "Μηχανολογίας (Θερμοδυναμικής Ενέργειας)", "Μηχανολογίας (Μηχανική Παραγωγής)",
+                    "Ξενοδοχειακών (Γενικά)", "Ξενοδοχειακών (Επιστήμη Τεχνολογίας Τροφίμων)",
+                    "Ξενοδοχειακών (Μαγειρική)", "Ξενοδοχειακών (Τεχνολογία Τροφίμων)",
+                    "Ξενοδοχειακών (Τραπεζοκομία)", "Ξυλουργικής-Επιπλοποιίας", "Σχεδίασης Επίπλων",
+                    "Σχεδίασης-Κατασκευής Ενδυμάτων", "Υποδηματοποιίας", "Χημικής Μηχανικής",
+                    "Ψύξης-Κλιματισμού"
+                ],
+                "Προδημοτική": ["Νηπιαγωγών", "Νηπιαγωγών Α5-Α7"]
+            };
+        typeDropdown.addEventListener('change', function () {
+            const selectedType = typeDropdown.value;
+            fieldDropdown.innerHTML = '<option value="">-- Επιλέξτε πεδίο --</option>';
+            if (optionsMap[selectedType]) {
+                optionsMap[selectedType].forEach(function (field) {
+                    const option = document.createElement('option');
+                    option.value = field;
+                    option.textContent = field;
+                    fieldDropdown.appendChild(option);
+                });
+            }
+        });
+    });
+    </script>
 </body>
 
 </html>
