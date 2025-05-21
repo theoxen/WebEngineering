@@ -107,7 +107,7 @@
             'reference' => '484bedac47bac4012dc73df91da221f0a66845cb',
             'dev_requirement' => false,
         ),
-        'symfony/polyfill-mbstring' => array(
+        'symfony/polyfill-mbstring' => array( 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
             'pretty_version' => 'v1.31.0',
