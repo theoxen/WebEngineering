@@ -1,6 +1,6 @@
 # Composer packages
-# /vendor/
-# composer.lock
+/vendor/
+composer.lock
 
 # Environment files
 .env
@@ -19,3 +19,4 @@ Thumbs.db
 # Logs
 *.log
 error_log
+/vendor
