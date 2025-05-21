@@ -543,7 +543,7 @@ if (isset($_POST['searchApplicants'])) {
         }
 
         // Add the LIMIT clause to your SQL query
-        $sql .= " ORDER BY r.ranking ASC LIMIT $limit";
+        $sql .= " ORDER BY r.ranking ASC";
     } else {
         // Base SQL without categories
         $sql = "SELECT r.*, 'Unknown' as fields 
@@ -579,7 +579,7 @@ if (isset($_POST['searchApplicants'])) {
         }
 
         // Add the LIMIT clause to your SQL query
-        $sql .= " ORDER BY r.ranking ASC LIMIT $limit";
+        $sql .= " ORDER BY r.ranking ASC";
     }
     
     // Execute query
@@ -672,6 +672,47 @@ if (isset($_POST['searchApplicants'])) {
                             </div>
                         </div>
                         
+                        <!-- Year & Season Dropdowns - New Section -->
+<div class="mb-4">
+    <label class="form-label fw-bold">Έτος & Περίοδος:</label>
+    <div class="row g-2">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                <select class="form-select" name="yearFilter" id="yearFilter">
+                    <option value="">-- Επιλέξτε Έτος --</option>
+                    <?php
+                    $sql = "SELECT DISTINCT CONCAT('20', LEFT(categoryID, 2)) AS year FROM categories ORDER BY year DESC";
+                    $yearResult = $mysqli->query($sql);
+                    if ($yearResult && $yearResult->num_rows > 0) {
+                        while ($yearRow = $yearResult->fetch_assoc()) {
+                            $selected = (isset($_POST['yearFilter']) && $_POST['yearFilter'] == $yearRow['year']) ? 'selected' : '';
+                            echo "<option value='{$yearRow['year']}' $selected>{$yearRow['year']}</option>";
+                        }
+                    }
+                    ?>
+                </select>
+            </div>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-sun"></i></span>
+                    <select class="form-select" name="seasonFilter" id="seasonFilter">
+                        <option value="">-- Επιλέξτε Περίοδο --</option>
+                        <?php
+                        $seasons = ['Ιούνιος', 'Φεβρουάριος'];
+                        foreach ($seasons as $season) {
+                            $selected = (isset($_POST['seasonFilter']) && $_POST['seasonFilter'] == $season) ? 'selected' : '';
+                            echo "<option value=\"$season\" $selected>$season</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <small class="text-muted">Επιλέξτε έτος και περίοδο για να επιλέξετε κατηγορία</small>
+    </div>
+
                         <!-- Category Dropdown - New Section -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">Κατηγορία Υποψηφίων:</label>
@@ -679,23 +720,27 @@ if (isset($_POST['searchApplicants'])) {
                                 <span class="input-group-text"><i class="fas fa-filter"></i></span>
                                 <select class="form-select" name="categoryFilter" id="categoryFilter">
                                     <option value="">-- Επιλέξτε Κατηγορία --</option>
-                                    
                                     <?php
-                                    // Check if categories table exists and fetch categories
-                                    $sql = "SHOW TABLES LIKE 'categories'";
-                                    $result = $mysqli->query($sql);
-                                    
-                                    if ($result && $result->num_rows > 0) {
-                                        // Categories table exists, fetch all categories
-                                        $sql = "SELECT categoryID, fields FROM categories ORDER BY fields";
-                                        $categoryResult = $mysqli->query($sql);
-                                        
-                                        if ($categoryResult && $categoryResult->num_rows > 0) {
-                                            while ($category = $categoryResult->fetch_assoc()) {
-                                                $selected = (isset($_POST['categoryFilter']) && $_POST['categoryFilter'] == $category['categoryID']) ? 'selected' : '';
-                                                echo "<option value='{$category['categoryID']}' {$selected}>" . 
-                                                    htmlspecialchars($category['fields']) . "</option>";
-                                            }
+                                    $yearFilter = isset($_POST['yearFilter']) ? $mysqli->real_escape_string($_POST['yearFilter']) : '';
+                                    $seasonFilter = isset($_POST['seasonFilter']) ? $mysqli->real_escape_string($_POST['seasonFilter']) : '';
+                                    $sql = "SELECT categoryID, fields, season, CONCAT('20', LEFT(categoryID, 2)) AS year 
+                                            FROM categories WHERE 1=1 ";
+                                    if (!empty($yearFilter)) {
+                                        $sql .= "AND CONCAT('20', LEFT(categoryID, 2)) = '$yearFilter' ";
+                                    }
+                                    if (!empty($seasonFilter)) {
+                                        $sql .= "AND season = '$seasonFilter' ";
+                                    }
+                                    $sql .= "ORDER BY year DESC, FIELD(season, 'Ιούνιος', 'Φεβρουάριος'), fields";
+                                    $categoryResult = $mysqli->query($sql);
+                                    if ($categoryResult && $categoryResult->num_rows > 0) {
+                                        while ($category = $categoryResult->fetch_assoc()) {
+                                            $selected = (isset($_POST['categoryFilter']) && $_POST['categoryFilter'] == $category['categoryID']) ? 'selected' : '';
+                                            echo "<option value='{$category['categoryID']}' {$selected}>" .
+                                                htmlspecialchars($category['fields']) . " - " .
+                                                htmlspecialchars($category['season']) . " " .
+                                                htmlspecialchars($category['year']) .
+                                                "</option>";
                                         }
                                     }
                                     ?>
@@ -704,7 +749,7 @@ if (isset($_POST['searchApplicants'])) {
                             <small class="text-muted">Επιλέξτε μια κατηγορία για να εμφανιστούν οι αντίστοιχοι υποψήφιοι</small>
                         </div>
                         
-                      
+                                    
 
                         <div class="text-center mb-4 d-flex justify-content-center gap-3">
                             <button type="submit" name="searchApplicants" class="btn btn-primary px-5">
@@ -804,7 +849,7 @@ if (isset($_POST['searchApplicants'])) {
                                 }
 
                                 // Add the LIMIT clause to your SQL query
-                                $sql .= " ORDER BY r.ranking ASC LIMIT $limit";
+                                $sql .= " ORDER BY r.ranking ASC";
                             } else {
                                 // Base SQL without categories
                                 $sql = "SELECT r.*, 'Unknown' as fields 
@@ -845,7 +890,7 @@ if (isset($_POST['searchApplicants'])) {
                                 }
 
                                 // Add the LIMIT clause to your SQL query
-                                $sql .= " ORDER BY r.ranking ASC LIMIT $limit";
+                                $sql .= " ORDER BY r.ranking ASC";
                             }
                             
                             // Execute query
@@ -862,14 +907,7 @@ if (isset($_POST['searchApplicants'])) {
                         ?>
                         <form method="POST" action="../track-applicants.php" id="trackForm">
                             <div class="table-responsive table-fixed-height">
-                                <div class="mb-3 d-flex align-items-center">
-                                    <span class="me-2">Show entries:</span>
-                                    <select id="entriesPerPage" class="form-select form-select-sm" style="width: auto;">
-                                        <option value="25">25</option>
-                                        <option value="50" selected>50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                </div>
+                                
                                 <table class="table table-hover">
                                     <thead class="table-light">
                                         <tr>
@@ -950,10 +988,8 @@ if (isset($_POST['searchApplicants'])) {
         <thead class="table-light">
             <tr>
                 <th>Δικός μου</th>
-                <th>Κατάταξη</th>
                 <th>Ονοματεπώνυμο</th>
                 <th>Αρ. Αίτησης</th>
-                <th>Μόρια</th>
                 <th>Κατηγορία</th>
                 <th>Ημ. Εγγραφής</th>
                 <th>Ημ. Πτυχίου</th>
@@ -961,7 +997,12 @@ if (isset($_POST['searchApplicants'])) {
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($trackedApplicants as $applicant): 
+            <?php
+            $uniqueApplicants = [];
+            foreach ($trackedApplicants as $applicant):
+                $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
+                if (isset($uniqueApplicants[$uniqueKey])) continue;
+                $uniqueApplicants[$uniqueKey] = true;
                 $isOwn = isset($applicant['isOwnCandidate']) && $applicant['isOwnCandidate'] == 1;
             ?>
                 <tr class="<?php echo $isOwn ? 'table-success' : ''; ?>">
@@ -972,10 +1013,8 @@ if (isset($_POST['searchApplicants'])) {
                                    <?php echo $isOwn ? 'checked' : ''; ?>>
                         </div>
                     </td>
-                    <td><?php echo $applicant['ranking']; ?></td>
                     <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
                     <td><?php echo $applicant['appNum']; ?></td>
-                    <td><?php echo number_format($applicant['points'], 2); ?></td>
                     <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
                     <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
                     <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
@@ -1131,6 +1170,9 @@ if (isset($_POST['searchApplicants'])) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <script>
+
+
+
         $(document).ready(function() {
     // Select all checkbox functionality
     $('#selectAll').change(function() {
@@ -1193,6 +1235,37 @@ if (isset($_POST['searchApplicants'])) {
             }
         });
     });
+
+    // Auto-submit form when year dropdown changes
+    $('#yearFilter').change(function() {
+        // Reset category filter when year changes
+        $('#categoryFilter').val('');
+        $('#searchForm').submit();
+    });
+
+    // Auto-submit form when year or season dropdown changes
+    $('#yearFilter, #seasonFilter').change(function() {
+        // Reset category filter when year or season changes
+        $('#categoryFilter').val('');
+        $('#searchForm').submit();
+    });
+
+    function updateCategoryDropdownState() {
+    const yearSelected = $('#yearFilter').val() !== '';
+    const seasonSelected = $('#seasonFilter').val() !== '';
+    if (yearSelected && seasonSelected) {
+        $('#categoryFilter').prop('disabled', false);
+    } else {
+        $('#categoryFilter').prop('disabled', true).val('');
+    }
+}
+
+// Initial check on page load
+updateCategoryDropdownState();
+
+// Check on change
+$('#yearFilter, #seasonFilter').on('change', updateCategoryDropdownState);
+
     
     // Untrack button functionality
     $(document).on('click', '.untrack-btn', function(e) {
