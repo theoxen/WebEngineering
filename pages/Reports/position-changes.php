@@ -252,7 +252,6 @@ usort($rankings, function($a, $b) {
                                 <th>Current Points</th>
                                 <th>Previous Points</th>
                                 <th>Points Change</th>
-                                <th>Profile</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -273,16 +272,8 @@ usort($rankings, function($a, $b) {
                                     $icon = $rank_diff > 0 ? '↑' : ($rank_diff < 0 ? '↓' : '→');
                                 }
                             ?>
-                            <tr class="candidate-row <?= $class; ?>"
-                                data-name="<?= htmlspecialchars($rank['name']) ?>"
-                                data-field="<?= htmlspecialchars($field) ?>"
-                                data-type="<?= htmlspecialchars($type) ?>">
-                                <td>
-                                    <a href="/WebEngineering/pages/applicant-details.php?name=<?= urlencode($rank['name']) ?>&field=<?= urlencode($field) ?>&type=<?= urlencode($type) ?>"
-                                       class="text-primary text-decoration-none" target="_blank">
-                                        <?= htmlspecialchars($rank['name']) ?>
-                                    </a>
-                                </td>
+                            <tr>
+                                <td><?= htmlspecialchars($rank['name']) ?></td>
                                 <td><?= $rank['current_rank'] ?? 'N/A'; ?></td>
                                 <td><?= $rank['prev_rank'] ?? 'N/A'; ?></td>
                                 <td>
@@ -304,12 +295,6 @@ usort($rankings, function($a, $b) {
                                     <?php else: ?>
                                         <span class="missing">N/A</span>
                                     <?php endif; ?>
-                                </td>
-                                <td>
-                                    <a href="/WebEngineering/pages/applicant-details.php?name=<?= urlencode($rank['name']) ?>&field=<?= urlencode($field) ?>&type=<?= urlencode($type) ?>"
-                                       class="btn btn-sm btn-outline-primary" target="_blank">
-                                        <i class="fas fa-info-circle"></i> Details
-                                    </a>
                                 </td>
                             </tr>
                             <?php endforeach; endif; ?>
@@ -395,17 +380,6 @@ document.addEventListener('DOMContentLoaded', function() {
             currentPage++; 
             updatePagination(); 
         }
-    });
-
-    // Existing click handler for rows
-    tableRows.forEach(row => {
-        row.addEventListener('click', function(e) {
-            if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.closest('a') || e.target.closest('button')) return;
-            const name = this.dataset.name;
-            const field = this.dataset.field;
-            const type = this.dataset.type;
-            window.open(`/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`, '_blank');
-        });
     });
 });
 </script>

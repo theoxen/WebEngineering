@@ -255,7 +255,6 @@ foreach ($trends as $trend) {
                                 <th>Points</th>
                                 <th>Experience</th>
                                 <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -264,12 +263,7 @@ foreach ($trends as $trend) {
                                 data-name="<?= htmlspecialchars($candidate['candidateFullName']) ?>"
                                 data-field="<?= htmlspecialchars($candidate['fields']) ?>"
                                 data-type="<?= htmlspecialchars($candidate['type']) ?>">
-                                <td>
-                                    <a href="/WebEngineering/pages/applicant-details.php?name=<?= urlencode($candidate['candidateFullName']) ?>&field=<?= urlencode($candidate['fields']) ?>&type=<?= urlencode($candidate['type']) ?>" 
-                                       class="text-primary text-decoration-none">
-                                        <?= htmlspecialchars($candidate['candidateFullName']) ?>
-                                    </a>
-                                </td>
+                                <td><?= htmlspecialchars($candidate['candidateFullName']) ?></td>
                                 <td><?= htmlspecialchars($candidate['fields'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($candidate['type'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars(($candidate['season'] ?? 'N/A') . ' ' . ($candidate['year'] ?? '')) ?></td>
@@ -309,12 +303,7 @@ foreach ($trends as $trend) {
                                         <?= $candidate['isOwnCandidate'] ? 'Own Candidate' : 'Tracking' ?>
                                     </span>
                                 </td>
-                                <td>
-                                    <a href="/WebEngineering/pages/applicant-details.php?name=<?= urlencode($candidate['candidateFullName']) ?>&field=<?= urlencode($candidate['fields']) ?>&type=<?= urlencode($candidate['type']) ?>" 
-                                       class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-info-circle"></i> Details
-                                    </a>
-                                </td>
+
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -361,25 +350,41 @@ document.addEventListener('DOMContentLoaded', function() {
             labels: periods,
             datasets: candidates.map((name, index) => ({
                 label: name,
-                data: chartData[name].points,
+                data: chartData[name].points.map(p => p || null), // Handle missing points
                 borderColor: colors[index],
-                backgroundColor: colors[index],
+                backgroundColor: colors[index] + '20', // Add slight transparency
                 fill: false,
                 tension: 0.1,
                 borderWidth: 2,
-                pointRadius: 4
+                pointRadius: 4,
+                pointHoverRadius: 6
             }))
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: { mode: 'nearest', intersect: false },
+            interaction: { 
+                mode: 'nearest',
+                intersect: false,
+                axis: 'x'
+            },
             plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
+                legend: { 
+                    position: 'bottom',
+                    labels: { 
+                        boxWidth: 12,
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                },
                 tooltip: {
+                    mode: 'index',
+                    intersect: false,
                     callbacks: {
                         label: function(context) {
-                            return `${context.dataset.label}: ${context.parsed.y.toFixed(1)} points`;
+                            const points = context.parsed.y;
+                            if (points === null) return `${context.dataset.label}: No data`;
+                            return `${context.dataset.label}: ${points.toFixed(1)} points`;
                         }
                     }
                 }
@@ -387,12 +392,27 @@ document.addEventListener('DOMContentLoaded', function() {
             scales: {
                 x: {
                     grid: { display: false },
-                    ticks: { maxRotation: 45, minRotation: 45 }
+                    ticks: { 
+                        maxRotation: 45,
+                        minRotation: 45,
+                        font: {
+                            size: 11
+                        }
+                    }
                 },
                 y: {
-                    min: 70,
-                    max: 100,
-                    title: { display: true, text: 'Points' }
+                    min: 0,
+                    suggestedMax: 25,
+                    title: { 
+                        display: true,
+                        text: 'Points',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        color: '#e9ecef'
+                    }
                 }
             }
         }
@@ -434,9 +454,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     ticks: { maxRotation: 45, minRotation: 45 }
                 },
                 y: {
-                    reverse: true,
-                    title: { display: true, text: 'Ranking' },
-                    ticks: { stepSize: 1 }
+                    beginAtZero: true,
+                    title: { 
+                        display: true, 
+                        text: 'Ranking' 
+                    },
+                    ticks: { 
+                        stepSize: 1,
+                        precision: 0 // Add this to ensure whole numbers
+                    }
                 }
             }
         }
@@ -486,16 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
         if (currentPage < totalPages) { currentPage++; updatePagination(); }
     });
-    tableRows.forEach(row => {
-        row.style.cursor = 'pointer';
-        row.addEventListener('click', function(e) {
-            if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.closest('a') || e.target.closest('button')) return;
-            const name = this.dataset.name;
-            const field = this.dataset.field;
-            const type = this.dataset.type;
-            window.location.href = `/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`;
-        });
-    });
+
 });
 </script>
 </body>
