@@ -80,7 +80,7 @@ $startYear = 2016;
         
         .table-responsive {
             width: 100%;
-            max-width: 1200px; /* Increase this value as needed */
+            max-width: 1200px;
             margin: 0 auto;
         }
 
@@ -183,7 +183,6 @@ $startYear = 2016;
             font-size: 1.2rem;
             text-align: center;
             margin-top: 1rem;
-            /* Add these properties to fix the overflow */
             word-wrap: break-word;
             overflow-wrap: break-word;
             max-width: 100%;
