@@ -17,7 +17,12 @@
     ],
     "require": {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "php": ">=7.2"
+=======
+        "php": ">=7.2",
+        "ext-iconv": "*"
+>>>>>>> Stashed changes
 =======
         "php": ">=7.2",
         "ext-iconv": "*"

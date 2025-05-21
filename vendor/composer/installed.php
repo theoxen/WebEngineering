@@ -3,6 +3,10 @@
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+        'reference' => '62cd8bbccd26d363bfcb115b3aa2e9c346691fe9',
+>>>>>>> Stashed changes
 =======
         'reference' => '62cd8bbccd26d363bfcb115b3aa2e9c346691fe9',
 >>>>>>> Stashed changes
@@ -18,6 +22,10 @@
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+            'reference' => '62cd8bbccd26d363bfcb115b3aa2e9c346691fe9',
+>>>>>>> Stashed changes
 =======
             'reference' => '62cd8bbccd26d363bfcb115b3aa2e9c346691fe9',
 >>>>>>> Stashed changes
@@ -38,8 +46,14 @@
         ),
         'phpmailer/phpmailer' => array(
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             'pretty_version' => 'v6.9.3',
             'version' => '6.9.3.0',
+=======
+            'pretty_version' => 'v6.10.0',
+            'version' => '6.10.0.0',
+            'reference' => 'bf74d75a1fde6beaa34a0ddae2ec5fce0f72a144',
+>>>>>>> Stashed changes
 =======
             'pretty_version' => 'v6.10.0',
             'version' => '6.10.0.0',
@@ -95,8 +109,14 @@
         ),
         'symfony/polyfill-mbstring' => array(
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             'pretty_version' => 'v1.31.0',
             'version' => '1.31.0.0',
+=======
+            'pretty_version' => 'v1.32.0',
+            'version' => '1.32.0.0',
+            'reference' => '6d857f4d76bd4b343eac26d6b539585d2bc56493',
+>>>>>>> Stashed changes
 =======
             'pretty_version' => 'v1.32.0',
             'version' => '1.32.0.0',

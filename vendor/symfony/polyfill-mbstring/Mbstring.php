@@ -984,7 +984,11 @@ final class Mbstring
     public static function mb_rtrim(string $string, ?string $characters = null, ?string $encoding = null): string
     {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         return self::mb_internal_trim('{[%s]+$}D', $string, $characters, $encoding, __FUNCTION__);
+=======
+        return self::mb_internal_trim('{[%s]+$}Du', $string, $characters, $encoding, __FUNCTION__);
+>>>>>>> Stashed changes
 =======
         return self::mb_internal_trim('{[%s]+$}Du', $string, $characters, $encoding, __FUNCTION__);
 >>>>>>> Stashed changes
