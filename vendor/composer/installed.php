@@ -1,27 +1,24 @@
 <?php return array(
     'root' => array(
+        'name' => '__root__',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-<<<<<<< Updated upstream
-        'reference' => '62cd8bbccd26d363bfcb115b3aa2e9c346691fe9',
-=======
-        'reference' => '12283aa28efd80412fcd4be2b4269efbadafc35d',
->>>>>>> Stashed changes
+
+        'reference' => '532eafb691512a0063c45e8cd45576d69d4893fb',
+
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'name' => '__root__',
+
         'dev' => true,
     ),
     'versions' => array(
         '__root__' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-<<<<<<< Updated upstream
-            'reference' => '62cd8bbccd26d363bfcb115b3aa2e9c346691fe9',
-=======
-            'reference' => '12283aa28efd80412fcd4be2b4269efbadafc35d',
->>>>>>> Stashed changes
+
+            'reference' => '532eafb691512a0063c45e8cd45576d69d4893fb',
+
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -30,37 +27,38 @@
         'firebase/php-jwt' => array(
             'pretty_version' => 'v6.11.1',
             'version' => '6.11.1.0',
+            'reference' => 'd1e91ecf8c598d073d0995afa8cd5c75c6e19e66',
             'type' => 'library',
             'install_path' => __DIR__ . '/../firebase/php-jwt',
             'aliases' => array(),
-            'reference' => 'd1e91ecf8c598d073d0995afa8cd5c75c6e19e66',
             'dev_requirement' => false,
         ),
         'phpmailer/phpmailer' => array(
-            'pretty_version' => 'v6.10.0',
-            'version' => '6.10.0.0',
+            'pretty_version' => 'v6.9.3',
+            'version' => '6.9.3.0',
+            'reference' => '2f5c94fe7493efc213f643c23b1b1c249d40f47e',
             'type' => 'library',
             'install_path' => __DIR__ . '/../phpmailer/phpmailer',
             'aliases' => array(),
-            'reference' => 'bf74d75a1fde6beaa34a0ddae2ec5fce0f72a144',
+
             'dev_requirement' => false,
         ),
         'sendgrid/php-http-client' => array(
             'pretty_version' => '4.1.3',
             'version' => '4.1.3.0',
+            'reference' => '3002e9c8d21dcf664936ced4e5802ba8581a52c2',
             'type' => 'library',
             'install_path' => __DIR__ . '/../sendgrid/php-http-client',
             'aliases' => array(),
-            'reference' => '3002e9c8d21dcf664936ced4e5802ba8581a52c2',
             'dev_requirement' => false,
         ),
         'sendgrid/sendgrid' => array(
             'pretty_version' => '8.1.2',
             'version' => '8.1.2.0',
+            'reference' => '6700d2cf50df38915fa2d9a03affbca58c48599f',
             'type' => 'library',
             'install_path' => __DIR__ . '/../sendgrid/sendgrid',
             'aliases' => array(),
-            'reference' => '6700d2cf50df38915fa2d9a03affbca58c48599f',
             'dev_requirement' => false,
         ),
         'sendgrid/sendgrid-php' => array(
@@ -72,28 +70,29 @@
         'smalot/pdfparser' => array(
             'pretty_version' => 'v2.12.0',
             'version' => '2.12.0.0',
+            'reference' => '8440edbf58c8596074e78ada38dcb0bd041a5948',
             'type' => 'library',
             'install_path' => __DIR__ . '/../smalot/pdfparser',
             'aliases' => array(),
-            'reference' => '8440edbf58c8596074e78ada38dcb0bd041a5948',
             'dev_requirement' => false,
         ),
         'starkbank/ecdsa' => array(
             'pretty_version' => '0.0.5',
             'version' => '0.0.5.0',
+            'reference' => '484bedac47bac4012dc73df91da221f0a66845cb',
             'type' => 'library',
             'install_path' => __DIR__ . '/../starkbank/ecdsa',
             'aliases' => array(),
-            'reference' => '484bedac47bac4012dc73df91da221f0a66845cb',
             'dev_requirement' => false,
         ),
         'symfony/polyfill-mbstring' => array(
-            'pretty_version' => 'v1.32.0',
-            'version' => '1.32.0.0',
+            'pretty_version' => 'v1.31.0',
+            'version' => '1.31.0.0',
+            'reference' => '85181ba99b2345b0ef10ce42ecac37612d9fd341',
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/polyfill-mbstring',
             'aliases' => array(),
-            'reference' => '6d857f4d76bd4b343eac26d6b539585d2bc56493',
+
             'dev_requirement' => false,
         ),
     ),

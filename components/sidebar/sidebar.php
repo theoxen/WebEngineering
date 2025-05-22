@@ -54,20 +54,15 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                         </a>
                     </li>
 
-                    <li class="nav-item">
-                        <a href="<?php echo $baseUrl?>admin/upload-file.php" class="nav-link <?php echo $currentPage, 'upload-file.php' ? 'active' : ''; ?>">
-                            <i class="fas fa-upload"></i> Upload File
-                        </a>
-                    </li>
+                    <?php if ($isAdmin): ?>
+                        <li class="nav-item">
+                            <a href="<?php echo $baseUrl?>admin/upload-file.php" class="nav-link <?php echo $currentPage == 'upload-file.php' ? 'active' : ''; ?>">
+                                <i class="fas fa-upload"></i> Upload File
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
                     <!-- /////////////////////////////////////////////////////////////////////////////-->
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#reportsSubmenu">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Reports</span>
-                            <i class="fas fa-angle-down ms-auto"></i>
-                        </a>
-                        <div class="collapse" id="reportsSubmenu">
                             <ul class="nav flex-column">
                                 <li class="nav-item">
                                     <a href="/WebEngineering/pages/Reports/select-report.php" class="nav-link">
@@ -75,33 +70,24 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                                         <span>Select Report</span>
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="/WebEngineering/pages/Reports/general-statistics.php" class="nav-link">
-                                        <i class="fas fa-chart-bar"></i>
-                                        <span>General Statistics</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/WebEngineering/pages/Reports/user-statistics.php" class="nav-link">
-                                        <i class="fas fa-users"></i>
-                                        <span>User Statistics</span>
-                                    </a>
-                                </li>
                             </ul>
-                        </div>
-                    </li>
                     <!-- /////////////////////////////////////////////////////////////////////////// -->
                     <?php if ($isAdmin): ?>
                         <!-- Admin only options -->
                         <li class="nav-heading mt-3 mb-1 text-uppercase ps-3 small fw-bold text-muted">Admin</li>
                         <li class="nav-item">
-                            <a href="<?php echo $baseUrl?>admin/dashboard.php" class="nav-link <?php echo strpos($currentPage, 'admin/') !== false ? 'active' : ''; ?>">
+                            <a href="<?php echo $baseUrl?>admin/dashboard.php" class="nav-link <?php echo strpos($currentPage, 'dashboard.php') !== false ? 'active' : ''; ?>">
                                 <i class="fas fa-tachometer-alt me-2"></i> Admin Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                        <a href="<?php echo $baseUrl?>admin/api.php" class="nav-link <?php echo strpos($currentPage, 'admin/') !== false ? 'active' : ''; ?>">
-                                <i class="fas fa-key"></i> API Keys
+                            <a href="<?php echo $baseUrl?>admin/api.php" class="nav-link <?php echo $currentPage == 'api.php' ? 'active' : ''; ?>">
+                                <i class="fas fa-key me-2"></i> API Keys
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="<?php echo $baseUrl?>admin/readingPDF_savingInfo.php" class="nav-link <?php echo $currentPage == 'readingPDF_savingInfo.php' ? 'active' : ''; ?>">
+                                <i class="fas fa-file-pdf me-2"></i> Process PDF Data
                             </a>
                         </li>
                     <?php endif; ?>
