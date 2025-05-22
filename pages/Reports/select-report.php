@@ -240,10 +240,10 @@ $pageTitle = "Select Report";
                     <div class="card report-card">
                         <div class="card-body text-center p-5">
                             <i class="fas fa-users-gear report-icon"></i>
-                            <h3 class="report-title">New Users Report</h3>
-                            <p class="report-description">
-                                View user registration statistics for a custom date range.
-                            </p>
+                            <h3 class="report-title">Position Changes Report</h3>
+            <p class="report-description">
+                Select criteria to view position changes.
+            </p>
                             <form action="user-statistics.php" method="GET" class="text-start mb-3">
                                 <div class="mb-3">
                                     <label for="start_date" class="form-label">Start Date</label>
