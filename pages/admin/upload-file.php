@@ -1,4 +1,7 @@
 <?php
+// Set maximum execution time to 1000 seconds
+ini_set('max_execution_time', '1000');
+set_time_limit(1000);
 
 session_start();
 if (!isset($_SESSION['user_id'])) {
@@ -10,6 +13,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: homepage.php");
     exit();
 }
+
+
 
 header('Content-Type: text/html; charset=utf-8'); // Set UTF-8 encoding
 include_once('../../database/db_connect.php');
@@ -59,19 +64,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
             $pdfText = $pdf->getText(); // Extract text from the PDF
 
             // Get form data
-            $year = $_POST['year'];
+            $year = (int)$_POST['year'];
             $season = $_POST['season'];
             $type = $_POST['type'];
             $fields = $_POST['fields'] ?? ''; // Assuming you have a "fields" input in your form
 
             // Insert metadata into the database
             $stmt = $mysqli->prepare("
-                INSERT INTO categories (year, season, type, fields, file_path, pdf_content)
+                INSERT INTO `categories` (`year`, `season`, `type`, `fields`, `file_path`, `pdf_content`)
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
             if ($stmt) {
                 $stmt->bind_param(
-                    "ssssss", // Data types: s = string
+                    "isssss", // Data types: s = string
                     $year,
                     $season,
                     $type,
@@ -214,6 +219,35 @@ $selectedField = $_POST['fields'] ?? '';
             color: red;
         }
 
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Ensure it's above everything */
+            flex-direction: column;
+        }
+
+        .spinner-container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 80%;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
         /* Responsive Design */
         @media (max-width: 600px) {
             .container {
@@ -292,6 +326,17 @@ $selectedField = $_POST['fields'] ?? '';
                 </div>
             </form>
 
+            <!-- Loading Overlay - This will cover everything when uploading -->
+            <div id="loadingOverlay" class="loading-overlay d-none">
+                <div class="spinner-container">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h4 class="mt-3">Processing your file</h4>
+                    <p class="text-muted">Please wait while we upload and analyze the PDF...</p>
+                </div>
+            </div>
+
             <!-- Display messages dynamically -->
             <div id="responseMessage" class="message <?php echo $responseClass; ?>" style="display: <?php echo ($responseMessage ? 'block' : 'none'); ?>;">
                 <?php echo $responseMessage; ?>
@@ -306,6 +351,15 @@ $selectedField = $_POST['fields'] ?? '';
             const selectedType = '<?= addslashes($selectedType) ?>'; 
             const selectedField = '<?= addslashes($selectedField) ?>';
             
+      // Add form submission handler to show loading overlay
+            document.querySelector('.upload-form').addEventListener('submit', function(e) {
+                // Validate the form first
+                if (this.checkValidity()) {
+                    document.getElementById('loadingOverlay').classList.remove('d-none');
+                }
+            });
+            
+
             const optionsMap = {
                 "Δημοτική": ["Δασκάλων"],
                 "Ειδική Εκπαίδευση": [
@@ -374,8 +428,24 @@ $selectedField = $_POST['fields'] ?? '';
                     });
                 }
             }
+
+        });
+
+        // File validation and form submission handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadForm = document.querySelector('.upload-form');
+            const fileInput = document.getElementById('pdfFile');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            uploadForm.addEventListener('submit', function(e) {
+                // Validate the form first
+                if (this.checkValidity() && fileInput.files.length > 0) {
+                    // Show loading overlay
+                    loadingOverlay.classList.remove('d-none');
+                }
+            });
+
         });
     </script>
-
 </body>
 </html>

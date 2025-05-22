@@ -85,6 +85,44 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+        /* Main content wrapper */
+        .content-wrapper {
+            margin-left: 250px; /* Match sidebar width */
+            padding: 30px;
+            transition: margin-left 0.3s;
+        }
+
+        /* Container adjustments */
+        .container {
+            max-width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        /* Responsive behavior */
+        @media (max-width: 767.98px) {
+            .content-wrapper {
+                margin-left: 0;
+                padding: 15px;
+                width: 100%;
+            }
+        }
+
+        /* Improve chart responsiveness */
+        .card {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
         .table-container {
             max-height: 600px;
             overflow-y: auto;
@@ -100,13 +138,6 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         .search-box {
             margin-bottom: 20px;
         }
-        .candidate-row {
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .candidate-row:hover {
-            background-color: rgba(0,0,0,0.05);
-        }
     </style>
 </head>
 
@@ -115,29 +146,6 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
     <div class="content-wrapper">
         <div class="container">
-            <!-- Date range selector form -->
-            <div class="mb-4">
-                <form class="card" method="GET">
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" name="start_date" id="start_date" 
-                                       value="<?php echo date('Y-m-d', strtotime($start_date)); ?>" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" name="end_date" id="end_date" 
-                                       value="<?php echo date('Y-m-d', strtotime($end_date)); ?>" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">&nbsp;</label>
-                                <button type="submit" class="btn btn-primary d-block">Update Report</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
 
             <!-- Page header with date range -->
             <div class="page-header mb-4">
@@ -203,8 +211,8 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     <div class="search-box">
                         <input type="text" id="searchTable" class="form-control" placeholder="Search candidates...">
                     </div>
-                    <div class="table-container">
-                        <table class="table table-hover">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="candidateTable">
                             <thead class="sticky-header">
                                 <tr>
                                     <th>Name</th>
@@ -214,7 +222,7 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                     <th>Points</th>
                                     <th>Experience</th>
                                     <th>Days Listed</th>
-                                    <th>Actions</th>
+                                
                                 </tr>
                             </thead>
                             <tbody>
@@ -233,16 +241,29 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                     <td><?php echo number_format($candidate['points'], 1); ?></td>
                                     <td><?php echo number_format($candidate['experience'], 1); ?> years</td>
                                     <td><?php echo $days_listed; ?> days</td>
-                                    <td>
-                                        <a href="/WebEngineering/pages/applicant-details.php?name=<?php echo urlencode($candidate['fullName']); ?>&field=<?php echo urlencode($candidate['fields']); ?>&type=<?php echo urlencode($candidate['type']); ?>" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-info-circle"></i> Details
-                                        </a>
-                                    </td>
+ 
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        <!-- Pagination controls -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="pagination-info">
+                                Showing <span id="pageStart">1</span> to <span id="pageEnd">10</span> of <span id="totalItems">0</span> entries
+                            </div>
+                            <ul class="pagination mb-0">
+                                <li class="page-item" id="previousPage">
+                                    <button class="page-link" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </button>
+                                </li>
+                                <li class="page-item" id="nextPage">
+                                    <button class="page-link" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -324,65 +345,78 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Date validation
-        const startDate = document.getElementById('start_date');
-        const endDate = document.getElementById('end_date');
-        const today = new Date().toISOString().split('T')[0];
-        startDate.max = today;
-        endDate.max = today;
+        // PAGINATION for Candidate Entries Table
+        const rowsPerPage = 10;
+        let currentPage = 1;
+        let filteredRows = [];
 
-        function validateDates() {
-            if(startDate.value && endDate.value) {
-                if(startDate.value > endDate.value) {
-                    alert('Start date cannot be after end date');
-                    endDate.value = startDate.value;
-                }
-            }
+        const tableRows = Array.from(document.querySelectorAll('#candidateTable tbody tr'));
+        const searchInput = document.getElementById('searchTable');
+        const pageStart = document.getElementById('pageStart');
+        const pageEnd = document.getElementById('pageEnd');
+        const totalItems = document.getElementById('totalItems');
+        const previousPage = document.getElementById('previousPage');
+        const nextPage = document.getElementById('nextPage');
+
+        function updatePagination() {
+            const totalRows = filteredRows.length;
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+            if (currentPage > totalPages) currentPage = 1;
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = Math.min(start + rowsPerPage, totalRows);
+
+            // Update info
+            pageStart.textContent = totalRows ? start + 1 : 0;
+            pageEnd.textContent = end;
+            totalItems.textContent = totalRows;
+
+            // Enable/disable buttons
+            previousPage.classList.toggle('disabled', currentPage === 1);
+            nextPage.classList.toggle('disabled', currentPage === totalPages || totalRows === 0);
+
+            // Show/hide rows
+            tableRows.forEach(row => row.style.display = 'none');
+            filteredRows.slice(start, end).forEach(row => row.style.display = '');
         }
 
-        startDate.addEventListener('change', validateDates);
-        endDate.addEventListener('change', validateDates);
+        // Initialize
+        filteredRows = tableRows;
+        updatePagination();
 
-        document.querySelector('form').addEventListener('submit', function(e) {
-            if(!startDate.value || !endDate.value) {
-                e.preventDefault();
-                alert('Please select both start and end dates');
-            }
-        });
-
-        // Search functionality
-        const searchInput = document.getElementById('searchTable');
-        const tableRows = document.querySelectorAll('.candidate-row');
-
+        // Search with pagination
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
-            
-            tableRows.forEach(row => {
+            filteredRows = tableRows.filter(row => {
                 const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
                 const field = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
                 const type = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                
-                const matches = name.includes(searchTerm) || 
-                              field.includes(searchTerm) || 
-                              type.includes(searchTerm);
-                
-                row.style.display = matches ? '' : 'none';
+                const date = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                const points = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+                return (
+                    name.includes(searchTerm) ||
+                    field.includes(searchTerm) ||
+                    type.includes(searchTerm) ||
+                    date.includes(searchTerm) ||
+                    points.includes(searchTerm)
+                );
             });
+            currentPage = 1;
+            updatePagination();
         });
 
-        // Row click handler
-        tableRows.forEach(row => {
-            row.addEventListener('click', function(e) {
-                if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {
-                    return;
-                }
-                
-                const name = this.dataset.name;
-                const field = this.dataset.field;
-                const type = this.dataset.type;
-                
-                window.location.href = `/WebEngineering/pages/applicant-details.php?name=${encodeURIComponent(name)}&field=${encodeURIComponent(field)}&type=${encodeURIComponent(type)}`;
-            });
+        // Pagination controls
+        previousPage.addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePagination();
+            }
+        });
+        nextPage.addEventListener('click', function() {
+            const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePagination();
+            }
         });
     });
     </script>

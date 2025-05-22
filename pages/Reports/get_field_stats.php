@@ -1,6 +1,6 @@
 <?php
-include_once('../../database/db_connect.php');
 
+include_once('../../database/db_connect.php');
 header('Content-Type: application/json');
 
 $field = $_GET['field'] ?? '';
@@ -24,7 +24,6 @@ $query = "SELECT
           FROM categories c
           JOIN rankinglist r ON c.categoryID = r.categoryID
           $conditions";
-
 $stmt = $mysqli->prepare($query);
 $stmt->bind_param("sssi", ...$params);
 $stmt->execute();
@@ -39,58 +38,53 @@ $response = [
         'Lowest Points' => $stats['min_points'],
         'Average Experience' => $stats['avg_experience'] . ' years',
         'Average Grade' => $stats['avg_grade']
-    ],
-    'pointsDistribution' => [
-        'labels' => ['90-100', '80-89', '70-79', 'Below 70'],
-        'data' => [0, 0, 0, 0] // Will be updated below
-    ],
-    'experienceDistribution' => [
-        'labels' => [],
-        'data' => []
     ]
 ];
 
-// Get points distribution
-$query = "SELECT 
-            CASE 
-                WHEN points >= 90 THEN 0
-                WHEN points >= 80 THEN 1
-                WHEN points >= 70 THEN 2
-                ELSE 3
-            END as range_index,
-            COUNT(*) as count
-          FROM categories c
-          JOIN rankinglist r ON c.categoryID = r.categoryID
-          $conditions
-          GROUP BY range_index";
-
-$stmt = $mysqli->prepare($query);
-$stmt->bind_param("sssi", ...$params);
-$stmt->execute();
-$points_dist = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-foreach ($points_dist as $range) {
-    $response['pointsDistribution']['data'][$range['range_index']] = (int)$range['count'];
+// Points distribution: bins 0-1, 1-2, ..., 9-10
+$points_labels = [];
+$points_data = [];
+$points_colors = [];
+for ($i = 0; $i < 10; $i++) {
+    $min = $i;
+    $max = $i + 1;
+    $label = "$min-$max";
+    $stmt = $mysqli->prepare(
+        "SELECT COUNT(*) as count 
+         FROM rankinglist r 
+         JOIN categories c ON r.categoryID = c.categoryID 
+         WHERE c.fields=? AND c.type=? AND c.season=? AND c.year=? AND r.points >= ? AND r.points < ?"
+    );
+    $stmt->bind_param("ssssdd", $field, $type, $season, $year, $min, $max);
+    $stmt->execute();
+    $count = $stmt->get_result()->fetch_assoc()['count'];
+    $points_labels[] = $label;
+    $points_data[] = (int)$count;
+    $points_colors[] = '#4e73df';
 }
+$response['pointsDistribution'] = [
+    'labels' => $points_labels,
+    'data' => $points_data,
+    'colors' => $points_colors
+];
 
-// Get experience distribution
+// Experience distribution
 $query = "SELECT 
-            FLOOR(experience) as years,
+            FLOOR(r.experience) as years,
             COUNT(*) as count
           FROM categories c
           JOIN rankinglist r ON c.categoryID = r.categoryID
           $conditions
           GROUP BY years
           ORDER BY years";
-
 $stmt = $mysqli->prepare($query);
 $stmt->bind_param("sssi", ...$params);
 $stmt->execute();
 $exp_dist = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-$response['experienceDistribution']['labels'] = array_map(function($item) {
-    return $item['years'] . ' years';
-}, $exp_dist);
-$response['experienceDistribution']['data'] = array_map('intval', array_column($exp_dist, 'count'));
+$response['experienceDistribution'] = [
+    'labels' => array_map(function($item) { return $item['years'] . ' years'; }, $exp_dist),
+    'data' => array_map('intval', array_column($exp_dist, 'count'))
+];
 
 echo json_encode($response);
