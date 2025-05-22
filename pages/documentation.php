@@ -364,7 +364,7 @@
 
                 <section id="section-authentication">
     <h2 class="section-title">Authentication</h2>
-    <p>All API requests require authentication using either session-based authentication or an API key. You can obtain your API key from the <a href="api.php">API Keys Management</a> page.</p>
+    <p>All API requests require authentication using either session-based authentication or an API key. You can obtain your API key from the <a href="user-api-keys.php">API Keys Management</a> page.</p>
     
     <div class="card mb-4">
     <div class="card-header">
