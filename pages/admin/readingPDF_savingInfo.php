@@ -5,6 +5,20 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 set_time_limit(500);
 
+
+
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: homepage.php");
+    exit();
+}
+
+
 require_once __DIR__ . '/../../database/db_connect.php';
 
 $totalCategories = 0;
