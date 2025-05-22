@@ -51,13 +51,14 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                             <i class="fas fa-key"></i> My API Keys
                         </a>
                     </li>
-
+                    <?php if($isAdmin): ?>
                     <li class="nav-item">
                         <a href="<?php echo $baseUrl ?>admin/upload-file.php"
                             class="nav-link <?php echo $currentPage, 'upload-file.php' ? 'active' : ''; ?>">
                             <i class="fas fa-upload"></i> Upload File
                         </a>
                     </li>
+                    <?php endif; ?>
 
                     <!-- /////////////////////////////////////////////////////////////////////////////-->
                     <li class="nav-item">
