@@ -3,17 +3,20 @@
         'name' => '__root__',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
+
         'reference' => '532eafb691512a0063c45e8cd45576d69d4893fb',
 
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
+
         'dev' => true,
     ),
     'versions' => array(
         '__root__' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
+
             'reference' => '532eafb691512a0063c45e8cd45576d69d4893fb',
 
             'type' => 'library',
@@ -37,6 +40,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../phpmailer/phpmailer',
             'aliases' => array(),
+
             'dev_requirement' => false,
         ),
         'sendgrid/php-http-client' => array(
@@ -88,6 +92,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/polyfill-mbstring',
             'aliases' => array(),
+
             'dev_requirement' => false,
         ),
     ),
