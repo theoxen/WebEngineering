@@ -159,7 +159,6 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
             background: transparent;
             border: none;
             color: black;
-            /* Change from #333 to black for better visibility */
             font-size: 1.5rem;
             cursor: pointer;
             z-index: 1050;
@@ -183,7 +182,6 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
 
         .sidebar-header a {
             margin-left: 5px;
-            /* Add some extra margin to the anchor itself */
         }
 
         @media (max-width: 767.98px) {
@@ -204,7 +202,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
             if (sidebar) {
                 sidebar.classList.toggle('active');
                 document.body.classList.toggle('sidebar-active');
-                sidebarCollapseBtn.classList.toggle('active-toggle'); // Add this line
+                sidebarCollapseBtn.classList.toggle('active-toggle');
 
                 // Change the icon based on sidebar state
                 if (sidebar.classList.contains('active')) {
@@ -241,7 +239,6 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
             }
         }
 
-        // Add click event listener to toggle button
         if (sidebarCollapseBtn) {
             sidebarCollapseBtn.addEventListener('click', function (e) {
                 e.stopPropagation(); // Prevent event bubbling

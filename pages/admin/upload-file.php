@@ -394,7 +394,6 @@ $selectedField = $_POST['fields'] ?? '';
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            /* Ensure it's above everything */
             flex-direction: column;
         }
 

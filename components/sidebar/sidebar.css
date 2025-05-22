@@ -101,11 +101,10 @@
     min-height: 100vh;
 }
 
-/* Responsive Behavior */
+
 @media (max-width: 767.98px) {
-    /* Mobile sidebar behavior */
     .sidebar-wrapper {
-        left: -250px; /* Hide sidebar off-canvas */
+        left: -250px; 
         box-shadow: none;
     }
     

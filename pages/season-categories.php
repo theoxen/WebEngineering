@@ -174,11 +174,25 @@ while ($category = $result->fetch_assoc()) {
             background-color: #f8f9fc;
             color: #4e73df;
         }
+        .content-wrapper {
+            margin-left: 250px;
+            padding: 20px;
+            width: calc(100% - 250px);
+            transition: all 0.3s;
+        }
+        
+        
+        @media (max-width: 768px) {
+            .content-wrapper {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
     <?php include_once "../components/sidebar/sidebar.php"; ?>
-    
+    <div class="content-wrapper">
     <div class="container mt-4">
         <div class="page-header text-center">
             <h1><?php echo $season . " " . $year; ?></h1>
@@ -221,6 +235,7 @@ while ($category = $result->fetch_assoc()) {
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
+    </div>
     </div>
     
     <!-- Bootstrap JS -->

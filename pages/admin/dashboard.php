@@ -64,7 +64,6 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
 
     <!-- Custom CSS for admin dashboard -->
     <style>
-        /* Apply box-sizing to all elements */
         *,
         *::before,
         *::after {
@@ -106,7 +105,6 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
             max-width: 100%;
         }
 
-        /* Fix for Bootstrap row negative margins */
         .row {
             --bs-gutter-x: 1.5rem;
             margin-right: calc(var(--bs-gutter-x) * -0.5);
@@ -259,17 +257,16 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
         @media (min-width: 768px) {
             .main-content {
                 padding-right: 15px;
-                /* Add padding to prevent content touching the edge */
             }
         }
 
-        @media (max-width: 1199.98px) {
+        @media (max-width: 1199px) {
             .stat-card-value {
                 font-size: 1.4rem;
             }
         }
 
-        @media (max-width: 991.98px) {
+        @media (max-width: 992px) {
             .dashboard-container {
                 padding-left: 0.5rem;
                 padding-right: 0.   5rem;
@@ -293,7 +290,6 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
         @media (max-width: 767.98px) {
             .main-content {
                 margin-left: 0 !important;
-                /* Override any margin on mobile */
                 width: 100% !important;
             }
 
@@ -305,15 +301,12 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
             .page-title {
                 width: 100%;
                 text-align: center;
-                /* Center the title text */
                 margin-bottom: 1.5rem;
-                /* Add more space between title and buttons */
             }
 
             .page-header {
                 flex-direction: column;
                 align-items: center !important;
-                /* Changed from flex-start to center */
                 text-align: center;
             }
 
@@ -322,7 +315,6 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
                 width: 100%;
                 display: flex;
                 justify-content: center;
-                /* Center the buttons */
             }
 
             .stat-card-value {
@@ -339,7 +331,6 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
                 font-size: 1.1rem;
             }
 
-            /* Ensure cards stay in their designated columns */
             .col-md-6 {
                 padding-right: 12px;
                 padding-left: 12px;
@@ -355,7 +346,7 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
             .page-title {
                 font-size: 1.3rem;
                 text-align: center;
-                padding: 0 0.5rem; /* Add padding for extra small screens */
+                padding: 0 0.5rem;
             }
 
             .card-body {
@@ -366,7 +357,6 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
                 padding: 1rem;
             }
 
-            /* Fix for mobile when sidebar is open */
             body.sidebar-active .main-content {
                 max-width: 100vw;
                 overflow-x: hidden;
@@ -544,7 +534,6 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Fix for mobile sidebar overflow -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
@@ -554,7 +543,7 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
             if (sidebarCollapseBtn) {
                 sidebarCollapseBtn.addEventListener('click', function () {
                     if (window.innerWidth < 768) {
-                        // On mobile, ensure content doesn't overflow when sidebar is open
+                        // On mobile, we are ensuring content doesn't overflow when sidebar is open
                         if (!document.body.classList.contains('sidebar-active')) {
                             document.body.style.overflow = 'hidden';
                         } else {

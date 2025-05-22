@@ -588,7 +588,7 @@ $stmt->close();
         // Variables to store current user info for modals
         let currentUserId = null;
 
-        // Handle View User button click
+        // Handling View User button click
         document.querySelectorAll('.view-user').forEach(button => {
             button.addEventListener('click', function () {
                 const userId = this.getAttribute('data-id');

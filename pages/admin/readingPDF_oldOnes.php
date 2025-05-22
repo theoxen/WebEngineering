@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 
 require_once __DIR__ . '/../../database/db_connect.php';
 
-// Fetch all categoryIDs and pdf_content from the categories table
+// Fetching all categoryIDs and pdf_content from the categories table
 $categoriesQuery = "
     SELECT categoryID, pdf_content 
     FROM categories 
@@ -20,7 +20,7 @@ if ($categoriesResult->num_rows > 0) {
         $categoryID = $category['categoryID'];
         $pdfContent = $category['pdf_content'];
 
-        // Check if the categoryID already has records in the rankinglist table
+        // Checking if the categoryID already has records in the rankinglist table
         $rankinglistQuery = "SELECT COUNT(*) as count FROM rankinglist WHERE categoryID = ?";
         $stmt = $mysqli->prepare($rankinglistQuery);
         $stmt->bind_param("i", $categoryID);
@@ -153,7 +153,7 @@ function parseLine($line) {
 
     preg_match('/^(Π\.Κ\.|<>)$/u', substr($line, $cursor), $matches);
     if (isset($matches[0]) && trim($matches[0]) === 'Π.Κ.') {
-        $result['notes'] = 'Π.Κ.'; // Save the valid note
+        $result['notes'] = 'Π.Κ.'; // Saving the valid note
     } else {
         $result['notes'] = ''; // Treat "<>" or no match as an empty note
     }
