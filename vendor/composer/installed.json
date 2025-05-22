@@ -307,7 +307,7 @@
             },
             "time": "2025-03-31T13:16:09+00:00",
             "type": "library",
-            "installation-source": "source",
+            "installation-source": "dist",
             "autoload": {
                 "psr-0": {
                     "Smalot\\PdfParser\\": "src/"
@@ -416,7 +416,7 @@
                     "name": "symfony/polyfill"
                 }
             },
-            "installation-source": "source",
+            "installation-source": "dist",
             "autoload": {
                 "files": [
                     "bootstrap.php"

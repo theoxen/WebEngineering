@@ -99,7 +99,18 @@
     padding: 1rem;
     min-height: 100vh;
 }
-
+@media (max-width: 990px) {
+    .sidebar-wrapper {
+        left: -500px; /* Hide sidebar off-canvas */
+        box-shadow: none;
+        
+    }
+    
+    .sidebar-wrapper.active {
+        left: 0;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+}
 /* Responsive Behavior */
 @media (max-width: 767.98px) {
     /* Mobile sidebar behavior */
