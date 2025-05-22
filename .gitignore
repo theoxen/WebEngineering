@@ -19,3 +19,4 @@ Thumbs.db
 # Logs
 *.log
 error_log
+# /vendor
