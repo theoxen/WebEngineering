@@ -351,7 +351,7 @@ $selectedField = $_POST['fields'] ?? '';
             const selectedType = '<?= addslashes($selectedType) ?>'; 
             const selectedField = '<?= addslashes($selectedField) ?>';
             
-            // Add form submission handler to show loading overlay
+      // Add form submission handler to show loading overlay
             document.querySelector('.upload-form').addEventListener('submit', function(e) {
                 // Validate the form first
                 if (this.checkValidity()) {
@@ -359,6 +359,7 @@ $selectedField = $_POST['fields'] ?? '';
                 }
             });
             
+
             const optionsMap = {
                 "Δημοτική": ["Δασκάλων"],
                 "Ειδική Εκπαίδευση": [
@@ -427,6 +428,7 @@ $selectedField = $_POST['fields'] ?? '';
                     });
                 }
             }
+
         });
 
         // File validation and form submission handling
@@ -442,6 +444,7 @@ $selectedField = $_POST['fields'] ?? '';
                     loadingOverlay.classList.remove('d-none');
                 }
             });
+
         });
     </script>
 </body>
