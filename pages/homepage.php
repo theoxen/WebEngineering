@@ -17,7 +17,7 @@ if (isset($_GET['return']) && $_GET['return'] == 'search' && !isset($_POST['sear
 // Save search parameters to session when searching or when category filter changes
 if (isset($_POST['searchApplicants']) || isset($_POST['categoryFilter'])) {
     $_SESSION['last_search'] = $_POST;
-    
+
     // If only the category filter was changed (without clicking search)
     // add the searchApplicants key to ensure the search is executed when returning
     if (!isset($_POST['searchApplicants'])) {
@@ -65,7 +65,7 @@ $startYear = 2016;
         rel="stylesheet">
 
 
-    
+
 
     <style>
         /* Additional homepage styles */
@@ -82,10 +82,11 @@ $startYear = 2016;
             max-width: 1200px;
             margin: 0 auto;
         }
-        
+
         .table-responsive {
             width: 100%;
-            max-width: 1200px; /* Increase this value as needed */
+            max-width: 1200px;
+            /* Increase this value as needed */
             margin: 0 auto;
         }
 
@@ -300,7 +301,7 @@ $startYear = 2016;
             align-self: center;
         }
 
-        
+
         /* Search and tracking styles */
         .search-tracking-section .card {
             border: none;
@@ -319,17 +320,17 @@ $startYear = 2016;
             display: inline-flex;
             margin: 0 2px;
         }
-        
+
         .search-tracking-section .card-header {
             padding: 1rem 1.5rem;
             font-weight: 600;
         }
-        
+
         .search-tracking-section .table th {
             font-weight: 600;
             font-size: 0.9rem;
         }
-        
+
         .btn-sm {
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
@@ -339,38 +340,38 @@ $startYear = 2016;
             max-height: 400px;
             overflow-y: auto;
         }
-        
+
         .table-fixed-height thead {
             position: sticky;
             top: 0;
             background-color: #f8f9fa;
             z-index: 1;
         }
-        
+
         /* Custom scrollbar styling */
         .table-fixed-height::-webkit-scrollbar {
             width: 8px;
         }
-        
+
         .table-fixed-height::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 4px;
         }
-        
+
         .table-fixed-height::-webkit-scrollbar-thumb {
             background: #c1c1c1;
             border-radius: 4px;
         }
-        
+
         .search-tracking-section .card-body {
             display: flex;
             flex-direction: column;
         }
-        
+
         .search-tracking-section form {
             width: 100%;
         }
-        
+
         .search-results {
             width: 100%;
         }
@@ -378,7 +379,7 @@ $startYear = 2016;
         .table-fixed-height::-webkit-scrollbar-thumb:hover {
             background: #a1a1a1;
         }
-        
+
 
         @media (max-width: 955px) {
 
@@ -437,19 +438,19 @@ $startYear = 2016;
     // $username = "root"; 
     // $password = ""; 
     // $dbname = "cei326omada1";
-    
+
     // $conn = new mysqli($servername, $username, $password, $dbname);
-    
+
     // if ($conn->connect_error) {
     //     die("Connection failed: " . $conn->connect_error);
     // }
 
     if (isset($_SESSION['userId']) || isset($_SESSION['user_id'])) {
         $userId = isset($_SESSION['userId']) ? $_SESSION['userId'] : $_SESSION['user_id'];
-        
+
         // Reset tracked applicants array
         $_SESSION['tracked_applicants'] = [];
-        
+
         // Get all tracked applicants from the database using the tracking table structure
         $sql = "SHOW TABLES LIKE 'categories'";
         $result = $mysqli->query($sql);
@@ -487,116 +488,116 @@ $startYear = 2016;
             }
         }
     }
-    
+
     // Handle search functionality
     $searchResults = [];
-if (isset($_POST['searchApplicants'])) {
-    $searchTerm = isset($_POST['searchTerm']) ? $mysqli->real_escape_string($_POST['searchTerm']) : '';
-    
-    // Get date filter values
-    $birthdayFrom = isset($_POST['birthdayFrom']) && !empty($_POST['birthdayFrom']) ? $mysqli->real_escape_string($_POST['birthdayFrom']) : '';
-    $birthdayTo = isset($_POST['birthdayTo']) && !empty($_POST['birthdayTo']) ? $mysqli->real_escape_string($_POST['birthdayTo']) : '';
-    $registrationFrom = isset($_POST['registrationFrom']) && !empty($_POST['registrationFrom']) ? $mysqli->real_escape_string($_POST['registrationFrom']) : '';
-    $registrationTo = isset($_POST['registrationTo']) && !empty($_POST['registrationTo']) ? $mysqli->real_escape_string($_POST['registrationTo']) : '';
-    
-    // Get category filter
-    $categoryFilter = isset($_POST['categoryFilter']) && !empty($_POST['categoryFilter']) ? $mysqli->real_escape_string($_POST['categoryFilter']) : '';
-    
-    // Check if categories table exists
-    $sql = "SHOW TABLES LIKE 'categories'";
-    $result = $mysqli->query($sql);
-    $categoriesExist = ($result && $result->num_rows > 0);
-    
-    if ($categoriesExist) {
-        // Base SQL with categories
-        $sql = "SELECT r.*, c.fields 
-               FROM rankinglist r 
-               JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
-               
-        // Add category filter if selected
-        if (!empty($categoryFilter)) {
-            $sql .= " AND r.categoryID = '$categoryFilter'";
-        }
-        
-        // Add search conditions - now including category name in the search
-        if (!empty($searchTerm)) {
-            $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.fields LIKE '%$searchTerm%')";
-        }
-        
-        // Add birthday date filter
-        if (!empty($birthdayFrom)) {
-            $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
-        }
-        if (!empty($birthdayTo)) {
-            $sql .= " AND r.birthdayDate <= '$birthdayTo'";
-        }
-        
-        // Add registration date filter
-        if (!empty($registrationFrom)) {
-            $sql .= " AND r.registrationDate >= '$registrationFrom'";
-        }
-        if (!empty($registrationTo)) {
-            $sql .= " AND r.registrationDate <= '$registrationTo'";
-        }
-        
-        // Get limit from URL parameter (default to 50)
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+    if (isset($_POST['searchApplicants'])) {
+        $searchTerm = isset($_POST['searchTerm']) ? $mysqli->real_escape_string($_POST['searchTerm']) : '';
 
-        // Validate the limit to only allow 25, 50, or 100
-        if (!in_array($limit, [25, 50, 100])) {
-            $limit = 50;
+        // Get date filter values
+        $birthdayFrom = isset($_POST['birthdayFrom']) && !empty($_POST['birthdayFrom']) ? $mysqli->real_escape_string($_POST['birthdayFrom']) : '';
+        $birthdayTo = isset($_POST['birthdayTo']) && !empty($_POST['birthdayTo']) ? $mysqli->real_escape_string($_POST['birthdayTo']) : '';
+        $registrationFrom = isset($_POST['registrationFrom']) && !empty($_POST['registrationFrom']) ? $mysqli->real_escape_string($_POST['registrationFrom']) : '';
+        $registrationTo = isset($_POST['registrationTo']) && !empty($_POST['registrationTo']) ? $mysqli->real_escape_string($_POST['registrationTo']) : '';
+
+        // Get category filter
+        $categoryFilter = isset($_POST['categoryFilter']) && !empty($_POST['categoryFilter']) ? $mysqli->real_escape_string($_POST['categoryFilter']) : '';
+
+        // Check if categories table exists
+        $sql = "SHOW TABLES LIKE 'categories'";
+        $result = $mysqli->query($sql);
+        $categoriesExist = ($result && $result->num_rows > 0);
+
+        if ($categoriesExist) {
+            // Base SQL with categories
+            $sql = "SELECT r.*, c.fields 
+                FROM rankinglist r 
+                JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
+
+            // Add category filter if selected
+            if (!empty($categoryFilter)) {
+                $sql .= " AND r.categoryID = '$categoryFilter'";
+            }
+
+            // Add search conditions - now including category name in the search
+            if (!empty($searchTerm)) {
+                $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.fields LIKE '%$searchTerm%')";
+            }
+
+            // Add birthday date filter
+            if (!empty($birthdayFrom)) {
+                $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
+            }
+            if (!empty($birthdayTo)) {
+                $sql .= " AND r.birthdayDate <= '$birthdayTo'";
+            }
+
+            // Add registration date filter
+            if (!empty($registrationFrom)) {
+                $sql .= " AND r.registrationDate >= '$registrationFrom'";
+            }
+            if (!empty($registrationTo)) {
+                $sql .= " AND r.registrationDate <= '$registrationTo'";
+            }
+
+            // Get limit from URL parameter (default to 50)
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+            // Validate the limit to only allow 25, 50, or 100
+            if (!in_array($limit, [25, 50, 100])) {
+                $limit = 50;
+            }
+
+            // Add the LIMIT clause to your SQL query
+            $sql .= " ORDER BY r.ranking ASC";
+        } else {
+            // Base SQL without categories
+            $sql = "SELECT r.*, 'Unknown' as fields 
+                FROM rankinglist r WHERE 1=1";
+
+            // Add search conditions - without category search since table doesn't exist
+            if (!empty($searchTerm)) {
+                $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
+            }
+
+            // Add birthday date filter
+            if (!empty($birthdayFrom)) {
+                $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
+            }
+            if (!empty($birthdayTo)) {
+                $sql .= " AND r.birthdayDate <= '$birthdayTo'";
+            }
+
+            // Add registration date filter
+            if (!empty($registrationFrom)) {
+                $sql .= " AND r.registrationDate >= '$registrationFrom'";
+            }
+            if (!empty($registrationTo)) {
+                $sql .= " AND r.registrationDate <= '$registrationTo'";
+            }
+
+            // Get limit from URL parameter (default to 50)
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+            // Validate the limit to only allow 25, 50, or 100
+            if (!in_array($limit, [25, 50, 100])) {
+                $limit = 50;
+            }
+
+            // Add the LIMIT clause to your SQL query
+            $sql .= " ORDER BY r.ranking ASC";
         }
 
-        // Add the LIMIT clause to your SQL query
-        $sql .= " ORDER BY r.ranking ASC";
-    } else {
-        // Base SQL without categories
-        $sql = "SELECT r.*, 'Unknown' as fields 
-               FROM rankinglist r WHERE 1=1";
-               
-        // Add search conditions - without category search since table doesn't exist
-        if (!empty($searchTerm)) {
-            $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
-        }
-        
-        // Add birthday date filter
-        if (!empty($birthdayFrom)) {
-            $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
-        }
-        if (!empty($birthdayTo)) {
-            $sql .= " AND r.birthdayDate <= '$birthdayTo'";
-        }
-        
-        // Add registration date filter
-        if (!empty($registrationFrom)) {
-            $sql .= " AND r.registrationDate >= '$registrationFrom'";
-        }
-        if (!empty($registrationTo)) {
-            $sql .= " AND r.registrationDate <= '$registrationTo'";
-        }
-        
-        // Get limit from URL parameter (default to 50)
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+        // Execute query
+        $result = $mysqli->query($sql);
 
-        // Validate the limit to only allow 25, 50, or 100
-        if (!in_array($limit, [25, 50, 100])) {
-            $limit = 50;
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $searchResults[] = $row;
+            }
         }
-
-        // Add the LIMIT clause to your SQL query
-        $sql .= " ORDER BY r.ranking ASC";
     }
-    
-    // Execute query
-    $result = $mysqli->query($sql);
-    
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $searchResults[] = $row;
-        }
-    }
-}
-    
+
     // Get tracked applicants list from session
     if (!isset($_SESSION['tracked_applicants'])) {
         $_SESSION['tracked_applicants'] = [];
@@ -605,339 +606,413 @@ if (isset($_POST['searchApplicants'])) {
     ?>
 
 
-        <div class="main-content">
+    <div class="main-content">
 
-    <div class="container content-wrapper">
-        <div class="page-header">
-            <h1 class="page-title"><?php echo $pageTitle; ?></h1>
-            <p class="page-description">Πρόσβαση στους καταλόγους διοριστέων εκπαιδευτικών ανά περίοδο και έτος. Επιλέξτε τον κατάλογο που επιθυμείτε.</p>
-        </div>
-        
-        <!-- Applicant Search and Tracking Section -->
-        <div class="search-tracking-section mb-5">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0 text-center"><i class="fas fa-search me-2"></i> Αναζήτηση Υποψηφίων</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" id="searchForm">
-                        <!-- Search input at top, full width -->
-                        <div class="mb-4">
+        <div class="container content-wrapper">
+            <div class="page-header">
+                <h1 class="page-title"><?php echo $pageTitle; ?></h1>
+                <p class="page-description">Πρόσβαση στους καταλόγους διοριστέων εκπαιδευτικών ανά περίοδο και έτος. Επιλέξτε τον κατάλογο που επιθυμείτε.</p>
+            </div>
 
-                         <!-- Year & Season Dropdowns - New Section -->
-<div class="mb-4">
-    <label class="form-label fw-bold">Έτος & Περίοδος:</label>
-    <div class="row g-2">
-        <div class="col-md-6">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                <select class="form-select" name="yearFilter" id="yearFilter">
-                    <option value="">-- Επιλέξτε Έτος --</option>
-                    <?php
-                    $sql = "SELECT DISTINCT CONCAT('20', LEFT(categoryID, 2)) AS year FROM categories ORDER BY year DESC";
-                    $yearResult = $mysqli->query($sql);
-                    if ($yearResult && $yearResult->num_rows > 0) {
-                        while ($yearRow = $yearResult->fetch_assoc()) {
-                            $selected = (isset($_POST['yearFilter']) && $_POST['yearFilter'] == $yearRow['year']) ? 'selected' : '';
-                            echo "<option value='{$yearRow['year']}' $selected>{$yearRow['year']}</option>";
-                        }
-                    }
-                    ?>
-                </select>
-            </div>
-            </div>
-            <div class="col-md-6">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-sun"></i></span>
-                    <select class="form-select" name="seasonFilter" id="seasonFilter">
-                        <option value="">-- Επιλέξτε Περίοδο --</option>
-                        <?php
-                        $seasons = ['Ιούνιος', 'Φεβρουάριος'];
-                        foreach ($seasons as $season) {
-                            $selected = (isset($_POST['seasonFilter']) && $_POST['seasonFilter'] == $season) ? 'selected' : '';
-                            echo "<option value=\"$season\" $selected>$season</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <small class="text-muted">Επιλέξτε έτος και περίοδο για να επιλέξετε κατηγορία</small>
-    </div>
+            <!-- Applicant Search and Tracking Section -->
+            <div class="search-tracking-section mb-5">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0 text-center"><i class="fas fa-search me-2"></i> Αναζήτηση Υποψηφίων</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" id="searchForm">
+                            <!-- Search input at top, full width -->
+                            <div class="mb-4">
 
-                        <!-- Category Dropdown - New Section -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Κατηγορία Υποψηφίων:</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-filter"></i></span>
-                                <select class="form-select" name="categoryFilter" id="categoryFilter">
-                                    <option value="">-- Επιλέξτε Κατηγορία --</option>
-                                    <?php
-                                    $yearFilter = isset($_POST['yearFilter']) ? $mysqli->real_escape_string($_POST['yearFilter']) : '';
-                                    $seasonFilter = isset($_POST['seasonFilter']) ? $mysqli->real_escape_string($_POST['seasonFilter']) : '';
-                                    $sql = "SELECT categoryID, fields, season, CONCAT('20', LEFT(categoryID, 2)) AS year 
+                                <!-- Year & Season Dropdowns - New Section -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Έτος & Περίοδος:</label>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                                <select class="form-select" name="yearFilter" id="yearFilter">
+                                                    <option value="">-- Επιλέξτε Έτος --</option>
+                                                    <?php
+                                                    $sql = "SELECT DISTINCT CONCAT('20', LEFT(categoryID, 2)) AS year FROM categories ORDER BY year DESC";
+                                                    $yearResult = $mysqli->query($sql);
+                                                    if ($yearResult && $yearResult->num_rows > 0) {
+                                                        while ($yearRow = $yearResult->fetch_assoc()) {
+                                                            $selected = (isset($_POST['yearFilter']) && $_POST['yearFilter'] == $yearRow['year']) ? 'selected' : '';
+                                                            echo "<option value='{$yearRow['year']}' $selected>{$yearRow['year']}</option>";
+                                                        }
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-sun"></i></span>
+                                                <select class="form-select" name="seasonFilter" id="seasonFilter">
+                                                    <option value="">-- Επιλέξτε Περίοδο --</option>
+                                                    <?php
+                                                    $seasons = ['Ιούνιος', 'Φεβρουάριος'];
+                                                    foreach ($seasons as $season) {
+                                                        $selected = (isset($_POST['seasonFilter']) && $_POST['seasonFilter'] == $season) ? 'selected' : '';
+                                                        echo "<option value=\"$season\" $selected>$season</option>";
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">Επιλέξτε έτος και περίοδο για να επιλέξετε κατηγορία</small>
+                                </div>
+
+                                <!-- Category Dropdown - New Section -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Κατηγορία Υποψηφίων:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-filter"></i></span>
+                                        <select class="form-select" name="categoryFilter" id="categoryFilter">
+                                            <option value="">-- Επιλέξτε Κατηγορία --</option>
+                                            <?php
+                                            $yearFilter = isset($_POST['yearFilter']) ? $mysqli->real_escape_string($_POST['yearFilter']) : '';
+                                            $seasonFilter = isset($_POST['seasonFilter']) ? $mysqli->real_escape_string($_POST['seasonFilter']) : '';
+                                            $sql = "SELECT categoryID, fields, season, CONCAT('20', LEFT(categoryID, 2)) AS year 
                                             FROM categories WHERE 1=1 ";
-                                    if (!empty($yearFilter)) {
-                                        $sql .= "AND CONCAT('20', LEFT(categoryID, 2)) = '$yearFilter' ";
-                                    }
-                                    if (!empty($seasonFilter)) {
-                                        $sql .= "AND season = '$seasonFilter' ";
-                                    }
-                                    $sql .= "ORDER BY year DESC, FIELD(season, 'Ιούνιος', 'Φεβρουάριος'), fields";
-                                    $categoryResult = $mysqli->query($sql);
-                                    if ($categoryResult && $categoryResult->num_rows > 0) {
-                                        while ($category = $categoryResult->fetch_assoc()) {
-                                            $selected = (isset($_POST['categoryFilter']) && $_POST['categoryFilter'] == $category['categoryID']) ? 'selected' : '';
-                                            echo "<option value='{$category['categoryID']}' {$selected}>" .
-                                                htmlspecialchars($category['fields']) . " - " .
-                                                htmlspecialchars($category['season']) . " " .
-                                                htmlspecialchars($category['year']) .
-                                                "</option>";
-                                        }
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-                            <small class="text-muted">Επιλέξτε μια κατηγορία για να εμφανιστούν οι αντίστοιχοι υποψήφιοι</small>
-                        </div>
-                            <input type="text" class="form-control form-control-lg" name="searchTerm" 
-                                placeholder="Αναζήτηση με ονοματεπώνυμο ή αριθμό αίτησης..." 
-                                value="<?php echo isset($_POST['searchTerm']) ? htmlspecialchars($_POST['searchTerm']) : ''; ?>">
-                    <small class="text-muted">Επιλέξτε έτος, περίοδο και κατηγορία για να εφαρμώσετε έξτρα φίλτρα</small>
-
-                        </div>
-                        
-                        
-                        <!-- Date filters -->
-                        <div class="row mb-4">
-                            <!-- Birthday Date Range -->
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Ημερομηνία Γέννησης:</label>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                            <input type="date" class="form-control" name="birthdayFrom" 
-                                                value="<?php echo isset($_POST['birthdayFrom']) ? $_POST['birthdayFrom'] : ''; ?>">
-                                        </div>
-                                        <small class="text-muted">Από</small>
+                                            if (!empty($yearFilter)) {
+                                                $sql .= "AND CONCAT('20', LEFT(categoryID, 2)) = '$yearFilter' ";
+                                            }
+                                            if (!empty($seasonFilter)) {
+                                                $sql .= "AND season = '$seasonFilter' ";
+                                            }
+                                            $sql .= "ORDER BY year DESC, FIELD(season, 'Ιούνιος', 'Φεβρουάριος'), fields";
+                                            $categoryResult = $mysqli->query($sql);
+                                            if ($categoryResult && $categoryResult->num_rows > 0) {
+                                                while ($category = $categoryResult->fetch_assoc()) {
+                                                    $selected = (isset($_POST['categoryFilter']) && $_POST['categoryFilter'] == $category['categoryID']) ? 'selected' : '';
+                                                    echo "<option value='{$category['categoryID']}' {$selected}>" .
+                                                        htmlspecialchars($category['fields']) . " - " .
+                                                        htmlspecialchars($category['season']) . " " .
+                                                        htmlspecialchars($category['year']) .
+                                                        "</option>";
+                                                }
+                                            }
+                                            ?>
+                                        </select>
                                     </div>
-                                    <div class="col-6">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                            <input type="date" class="form-control" name="birthdayTo" 
-                                                value="<?php echo isset($_POST['birthdayTo']) ? $_POST['birthdayTo'] : ''; ?>">
+                                    <small class="text-muted">Επιλέξτε μια κατηγορία για να εμφανιστούν οι αντίστοιχοι υποψήφιοι</small>
+                                </div>
+                                <input type="text" class="form-control form-control-lg" name="searchTerm"
+                                    placeholder="Αναζήτηση με ονοματεπώνυμο ή αριθμό αίτησης..."
+                                    value="<?php echo isset($_POST['searchTerm']) ? htmlspecialchars($_POST['searchTerm']) : ''; ?>">
+                                <small class="text-muted">Επιλέξτε έτος, περίοδο και κατηγορία για να εφαρμώσετε έξτρα φίλτρα</small>
+
+                            </div>
+
+
+                            <!-- Date filters -->
+                            <div class="row mb-4">
+                                <!-- Birthday Date Range -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Ημερομηνία Γέννησης:</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                                <input type="date" class="form-control" name="birthdayFrom"
+                                                    value="<?php echo isset($_POST['birthdayFrom']) ? $_POST['birthdayFrom'] : ''; ?>">
+                                            </div>
+                                            <small class="text-muted">Από</small>
                                         </div>
-                                        <small class="text-muted">Έως</small>
+                                        <div class="col-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                                <input type="date" class="form-control" name="birthdayTo"
+                                                    value="<?php echo isset($_POST['birthdayTo']) ? $_POST['birthdayTo'] : ''; ?>">
+                                            </div>
+                                            <small class="text-muted">Έως</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Registration Date Range -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Ημερομηνία Εγγραφής Στους Καταλόγους:</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                                <input type="date" class="form-control" name="registrationFrom"
+                                                    value="<?php echo isset($_POST['registrationFrom']) ? $_POST['registrationFrom'] : ''; ?>">
+                                            </div>
+                                            <small class="text-muted">Από</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                                <input type="date" class="form-control" name="registrationTo"
+                                                    value="<?php echo isset($_POST['registrationTo']) ? $_POST['registrationTo'] : ''; ?>">
+                                            </div>
+                                            <small class="text-muted">Έως</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Registration Date Range -->
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Ημερομηνία Εγγραφής Στους Καταλόγους:</label>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                            <input type="date" class="form-control" name="registrationFrom" 
-                                                value="<?php echo isset($_POST['registrationFrom']) ? $_POST['registrationFrom'] : ''; ?>">
-                                        </div>
-                                        <small class="text-muted">Από</small>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                            <input type="date" class="form-control" name="registrationTo" 
-                                                value="<?php echo isset($_POST['registrationTo']) ? $_POST['registrationTo'] : ''; ?>">
-                                        </div>
-                                        <small class="text-muted">Έως</small>
-                                    </div>
-                                </div>
+
+
+
+
+
+                            <div class="text-center mb-4 d-flex justify-content-center gap-3">
+                                <button type="submit" name="searchApplicants" class="btn btn-primary px-5">
+                                    <i class="fas fa-search me-2"></i> Αναζήτηση
+                                </button>
+                                <button type="button" id="clearFilters" class="btn btn-outline-secondary px-4">
+                                    <i class="fas fa-eraser me-2"></i> Καθαρισμός Φίλτρων
+                                </button>
                             </div>
-                        </div>
-                        
-                       
-                        
-                                    
+                        </form>
 
-                        <div class="text-center mb-4 d-flex justify-content-center gap-3">
-                            <button type="submit" name="searchApplicants" class="btn btn-primary px-5">
-                                <i class="fas fa-search me-2"></i> Αναζήτηση
-                            </button>
-                            <button type="button" id="clearFilters" class="btn btn-outline-secondary px-4">
-                                <i class="fas fa-eraser me-2"></i> Καθαρισμός Φίλτρων
-                            </button>
-                        </div>
-                    </form>
-                
-                    <div class="search-results mt-4">
-                    <h5 class="text-center mb-3">
-                        <?php 
-                        $isSearch = isset($_POST['searchApplicants']);
-                        $hasSearchTerm = !empty($_POST['searchTerm']);
-                        $hasBirthdayFilter = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']);
-                        $hasRegDateFilter = !empty($_POST['registrationFrom']) || !empty($_POST['registrationTo']);
-                        $hasCategoryFilter = !empty($_POST['categoryFilter']);
-                        
-                        if ($isSearch && ($hasSearchTerm || $hasBirthdayFilter || $hasRegDateFilter || $hasCategoryFilter)) {
-                            echo 'Αποτελέσματα Αναζήτησης';
-                        } else {
-                            echo 'Λίστα Υποψηφίων';
-                        }
-                        ?>
-                    </h5>                        
-                        <?php
-                        // Get applicants to display (either search results or filtered by category)
-                        $displayApplicants = [];
+                        <div class="search-results mt-4">
+                            <h5 class="text-center mb-3">
+                                <?php
+                                $isSearch = isset($_POST['searchApplicants']);
+                                $hasSearchTerm = !empty($_POST['searchTerm']);
+                                $hasBirthdayFilter = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']);
+                                $hasRegDateFilter = !empty($_POST['registrationFrom']) || !empty($_POST['registrationTo']);
+                                $hasCategoryFilter = !empty($_POST['categoryFilter']);
 
-                        // Check if we have a category filter or search parameters
-                        $categoryFilter = isset($_POST['categoryFilter']) && !empty($_POST['categoryFilter']) ? 
-                                        $mysqli->real_escape_string($_POST['categoryFilter']) : '';
-                        $hasSearchTerm = !empty($_POST['searchTerm']);
-                        $hasBirthdayFilter = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']);
-                        $hasRegDateFilter = !empty($_POST['registrationFrom']) || !empty($_POST['registrationTo']);
+                                if ($isSearch && ($hasSearchTerm || $hasBirthdayFilter || $hasRegDateFilter || $hasCategoryFilter)) {
+                                    echo 'Αποτελέσματα Αναζήτησης';
+                                } else {
+                                    echo 'Λίστα Υποψηφίων';
+                                }
+                                ?>
+                            </h5>
+                            <?php
+                            // Get applicants to display (either search results or filtered by category)
+                            $displayApplicants = [];
 
-                        // Only fetch results if any filter is applied (category, search term, or date filters)
-                        if (!empty($categoryFilter) || $hasSearchTerm || $hasBirthdayFilter || $hasRegDateFilter) {
-                            // Build the SQL query based on all applied filters
-                            $sql = "SHOW TABLES LIKE 'categories'";
-                            $result = $mysqli->query($sql);
-                            $categoriesExist = ($result && $result->num_rows > 0);
-                            
-                            if ($categoriesExist) {
-                                // Base SQL with categories
-                                if ($categoryFilter == 'all') {
-                                    // Special case - show all applicants
-                                    $sql = "SELECT r.*, c.fields 
+                            // Check if we have a category filter or search parameters
+                            $categoryFilter = isset($_POST['categoryFilter']) && !empty($_POST['categoryFilter']) ?
+                                $mysqli->real_escape_string($_POST['categoryFilter']) : '';
+                            $hasSearchTerm = !empty($_POST['searchTerm']);
+                            $hasBirthdayFilter = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']);
+                            $hasRegDateFilter = !empty($_POST['registrationFrom']) || !empty($_POST['registrationTo']);
+
+                            // Only fetch results if any filter is applied (category, search term, or date filters)
+                            if (!empty($categoryFilter) || $hasSearchTerm || $hasBirthdayFilter || $hasRegDateFilter) {
+                                // Build the SQL query based on all applied filters
+                                $sql = "SHOW TABLES LIKE 'categories'";
+                                $result = $mysqli->query($sql);
+                                $categoriesExist = ($result && $result->num_rows > 0);
+
+                                if ($categoriesExist) {
+                                    // Base SQL with categories
+                                    if ($categoryFilter == 'all') {
+                                        // Special case - show all applicants
+                                        $sql = "SELECT r.*, c.fields 
                                           FROM rankinglist r 
                                           LEFT JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
-                                } else {
-                                    // Normal filtering by specific category
-                                    $sql = "SELECT r.*, c.fields 
+                                    } else {
+                                        // Normal filtering by specific category
+                                        $sql = "SELECT r.*, c.fields 
                                           FROM rankinglist r 
                                           JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
-                                          
-                                    // Add category filter if selected (and not "all")
-                                    if (!empty($categoryFilter)) {
-                                        $sql .= " AND r.categoryID = '$categoryFilter'";
+
+                                        // Add category filter if selected (and not "all")
+                                        if (!empty($categoryFilter)) {
+                                            $sql .= " AND r.categoryID = '$categoryFilter'";
+                                        }
+                                    }
+
+                                    // Add search conditions
+                                    if (!empty($_POST['searchTerm'])) {
+                                        $searchTerm = $mysqli->real_escape_string($_POST['searchTerm']);
+                                        $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.fields LIKE '%$searchTerm%')";
+                                    }
+
+                                    // Add birthday date filter
+                                    if (!empty($_POST['birthdayFrom'])) {
+                                        $birthdayFrom = $mysqli->real_escape_string($_POST['birthdayFrom']);
+                                        $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
+                                    }
+                                    if (!empty($_POST['birthdayTo'])) {
+                                        $birthdayTo = $mysqli->real_escape_string($_POST['birthdayTo']);
+                                        $sql .= " AND r.birthdayDate <= '$birthdayTo'";
+                                    }
+
+                                    // Add registration date filter
+                                    if (!empty($_POST['registrationFrom'])) {
+                                        $registrationFrom = $mysqli->real_escape_string($_POST['registrationFrom']);
+                                        $sql .= " AND r.registrationDate >= '$registrationFrom'";
+                                    }
+                                    if (!empty($_POST['registrationTo'])) {
+                                        $registrationTo = $mysqli->real_escape_string($_POST['registrationTo']);
+                                        $sql .= " AND r.registrationDate <= '$registrationTo'";
+                                    }
+
+                                    // Get limit from URL parameter (default to 50)
+                                    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+                                    // Validate the limit to only allow 25, 50, or 100
+                                    if (!in_array($limit, [25, 50, 100])) {
+                                        $limit = 50;
+                                    }
+
+                                    // Add the LIMIT clause to your SQL query
+                                    $sql .= " ORDER BY r.ranking ASC";
+                                } else {
+                                    // Base SQL without categories
+                                    $sql = "SELECT r.*, 'Unknown' as fields 
+                                    FROM rankinglist r WHERE 1=1";
+
+                                    // Add search conditions
+                                    if (!empty($_POST['searchTerm'])) {
+                                        $searchTerm = $mysqli->real_escape_string($_POST['searchTerm']);
+                                        $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
+                                    }
+
+                                    // Add birthday date filter
+                                    if (!empty($_POST['birthdayFrom'])) {
+                                        $birthdayFrom = $mysqli->real_escape_string($_POST['birthdayFrom']);
+                                        $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
+                                    }
+                                    if (!empty($_POST['birthdayTo'])) {
+                                        $birthdayTo = $mysqli->real_escape_string($_POST['birthdayTo']);
+                                        $sql .= " AND r.birthdayDate <= '$birthdayTo'";
+                                    }
+
+                                    // Add registration date filter
+                                    if (!empty($_POST['registrationFrom'])) {
+                                        $registrationFrom = $mysqli->real_escape_string($_POST['registrationFrom']);
+                                        $sql .= " AND r.registrationDate >= '$registrationFrom'";
+                                    }
+                                    if (!empty($_POST['registrationTo'])) {
+                                        $registrationTo = $mysqli->real_escape_string($_POST['registrationTo']);
+                                        $sql .= " AND r.registrationDate <= '$registrationTo'";
+                                    }
+
+                                    // Get limit from URL parameter (default to 50)
+                                    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+                                    // Validate the limit to only allow 25, 50, or 100
+                                    if (!in_array($limit, [25, 50, 100])) {
+                                        $limit = 50;
+                                    }
+
+                                    // Add the LIMIT clause to your SQL query
+                                    $sql .= " ORDER BY r.ranking ASC";
+                                }
+
+                                // Execute query
+                                $result = $mysqli->query($sql);
+
+                                if ($result && $result->num_rows > 0) {
+                                    while ($row = $result->fetch_assoc()) {
+                                        $displayApplicants[] = $row;
                                     }
                                 }
-                                
-                                // Add search conditions
-                                if (!empty($_POST['searchTerm'])) {
-                                    $searchTerm = $mysqli->real_escape_string($_POST['searchTerm']);
-                                    $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.fields LIKE '%$searchTerm%')";
-                                }
-                                
-                                // Add birthday date filter
-                                if (!empty($_POST['birthdayFrom'])) {
-                                    $birthdayFrom = $mysqli->real_escape_string($_POST['birthdayFrom']);
-                                    $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
-                                }
-                                if (!empty($_POST['birthdayTo'])) {
-                                    $birthdayTo = $mysqli->real_escape_string($_POST['birthdayTo']);
-                                    $sql .= " AND r.birthdayDate <= '$birthdayTo'";
-                                }
-                                
-                                // Add registration date filter
-                                if (!empty($_POST['registrationFrom'])) {
-                                    $registrationFrom = $mysqli->real_escape_string($_POST['registrationFrom']);
-                                    $sql .= " AND r.registrationDate >= '$registrationFrom'";
-                                }
-                                if (!empty($_POST['registrationTo'])) {
-                                    $registrationTo = $mysqli->real_escape_string($_POST['registrationTo']);
-                                    $sql .= " AND r.registrationDate <= '$registrationTo'";
-                                }
-                                
-                                // Get limit from URL parameter (default to 50)
-                                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
-
-                                // Validate the limit to only allow 25, 50, or 100
-                                if (!in_array($limit, [25, 50, 100])) {
-                                    $limit = 50;
-                                }
-
-                                // Add the LIMIT clause to your SQL query
-                                $sql .= " ORDER BY r.ranking ASC";
-                            } else {
-                                // Base SQL without categories
-                                $sql = "SELECT r.*, 'Unknown' as fields 
-                                    FROM rankinglist r WHERE 1=1";
-                                    
-                                // Add search conditions
-                                if (!empty($_POST['searchTerm'])) {
-                                    $searchTerm = $mysqli->real_escape_string($_POST['searchTerm']);
-                                    $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
-                                }
-                                
-                                // Add birthday date filter
-                                if (!empty($_POST['birthdayFrom'])) {
-                                    $birthdayFrom = $mysqli->real_escape_string($_POST['birthdayFrom']);
-                                    $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
-                                }
-                                if (!empty($_POST['birthdayTo'])) {
-                                    $birthdayTo = $mysqli->real_escape_string($_POST['birthdayTo']);
-                                    $sql .= " AND r.birthdayDate <= '$birthdayTo'";
-                                }
-                                
-                                // Add registration date filter
-                                if (!empty($_POST['registrationFrom'])) {
-                                    $registrationFrom = $mysqli->real_escape_string($_POST['registrationFrom']);
-                                    $sql .= " AND r.registrationDate >= '$registrationFrom'";
-                                }
-                                if (!empty($_POST['registrationTo'])) {
-                                    $registrationTo = $mysqli->real_escape_string($_POST['registrationTo']);
-                                    $sql .= " AND r.registrationDate <= '$registrationTo'";
-                                }
-                                
-                                // Get limit from URL parameter (default to 50)
-                                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
-
-                                // Validate the limit to only allow 25, 50, or 100
-                                if (!in_array($limit, [25, 50, 100])) {
-                                    $limit = 50;
-                                }
-
-                                // Add the LIMIT clause to your SQL query
-                                $sql .= " ORDER BY r.ranking ASC";
                             }
-                            
-                            // Execute query
-                            $result = $mysqli->query($sql);
-                            
-                            if ($result && $result->num_rows > 0) {
-                                while ($row = $result->fetch_assoc()) {
-                                    $displayApplicants[] = $row;
+
+                            // Filter to show each candidate only once per category
+                            $uniqueApplicants = [];
+                            $filteredApplicants = [];
+                            foreach ($displayApplicants as $applicant) {
+                                $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'] . '|' . $applicant['categoryID'];
+                                if (!isset($uniqueApplicants[$uniqueKey])) {
+                                    $uniqueApplicants[$uniqueKey] = true;
+                                    $filteredApplicants[] = $applicant;
                                 }
                             }
-                        }
+                            $displayApplicants = $filteredApplicants;
 
-                        // Filter to show each candidate only once per category
-                        $uniqueApplicants = [];
-                        $filteredApplicants = [];
-                        foreach ($displayApplicants as $applicant) {
-                            $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'] . '|' . $applicant['categoryID'];
-                            if (!isset($uniqueApplicants[$uniqueKey])) {
-                                $uniqueApplicants[$uniqueKey] = true;
-                                $filteredApplicants[] = $applicant;
-                            }
-                        }
-                        $displayApplicants = $filteredApplicants;
-                        
-                        if (!empty($displayApplicants)): 
-                        ?>
-                        <form method="POST" action="../track-applicants.php" id="trackForm">
+                            if (!empty($displayApplicants)):
+                            ?>
+                                <form method="POST" action="../track-applicants.php" id="trackForm">
+                                    <div class="table-responsive table-fixed-height">
+
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th><input type="checkbox" id="selectAll" class="form-check-input"> Επιλογή</th>
+                                                    <th>Κατάταξη</th>
+                                                    <th>Ονοματεπώνυμο</th>
+                                                    <th>Αρ. Αίτησης</th>
+                                                    <th>Μόρια</th>
+                                                    <th>Κατηγορία</th>
+                                                    <th>Ημ. Εγγραφής</th>
+                                                    <th>Ημ. Πτυχίου</th>
+                                                    <th>Ενέργειες</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($displayApplicants as $applicant):
+                                                    // Check if this applicant is already being tracked
+                                                    $isTracked = false;
+                                                    foreach ($trackedApplicants as $tracked) {
+                                                        if ($tracked['id'] == $applicant['id']) {
+                                                            $isTracked = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                ?>
+                                                    <tr<?php echo $isTracked ? ' class="table-light"' : ''; ?>>
+                                                        <td>
+                                                            <input type="checkbox" name="track_applicants[]" value="<?php echo $applicant['id']; ?>"
+                                                                class="form-check-input applicant-check" <?php echo $isTracked ? 'checked' : ''; ?>>
+                                                        </td>
+                                                        <td><?php echo $applicant['ranking']; ?></td>
+                                                        <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
+                                                        <td><?php echo $applicant['appNum']; ?></td>
+                                                        <td><?php echo number_format($applicant['points'], 2); ?></td>
+                                                        <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
+                                                        <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
+                                                        <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
+                                                        <td class="action-buttons">
+
+
+                                                            <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
+                                                                <i class="fas fa-info-circle"></i>
+                                                            </a>
+                                                        </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="d-flex justify-content-end mt-3">
+                                        <button type="submit" class="btn btn-success" name="track_selected">
+                                            <i class="fas fa-user-check me-2"></i> Παρακολούθηση Επιλεγμένων
+                                        </button>
+                                    </div>
+                                </form>
+                            <?php else: ?>
+                                <div class="alert alert-info">
+                                    <?php if (empty($categoryFilter) && !$hasSearchTerm && !$hasBirthdayFilter && !$hasRegDateFilter): ?>
+                                        <i class="fas fa-info-circle me-2"></i> Παρακαλώ εφαρμόστε κάποιο φίλτρο αναζήτησης ή επιλέξτε μια κατηγορία για να εμφανιστούν αποτελέσματα.
+                                    <?php else: ?>
+                                        <i class="fas fa-info-circle me-2"></i> Δεν βρέθηκαν υποψήφιοι με τα επιλεγμένα κριτήρια.
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tracked Applicants Section -->
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-check me-2"></i> Υπό Παρακολούθηση Υποψήφιοι</h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($trackedApplicants)): ?>
                             <div class="table-responsive table-fixed-height">
-                                
                                 <table class="table table-hover">
                                     <thead class="table-light">
                                         <tr>
-                                            <th><input type="checkbox" id="selectAll" class="form-check-input"> Επιλογή</th>
-                                            <th>Κατάταξη</th>
+                                            <th>Δικός μου</th>
                                             <th>Ονοματεπώνυμο</th>
                                             <th>Αρ. Αίτησης</th>
-                                            <th>Μόρια</th>
                                             <th>Κατηγορία</th>
                                             <th>Ημ. Εγγραφής</th>
                                             <th>Ημ. Πτυχίου</th>
@@ -945,150 +1020,76 @@ if (isset($_POST['searchApplicants'])) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                    <?php foreach ($displayApplicants as $applicant): 
-                                        // Check if this applicant is already being tracked
-                                        $isTracked = false;
-                                        foreach ($trackedApplicants as $tracked) {
-                                            if ($tracked['id'] == $applicant['id']) {
-                                                $isTracked = true;
-                                                break;
-                                            }
-                                        }
-                                    ?>
-                                        <tr<?php echo $isTracked ? ' class="table-light"' : ''; ?>>
-                                            <td>
-                                                <input type="checkbox" name="track_applicants[]" value="<?php echo $applicant['id']; ?>" 
-                                                    class="form-check-input applicant-check" <?php echo $isTracked ? 'checked' : ''; ?>>
-                                            </td>
-                                            <td><?php echo $applicant['ranking']; ?></td>
-                                            <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
-                                            <td><?php echo $applicant['appNum']; ?></td>
-                                            <td><?php echo number_format($applicant['points'], 2); ?></td>
-                                            <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
-                                            <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
-                                            <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
-                                            <td class="action-buttons">
-                                            
-                                            
-                                            <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
-                                                <i class="fas fa-info-circle"></i>
-                                            </a>
-                                        </td>
-                                        </tr>
-                                    <?php endforeach; ?>
+                                        <?php
+                                        $uniqueApplicants = [];
+                                        foreach ($trackedApplicants as $applicant):
+                                            $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
+                                            if (isset($uniqueApplicants[$uniqueKey])) continue;
+                                            $uniqueApplicants[$uniqueKey] = true;
+                                            $isOwn = isset($applicant['isOwnCandidate']) && $applicant['isOwnCandidate'] == 1;
+                                        ?>
+                                            <tr class="<?php echo $isOwn ? 'table-success' : ''; ?>">
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input own-candidate-check"
+                                                            data-id="<?php echo $applicant['trackingID']; ?>"
+                                                            <?php echo $isOwn ? 'checked' : ''; ?>>
+                                                    </div>
+                                                </td>
+                                                <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
+                                                <td><?php echo $applicant['appNum']; ?></td>
+                                                <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
+                                                <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
+                                                <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
+                                                <td class="action-buttons">
+                                                    <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
+                                                        <i class="fas fa-user-minus"></i>
+                                                    </button>
+                                                    <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="d-flex justify-content-end mt-3">
-                                <button type="submit" class="btn btn-success" name="track_selected">
-                                    <i class="fas fa-user-check me-2"></i> Παρακολούθηση Επιλεγμένων
-                                </button>
-                            </div>
-                        </form>
                         <?php else: ?>
-                        <div class="alert alert-info">
-                            <?php if (empty($categoryFilter) && !$hasSearchTerm && !$hasBirthdayFilter && !$hasRegDateFilter): ?>
-                                <i class="fas fa-info-circle me-2"></i> Παρακαλώ εφαρμόστε κάποιο φίλτρο αναζήτησης ή επιλέξτε μια κατηγορία για να εμφανιστούν αποτελέσματα.
-                            <?php else: ?>
-                                <i class="fas fa-info-circle me-2"></i> Δεν βρέθηκαν υποψήφιοι με τα επιλεγμένα κριτήρια.
-                            <?php endif; ?>
-                        </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> Δεν έχετε προσθέσει ακόμη υποψηφίους για παρακολούθηση.
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
-            
-            <!-- Tracked Applicants Section -->
-            <div class="card shadow-sm mt-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fas fa-user-check me-2"></i> Υπό Παρακολούθηση Υποψήφιοι</h5>
-                </div>
-                <div class="card-body">
-                    <?php if (!empty($trackedApplicants)): ?>
-                        <div class="table-responsive table-fixed-height">
-    <table class="table table-hover">
-        <thead class="table-light">
-            <tr>
-                <th>Δικός μου</th>
-                <th>Ονοματεπώνυμο</th>
-                <th>Αρ. Αίτησης</th>
-                <th>Κατηγορία</th>
-                <th>Ημ. Εγγραφής</th>
-                <th>Ημ. Πτυχίου</th>
-                <th>Ενέργειες</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            $uniqueApplicants = [];
-            foreach ($trackedApplicants as $applicant):
-                $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
-                if (isset($uniqueApplicants[$uniqueKey])) continue;
-                $uniqueApplicants[$uniqueKey] = true;
-                $isOwn = isset($applicant['isOwnCandidate']) && $applicant['isOwnCandidate'] == 1;
-            ?>
-                <tr class="<?php echo $isOwn ? 'table-success' : ''; ?>">
-                    <td>
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input own-candidate-check" 
-                                   data-id="<?php echo $applicant['trackingID']; ?>"
-                                   <?php echo $isOwn ? 'checked' : ''; ?>>
-                        </div>
-                    </td>
-                    <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
-                    <td><?php echo $applicant['appNum']; ?></td>
-                    <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
-                    <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
-                    <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
-                    <td class="action-buttons">
-                        <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
-                            <i class="fas fa-user-minus"></i>
-                        </button>
-                        <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
-                            <i class="fas fa-info-circle"></i>
-                        </a>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
-                    <?php else: ?>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i> Δεν έχετε προσθέσει ακόμη υποψηφίους για παρακολούθηση.
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        
-        <div class="catalogs-container">
-        <?php
-        // Loop through each year from current year down to the starting year
-        for ($year = $currentYear; $year >= $startYear; $year--) {
-            // Start a new section for this year
-            echo '<div class="year-section">';
-            
-            // Display year divider
-            echo '<div class="year-divider text-center"><h3>' . $year . '</h3></div>';
-            
-            // Begin cards for this year
-            echo '<div class="year-cards">';
-            
-            // Check which months exist for this year
-            $hasFebruary = ($year < $currentYear || ($year == $currentYear && $currentMonth >= 2));
-            $hasJune = ($year < $currentYear || ($year == $currentYear && $currentMonth >= 6));
-            
-            // February catalog if available
-            if ($hasFebruary) {
-                $monthNum = 2;
-                $monthName = $monthNames[$monthNum];
 
-               // $cardUrl = "year-season-details.php?year=" . $year . "&month=" . $monthNum;
+            <div class="catalogs-container">
+                <?php
+                // Loop through each year from current year down to the starting year
+                for ($year = $currentYear; $year >= $startYear; $year--) {
+                    // Start a new section for this year
+                    echo '<div class="year-section">';
 
-                $cardUrl = "season-categories.php?year=" . $year . "&season=Φεβρουάριος";
+                    // Display year divider
+                    echo '<div class="year-divider text-center"><h3>' . $year . '</h3></div>';
 
-                echo '<a href="' . $cardUrl . '" class="card-link">
+                    // Begin cards for this year
+                    echo '<div class="year-cards">';
+
+                    // Check which months exist for this year
+                    $hasFebruary = ($year < $currentYear || ($year == $currentYear && $currentMonth >= 2));
+                    $hasJune = ($year < $currentYear || ($year == $currentYear && $currentMonth >= 6));
+
+                    // February catalog if available
+                    if ($hasFebruary) {
+                        $monthNum = 2;
+                        $monthName = $monthNames[$monthNum];
+
+                        // $cardUrl = "year-season-details.php?year=" . $year . "&month=" . $monthNum;
+
+                        $cardUrl = "season-categories.php?year=" . $year . "&season=Φεβρουάριος";
+
+                        echo '<a href="' . $cardUrl . '" class="card-link">
                     <div class="catalog-card">
                         <div class="card-header-custom" style="background-color: #4e73df;">
                             <i class="fas fa-snowflake card-icon"></i>
@@ -1127,15 +1128,14 @@ if (isset($_POST['searchApplicants'])) {
                         </div>
                     </div>
                 </a>';
+                    }
 
-            }
-            
-            // June catalog if available
-            if ($hasJune) {
-                $monthNum = 6;
-                $monthName = $monthNames[$monthNum];
-                $cardUrl = "season-categories.php?year=" . $year . "&season=Ιούνιος";               
-                echo '<a href="' . $cardUrl . '" class="card-link">
+                    // June catalog if available
+                    if ($hasJune) {
+                        $monthNum = 6;
+                        $monthName = $monthNames[$monthNum];
+                        $cardUrl = "season-categories.php?year=" . $year . "&season=Ιούνιος";
+                        echo '<a href="' . $cardUrl . '" class="card-link">
                     <div class="catalog-card">
                         <div class="card-header-custom" style="background-color: #f6c23e;">
                             <i class="fas fa-sun card-icon"></i>
@@ -1187,303 +1187,301 @@ if (isset($_POST['searchApplicants'])) {
     <!-- Bootstrap JS -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- jQuery for AJAX functionality -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <script>
-
-
-
         $(document).ready(function() {
-    // Select all checkbox functionality
-    $('#selectAll').change(function() {
-        $('.applicant-check').prop('checked', $(this).prop('checked'));$displayApplicants = $filteredApplicants;
-    });
+            // Select all checkbox functionality
+            $('#selectAll').change(function() {
+                $('.applicant-check').prop('checked', $(this).prop('checked'));
+                $displayApplicants = $filteredApplicants;
+            });
 
-    $('#clearFilters').click(function() {
-    // Clear the text input
-    $('input[name="searchTerm"]').val('');
-    
-    // Clear date fields
-    $('input[name="birthdayFrom"]').val('');
-    $('input[name="birthdayTo"]').val('');
-    $('input[name="registrationFrom"]').val('');
-    $('input[name="registrationTo"]').val('');
-    
-    // Reset category dropdown to default
-    $('#categoryFilter').val('');
-    
-    // Submit the form to refresh results
-    $('#searchForm').submit();
-    });
-    
-    // Individual track button
-    $('.track-single').click(function(e) {
-        e.preventDefault();
-        const applicantID = $(this).data('id');
-        const $button = $(this);
-        const $row = $button.closest('tr');
-        
-        $.ajax({
-            url: '../track-applicants.php',
-            method: 'POST',
-            dataType: 'json',
-            data: {
-                track_single: true,
-                applicantID: applicantID
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    // Update the button appearance directly
-                    $button.removeClass('btn-primary').addClass('btn-danger');
-                    $button.removeClass('track-single').addClass('untrack-btn');
-                    $button.html('<i class="fas fa-user-minus"></i>');
-                    $row.addClass('table-light');
-                    
-                    // Check the checkbox
-                    $row.find('.applicant-check').prop('checked', true);
-                    
-                    // Use AJAX to update tracked section without page reload
-                    $.post('get-tracked-section.php', {}, function(data) {
-                        $('.card-header.bg-success').closest('.card').find('.card-body').html(data);
-                        // Rebind event handlers for newly added elements
-                        bindTrackedEvents();
-                    });
+            $('#clearFilters').click(function() {
+                // Clear the text input
+                $('input[name="searchTerm"]').val('');
+
+                // Clear date fields
+                $('input[name="birthdayFrom"]').val('');
+                $('input[name="birthdayTo"]').val('');
+                $('input[name="registrationFrom"]').val('');
+                $('input[name="registrationTo"]').val('');
+
+                // Reset category dropdown to default
+                $('#categoryFilter').val('');
+
+                // Submit the form to refresh results
+                $('#searchForm').submit();
+            });
+
+            // Individual track button
+            $('.track-single').click(function(e) {
+                e.preventDefault();
+                const applicantID = $(this).data('id');
+                const $button = $(this);
+                const $row = $button.closest('tr');
+
+                $.ajax({
+                    url: '../track-applicants.php',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        track_single: true,
+                        applicantID: applicantID
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            // Update the button appearance directly
+                            $button.removeClass('btn-primary').addClass('btn-danger');
+                            $button.removeClass('track-single').addClass('untrack-btn');
+                            $button.html('<i class="fas fa-user-minus"></i>');
+                            $row.addClass('table-light');
+
+                            // Check the checkbox
+                            $row.find('.applicant-check').prop('checked', true);
+
+                            // Use AJAX to update tracked section without page reload
+                            $.post('get-tracked-section.php', {}, function(data) {
+                                $('.card-header.bg-success').closest('.card').find('.card-body').html(data);
+                                // Rebind event handlers for newly added elements
+                                bindTrackedEvents();
+                            });
+                        }
+                    },
+                    error: function() {
+                        alert('Προέκυψε σφάλμα κατά την προσθήκη του υποψηφίου');
+                    }
+                });
+            });
+
+            // Auto-submit form when year dropdown changes
+            $('#yearFilter').change(function() {
+                // Reset category filter when year changes
+                $('#categoryFilter').val('');
+                $('#searchForm').submit();
+            });
+
+            // Auto-submit form when year or season dropdown changes
+            $('#yearFilter, #seasonFilter').change(function() {
+                // Reset category filter when year or season changes
+                $('#categoryFilter').val('');
+                $('#searchForm').submit();
+            });
+
+            function updateCategoryDropdownState() {
+                const yearSelected = $('#yearFilter').val() !== '';
+                const seasonSelected = $('#seasonFilter').val() !== '';
+                if (yearSelected && seasonSelected) {
+                    $('#categoryFilter').prop('disabled', false);
+                } else {
+                    $('#categoryFilter').prop('disabled', true).val('');
                 }
-            },
-            error: function() {
-                alert('Προέκυψε σφάλμα κατά την προσθήκη του υποψηφίου');
             }
-        });
-    });
 
-    // Auto-submit form when year dropdown changes
-    $('#yearFilter').change(function() {
-        // Reset category filter when year changes
-        $('#categoryFilter').val('');
-        $('#searchForm').submit();
-    });
+            function updateFilterInputsState() {
+                const categorySelected = $('#categoryFilter').val() !== '';
+                // Disable/enable name and date filters
+                $('input[name="searchTerm"]').prop('disabled', !categorySelected);
+                $('input[name="birthdayFrom"]').prop('disabled', !categorySelected);
+                $('input[name="birthdayTo"]').prop('disabled', !categorySelected);
+                $('input[name="registrationFrom"]').prop('disabled', !categorySelected);
+                $('input[name="registrationTo"]').prop('disabled', !categorySelected);
+            }
 
-    // Auto-submit form when year or season dropdown changes
-    $('#yearFilter, #seasonFilter').change(function() {
-        // Reset category filter when year or season changes
-        $('#categoryFilter').val('');
-        $('#searchForm').submit();
-    });
+            // Initial check on page load
+            updateFilterInputsState();
 
-    function updateCategoryDropdownState() {
-    const yearSelected = $('#yearFilter').val() !== '';
-    const seasonSelected = $('#seasonFilter').val() !== '';
-    if (yearSelected && seasonSelected) {
-        $('#categoryFilter').prop('disabled', false);
-    } else {
-        $('#categoryFilter').prop('disabled', true).val('');
-    }
-}
-
-function updateFilterInputsState() {
-        const categorySelected = $('#categoryFilter').val() !== '';
-        // Disable/enable name and date filters
-        $('input[name="searchTerm"]').prop('disabled', !categorySelected);
-        $('input[name="birthdayFrom"]').prop('disabled', !categorySelected);
-        $('input[name="birthdayTo"]').prop('disabled', !categorySelected);
-        $('input[name="registrationFrom"]').prop('disabled', !categorySelected);
-        $('input[name="registrationTo"]').prop('disabled', !categorySelected);
-    }
-
-    // Initial check on page load
-    updateFilterInputsState();
-
-    // Check on category change
-    $('#categoryFilter').on('change', updateFilterInputsState);
+            // Check on category change
+            $('#categoryFilter').on('change', updateFilterInputsState);
 
 
-// Initial check on page load
-updateCategoryDropdownState();
+            // Initial check on page load
+            updateCategoryDropdownState();
 
-// Check on change
-$('#yearFilter, #seasonFilter').on('change', updateCategoryDropdownState);
+            // Check on change
+            $('#yearFilter, #seasonFilter').on('change', updateCategoryDropdownState);
 
-    
-    // Untrack button functionality
-    $(document).on('click', '.untrack-btn', function(e) {
-        e.preventDefault();
-        const applicantID = $(this).data('id');
-        const $button = $(this);
-        const $row = $button.closest('tr');
-        const isInTrackedSection = $row.closest('.card').find('.card-header').hasClass('bg-success');
-        
-        $.ajax({
-            url: '../track-applicants.php',
-            method: 'POST',
-            dataType: 'json',
-            data: {
-                untrack: true,
-                applicantID: applicantID
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    if (isInTrackedSection) {
-                        // If in tracked section, remove the row
-                        $row.fadeOut(300, function() {
-                            $(this).remove();
-                            
-                            // If no more tracked rows, show empty message
-                            if ($('.card-header.bg-success').closest('.card').find('tbody tr').length === 0) {
-                                $('.card-header.bg-success').closest('.card').find('.card-body').html(
-                                    '<div class="alert alert-info">' +
-                                    '<i class="fas fa-info-circle me-2"></i> Δεν έχετε προσθέσει ακόμη υποψηφίους για παρακολούθηση.' +
-                                    '</div>'
-                                );
+
+            // Untrack button functionality
+            $(document).on('click', '.untrack-btn', function(e) {
+                e.preventDefault();
+                const applicantID = $(this).data('id');
+                const $button = $(this);
+                const $row = $button.closest('tr');
+                const isInTrackedSection = $row.closest('.card').find('.card-header').hasClass('bg-success');
+
+                $.ajax({
+                    url: '../track-applicants.php',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        untrack: true,
+                        applicantID: applicantID
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            if (isInTrackedSection) {
+                                // If in tracked section, remove the row
+                                $row.fadeOut(300, function() {
+                                    $(this).remove();
+
+                                    // If no more tracked rows, show empty message
+                                    if ($('.card-header.bg-success').closest('.card').find('tbody tr').length === 0) {
+                                        $('.card-header.bg-success').closest('.card').find('.card-body').html(
+                                            '<div class="alert alert-info">' +
+                                            '<i class="fas fa-info-circle me-2"></i> Δεν έχετε προσθέσει ακόμη υποψηφίους για παρακολούθηση.' +
+                                            '</div>'
+                                        );
+                                    }
+                                });
+
+                                // Update search results display if the row exists there
+                                const $searchRow = $('.search-results .applicant-check[value="' + applicantID + '"]').closest('tr');
+                                if ($searchRow.length) {
+                                    $searchRow.removeClass('table-light');
+                                    $searchRow.find('.applicant-check').prop('checked', false);
+                                    $searchRow.find('.untrack-btn')
+                                        .removeClass('btn-danger').addClass('btn-primary')
+                                        .removeClass('untrack-btn').addClass('track-single')
+                                        .html('<i class="fas fa-user-plus"></i>');
+                                }
+                            } else {
+                                // If in search results, update button appearance
+                                $button.removeClass('btn-danger').addClass('btn-primary');
+                                $button.removeClass('untrack-btn').addClass('track-single');
+                                $button.html('<i class="fas fa-user-plus"></i>');
+                                $row.removeClass('table-light');
+
+                                // Uncheck the checkbox
+                                $row.find('.applicant-check').prop('checked', false);
+
+                                // Update tracked section
+                                $.post('get-tracked-section.php', {}, function(data) {
+                                    $('.card-header.bg-success').closest('.card').find('.card-body').html(data);
+                                    // Rebind event handlers for newly added elements
+                                    bindTrackedEvents();
+                                });
                             }
+                        }
+                    },
+                    error: function() {
+                        alert('Προέκυψε σφάλμα κατά την αφαίρεση του υποψηφίου');
+                    }
+                });
+            });
+
+            function bindTrackedEvents() {
+                // Handle own candidate checkbox change
+                $('.own-candidate-check').change(function() {
+                    const trackingID = $(this).data('id');
+                    const isChecked = $(this).prop('checked');
+
+                    // If checking a candidate
+                    if (isChecked) {
+                        // Disable other checkboxes and use tooltips
+                        $('.own-candidate-check:not(:checked)').prop('disabled', true);
+                        $('.own-candidate-check:not(:checked)').attr('title', 'Αποεπιλέξτε τον υπάρχοντα υποψήφιο πρώτα');
+
+                        // Initialize Bootstrap tooltips for newly disabled checkboxes
+                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('.own-candidate-check:not(:checked)'));
+                        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl);
                         });
-                        
-                        // Update search results display if the row exists there
-                        const $searchRow = $('.search-results .applicant-check[value="' + applicantID + '"]').closest('tr');
-                        if ($searchRow.length) {
-                            $searchRow.removeClass('table-light');
-                            $searchRow.find('.applicant-check').prop('checked', false);
-                            $searchRow.find('.untrack-btn')
-                                .removeClass('btn-danger').addClass('btn-primary')
-                                .removeClass('untrack-btn').addClass('track-single')
-                                .html('<i class="fas fa-user-plus"></i>');
+
+                        // Add info message if it doesn't exist
+                        if ($('#own-candidate-info').length === 0) {
+                            $('.card-header.bg-success').closest('.card').find('.card-body').prepend(
+                                '<div id="own-candidate-info" class="alert alert-info mb-3">' +
+                                '<i class="fas fa-info-circle me-2"></i> ' +
+                                'Μόνο ένας υποψήφιος μπορεί να επισημανθεί ως "Δικός μου". Για να επιλέξετε διαφορετικό υποψήφιο, αποεπιλέξτε πρώτα τον τρέχοντα.' +
+                                '</div>'
+                            );
                         }
                     } else {
-                        // If in search results, update button appearance
-                        $button.removeClass('btn-danger').addClass('btn-primary');
-                        $button.removeClass('untrack-btn').addClass('track-single');
-                        $button.html('<i class="fas fa-user-plus"></i>');
-                        $row.removeClass('table-light');
-                        
-                        // Uncheck the checkbox
-                        $row.find('.applicant-check').prop('checked', false);
-                        
-                        // Update tracked section
-                        $.post('get-tracked-section.php', {}, function(data) {
-                            $('.card-header.bg-success').closest('.card').find('.card-body').html(data);
-                            // Rebind event handlers for newly added elements
-                            bindTrackedEvents();
-                        });
-                    }
-                }
-            },
-            error: function() {
-                alert('Προέκυψε σφάλμα κατά την αφαίρεση του υποψηφίου');
-            }
-        });
-    });
+                        // If unchecking, re-enable all checkboxes and remove tooltips
+                        $('.own-candidate-check').prop('disabled', false);
+                        $('.own-candidate-check').removeAttr('title');
 
-    function bindTrackedEvents() {
-        // Handle own candidate checkbox change
-        $('.own-candidate-check').change(function() {
-            const trackingID = $(this).data('id');
-            const isChecked = $(this).prop('checked');
-            
-            // If checking a candidate
-            if (isChecked) {
-                // Disable other checkboxes and use tooltips
+                        // Dispose tooltips
+                        $('.own-candidate-check').each(function() {
+                            var tooltip = bootstrap.Tooltip.getInstance(this);
+                            if (tooltip) {
+                                tooltip.dispose();
+                            }
+                        });
+
+                        // Remove info message
+                        $('#own-candidate-info').remove();
+                    }
+
+                    // Toggle the table-success class
+                    $(this).closest('tr').toggleClass('table-success', isChecked);
+
+                    // Send AJAX request to update database
+                    $.ajax({
+                        url: '../toggle-own-candidate.php',
+                        method: 'POST',
+                        data: {
+                            trackingID: trackingID,
+                            isOwn: isChecked
+                        },
+                        success: function(response) {
+                            if (response.status !== 'success') {
+                                alert('Προέκυψε σφάλμα κατά την ενημέρωση');
+                            }
+                        },
+                        error: function() {
+                            alert('Προέκυψε σφάλμα επικοινωνίας με τον διακομιστή');
+                        }
+                    });
+                });
+            }
+
+            // Initialize own candidate checkboxes - disable other checkboxes if one is already checked
+            if ($('.own-candidate-check:checked').length > 0) {
+                // Just disable the checkboxes and use tooltips instead of text messages
                 $('.own-candidate-check:not(:checked)').prop('disabled', true);
                 $('.own-candidate-check:not(:checked)').attr('title', 'Αποεπιλέξτε τον υπάρχοντα υποψήφιο πρώτα');
-                
-                // Initialize Bootstrap tooltips for newly disabled checkboxes
+
+                // Initialize Bootstrap tooltips
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('.own-candidate-check:not(:checked)'));
-                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl);
                 });
-                
-                // Add info message if it doesn't exist
-                if ($('#own-candidate-info').length === 0) {
-            $('.card-header.bg-success').closest('.card').find('.card-body').prepend(
-                '<div id="own-candidate-info" class="alert alert-info mb-3">' +
-                '<i class="fas fa-info-circle me-2"></i> ' +
-                'Μόνο ένας υποψήφιος μπορεί να επισημανθεί ως "Δικός μου". Για να επιλέξετε διαφορετικό υποψήφιο, αποεπιλέξτε πρώτα τον τρέχοντα.' +
-                '</div>'
-            );
-        }
-            } else {
-                // If unchecking, re-enable all checkboxes and remove tooltips
-                $('.own-candidate-check').prop('disabled', false);
-                $('.own-candidate-check').removeAttr('title');
-                
-                // Dispose tooltips
-                $('.own-candidate-check').each(function() {
-                    var tooltip = bootstrap.Tooltip.getInstance(this);
-                    if (tooltip) {
-                        tooltip.dispose();
-                    }
-                });
-                
-                // Remove info message
-                $('#own-candidate-info').remove();
             }
-            
-            // Toggle the table-success class
-            $(this).closest('tr').toggleClass('table-success', isChecked);
-            
-            // Send AJAX request to update database
-            $.ajax({
-                url: '../toggle-own-candidate.php',
-                method: 'POST',
-                data: {
-                    trackingID: trackingID,
-                    isOwn: isChecked
-                },
-                success: function(response) {
-                    if (response.status !== 'success') {
-                        alert('Προέκυψε σφάλμα κατά την ενημέρωση');
-                    }
-                },
-                error: function() {
-                    alert('Προέκυψε σφάλμα επικοινωνίας με τον διακομιστή');
-                }
+
+            // Initial binding of tracked events
+            bindTrackedEvents();
+
+            // Show success message if redirected with success parameter
+            if (window.location.search.includes('tracked=success')) {
+                $('<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                    '<i class="fas fa-check-circle me-2"></i> Οι επιλεγμένοι υποψήφιοι προστέθηκαν στην παρακολούθηση.' +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>').insertAfter('.page-header').delay(3000).fadeOut();
+            }
+
+            // Auto-submit form when category dropdown changes
+            $('#categoryFilter').change(function() {
+                $('#searchForm').submit();
             });
         });
-    }
 
-    // Initialize own candidate checkboxes - disable other checkboxes if one is already checked
-    if ($('.own-candidate-check:checked').length > 0) {
-        // Just disable the checkboxes and use tooltips instead of text messages
-        $('.own-candidate-check:not(:checked)').prop('disabled', true);
-        $('.own-candidate-check:not(:checked)').attr('title', 'Αποεπιλέξτε τον υπάρχοντα υποψήφιο πρώτα');
-        
-        // Initialize Bootstrap tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('.own-candidate-check:not(:checked)'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
+        $('#trackForm').on('submit', function(e) {
+            e.preventDefault();
+
+            // Check if any applicants are selected
+            if ($('.applicant-check:checked').length === 0) {
+                // No applicants selected - show alert
+                alert('Παρακαλώ επιλέξτε τουλάχιστον έναν υποψήφιο');
+                return false;
+            }
+
+            // Applicants are selected - proceed with form submission
+            this.submit();
         });
-    }
-
-    // Initial binding of tracked events
-    bindTrackedEvents();
-    
-    // Show success message if redirected with success parameter
-    if (window.location.search.includes('tracked=success')) {
-        $('<div class="alert alert-success alert-dismissible fade show" role="alert">' +
-          '<i class="fas fa-check-circle me-2"></i> Οι επιλεγμένοι υποψήφιοι προστέθηκαν στην παρακολούθηση.' +
-          '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
-          '</div>').insertAfter('.page-header').delay(3000).fadeOut();
-    }
-    
-    // Auto-submit form when category dropdown changes
-    $('#categoryFilter').change(function() {
-        $('#searchForm').submit();
-    });
-});
-
-$('#trackForm').on('submit', function(e) {
-    e.preventDefault();
-    
-    // Check if any applicants are selected
-    if ($('.applicant-check:checked').length === 0) {
-        // No applicants selected - show alert
-        alert('Παρακαλώ επιλέξτε τουλάχιστον έναν υποψήφιο');
-        return false;
-    }
-    
-    // Applicants are selected - proceed with form submission
-    this.submit();
-});
     </script>
 </body>
 

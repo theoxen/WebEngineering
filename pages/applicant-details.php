@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 include '../database/db_connect.php';
 $pageTitle = "Στοιχεία Υποψηφίου";
 
-// Check if ID is provided
+// Redirect to homepage if no applicant ID is provided in the URL
 if (!isset($_GET['id'])) {
     header("Location: homepage.php");
     exit;
@@ -20,23 +20,25 @@ $sql = "SHOW TABLES LIKE 'categories'";
 $result = $mysqli->query($sql);
 
 if ($result && $result->num_rows > 0) {
-    // Categories table exists
+    // If categories table exists, join rankinglist with categories to get extra info
     $sql = "SELECT r.*, c.fields, c.season, CONCAT('20', LEFT(c.categoryID, 2)) AS year
             FROM rankinglist r 
             JOIN categories c ON r.categoryID = c.categoryID 
             WHERE r.id = ?";
 } else {
-    // No categories table, just query rankinglist
+    // If categories table does not exist, select only from rankinglist with default values
     $sql = "SELECT r.*, 'Unknown' as fields, '' as season, '' as year
             FROM rankinglist r 
             WHERE r.id = ?";
 }
 
+// Prepare and execute the SQL statement to fetch applicant details
 $stmt = $mysqli->prepare($sql);
 $stmt->bind_param("i", $applicantID);
 $stmt->execute();
 $result = $stmt->get_result();
 
+// If applicant found in database, fetch details
 if ($result->num_rows > 0) {
     $applicantDetails = $result->fetch_assoc();
 } else {
@@ -55,7 +57,7 @@ if ($result->num_rows > 0) {
     }
 }
 
-// Check if applicant is being tracked
+// Check if the applicant is currently being tracked by the user (in session)
 $isTracked = false;
 if (isset($_SESSION['tracked_applicants'])) {
     foreach ($_SESSION['tracked_applicants'] as $tracked) {
@@ -90,6 +92,7 @@ $mysqli->close();
 
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -103,14 +106,16 @@ $mysqli->close();
             font-family: 'Open Sans', sans-serif;
             background-color: #f8f9fc;
         }
+
         .content-wrapper {
             display: flex;
             flex-direction: column;
             padding-top: 30px;
             padding-bottom: 50px;
-            max-width: 900px; 
+            max-width: 900px;
             margin: 0 auto;
         }
+
         .profile-header {
             display: flex;
             align-items: center;
@@ -118,6 +123,7 @@ $mysqli->close();
             border-bottom: 1px solid #e9ecef;
             padding-bottom: 1rem;
         }
+
         .profile-image {
             width: 120px;
             height: 120px;
@@ -130,9 +136,11 @@ $mysqli->close();
             font-size: 3rem;
             color: #4e73df;
         }
+
         .profile-info h1 {
             margin-bottom: 0.5rem;
         }
+
         .applicant-details-card {
             margin-top: 1rem;
             border-radius: 0.75rem;
@@ -140,9 +148,11 @@ $mysqli->close();
             box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08);
             background: #fdfdfd;
         }
+
         .card-header.bg-light {
             background: #f4f6fa !important;
         }
+
         .ranking-box {
             border-radius: 100%;
             width: 80px;
@@ -165,20 +175,22 @@ $mysqli->close();
             z-index: 9999;
             min-width: 320px;
             max-width: 90vw;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
         }
 
         .applicant-details-card .table-responsive {
-        padding: 0;
-        overflow-x: unset;
-    }
-    .applicant-details-card table {
-        min-width: 0 !important;
-        width: 100%;
-        table-layout: auto;
-    }
+            padding: 0;
+            overflow-x: unset;
+        }
+
+        .applicant-details-card table {
+            min-width: 0 !important;
+            width: 100%;
+            table-layout: auto;
+        }
     </style>
 </head>
+
 <body>
     <?php include_once('../components/sidebar/sidebar.php'); ?>
     <div class="container content-wrapper">
@@ -230,10 +242,10 @@ $mysqli->close();
                                     <div class="col-md-9"><?php echo $applicantDetails['experience']; ?></div>
                                 </div>
                                 <?php if (isset($applicantDetails['army']) && $applicantDetails['army'] > 0): ?>
-                                <div class="row mb-3">
-                                    <div class="col-md-3 fw-bold">Στρατιωτική Θητεία</div>
-                                    <div class="col-md-9"><?php echo $applicantDetails['army']; ?></div>
-                                </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 fw-bold">Στρατιωτική Θητεία</div>
+                                        <div class="col-md-9"><?php echo $applicantDetails['army']; ?></div>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -252,10 +264,10 @@ $mysqli->close();
                                     <div class="col-md-9"><?php echo date('d/m/Y', strtotime($applicantDetails['registrationDate'])); ?></div>
                                 </div>
                                 <?php if (!empty($applicantDetails['notes'])): ?>
-                                <div class="row mb-3">
-                                    <div class="col-md-3 fw-bold">Σημειώσεις</div>
-                                    <div class="col-md-9"><?php echo htmlspecialchars($applicantDetails['notes']); ?></div>
-                                </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 fw-bold">Σημειώσεις</div>
+                                        <div class="col-md-9"><?php echo htmlspecialchars($applicantDetails['notes']); ?></div>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -313,85 +325,92 @@ $mysqli->close();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-    $(document).ready(function() {
-    function showMessage(message, type) {
-        const alertDiv = $(`<div class="alert alert-${type} custom-bottom-alert alert-dismissible fade show" role="alert">
+        $(document).ready(function() {
+            function showMessage(message, type) {
+                // Function to show a temporary alert message at the bottom of the page
+
+                const alertDiv = $(`<div class="alert alert-${type} custom-bottom-alert alert-dismissible fade show" role="alert">
                                 ${message}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>`);
-        // Append to body so it overlays everything
-        $('body').append(alertDiv);
-        setTimeout(() => {
-            alertDiv.alert('close');
-        }, 5000);
-    }
-        $('#trackBtn').click(function() {
-            const applicantID = $(this).data('id');
-            $.ajax({
-                url: '../track-applicants.php',
-                method: 'POST',
-                data: {
-                    track_single: true,
-                    applicantID: applicantID
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        showMessage('<i class="fas fa-check-circle me-2"></i> Ο υποψήφιος προστέθηκε στην παρακολούθηση', 'success');
-                        $('#trackBtn').replaceWith(`
+                // Append to body so it overlays everything
+                $('body').append(alertDiv);
+                setTimeout(() => {
+                    alertDiv.alert('close');
+                }, 5000);
+            }
+            // Handle click event for tracking an applicant
+
+            $('#trackBtn').click(function() {
+                const applicantID = $(this).data('id');
+                $.ajax({
+                    url: '../track-applicants.php',
+                    method: 'POST',
+                    data: {
+                        track_single: true,
+                        applicantID: applicantID
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            showMessage('<i class="fas fa-check-circle me-2"></i> Ο υποψήφιος προστέθηκε στην παρακολούθηση', 'success');
+                            $('#trackBtn').replaceWith(`
                             <button id="untrackBtn" data-id="${applicantID}" class="btn btn-danger">
                                 <i class="fas fa-user-minus me-2"></i> Διακοπή Παρακολούθησης
                             </button>
                         `);
-                        $('#untrackBtn').click(function() {
-                            const id = $(this).data('id');
-                            untrackApplicant(id);
-                        });
+                            $('#untrackBtn').click(function() {
+                                const id = $(this).data('id');
+                                untrackApplicant(id);
+                            });
+                        }
                     }
-                }
+                });
             });
-        });
-        function untrackApplicant(applicantID) {
-            $.ajax({
-                url: '../track-applicants.php',
-                method: 'POST',
-                data: {
-                    untrack: true,
-                    applicantID: applicantID
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        showMessage('<i class="fas fa-check-circle me-2"></i> Ο υποψήφιος αφαιρέθηκε από την παρακολούθηση', 'warning');
-                        $('#untrackBtn').replaceWith(`
+
+            // Function to untrack an applicant via AJAX
+            function untrackApplicant(applicantID) {
+                $.ajax({
+                    url: '../track-applicants.php',
+                    method: 'POST',
+                    data: {
+                        untrack: true,
+                        applicantID: applicantID
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            showMessage('<i class="fas fa-check-circle me-2"></i> Ο υποψήφιος αφαιρέθηκε από την παρακολούθηση', 'warning');
+                            $('#untrackBtn').replaceWith(`
                             <button id="trackBtn" data-id="${applicantID}" class="btn btn-success">
                                 <i class="fas fa-user-plus me-2"></i> Προσθήκη στην Παρακολούθηση
                             </button>
                         `);
-                        $('#trackBtn').click(function() {
-                            const id = $(this).data('id');
-                            $.ajax({
-                                url: '../track-applicants.php',
-                                method: 'POST',
-                                data: {
-                                    track_single: true,
-                                    applicantID: id
-                                },
-                                success: function(response) {
-                                    if (response.status === 'success') {
-                                        showMessage('<i class="fas fa-check-circle me-2"></i> Ο υποψήφιος προστέθηκε στην παρακολούθηση', 'success');
-                                        location.reload();
+                            $('#trackBtn').click(function() {
+                                const id = $(this).data('id');
+                                $.ajax({
+                                    url: '../track-applicants.php',
+                                    method: 'POST',
+                                    data: {
+                                        track_single: true,
+                                        applicantID: id
+                                    },
+                                    success: function(response) {
+                                        if (response.status === 'success') {
+                                            showMessage('<i class="fas fa-check-circle me-2"></i> Ο υποψήφιος προστέθηκε στην παρακολούθηση', 'success');
+                                            location.reload();
+                                        }
                                     }
-                                }
+                                });
                             });
-                        });
+                        }
                     }
-                }
+                });
+            }
+            $('#untrackBtn').click(function() {
+                const applicantID = $(this).data('id');
+                untrackApplicant(applicantID);
             });
-        }
-        $('#untrackBtn').click(function() {
-            const applicantID = $(this).data('id');
-            untrackApplicant(applicantID);
         });
-    });
     </script>
 </body>
+
 </html>
