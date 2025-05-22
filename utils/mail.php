@@ -5,10 +5,18 @@ require __DIR__ . '/../vendor/autoload.php';
 function sendVerificationEmail($to, $username, $token)
 {
     // Build base URL
+    // Determine if the connection is secure (HTTPS) or not (HTTP)
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+
+    // Get the current hostname
     $host = $_SERVER['HTTP_HOST'];
+
+    // Construct the base URL by combining protocol and hostname
     $baseUrl = $protocol . '://' . $host;
 
+    // If running on a local development environment, add the project folder path
+    // This handles the difference between development (localhost/WebEngineering) 
+    // and production (example.com) environments
     if ($host === 'localhost' || strpos($host, '127.0.0.1') !== false) {
         $baseUrl .= '/WebEngineering';
     }
