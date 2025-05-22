@@ -575,17 +575,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </label>
                                     </div>
 
-                                    <div class="form-check form-switch mb-3">
-                                        <input class="form-check-input" type="checkbox" id="positionChangeNotify"
-                                            name="positionChangeNotify" <?php echo $settingsData['positionChangeNotify'] ? 'checked' : ''; ?>>
-                                        <label class="form-check-label" for="positionChangeNotify">
-                                            <strong>Position Change</strong>
-                                            <p class="text-muted mb-0">Receive notifications when your connected
-                                                accounts'
-                                                position changes</p>
-                                        </label>
-                                    </div>
-
                                     <button type="submit" name="update_notifications" class="btn btn-primary">Save
                                         Notification Settings</button>
                                 </form>
