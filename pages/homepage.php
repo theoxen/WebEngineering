@@ -623,61 +623,8 @@ if (isset($_POST['searchApplicants'])) {
                     <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" id="searchForm">
                         <!-- Search input at top, full width -->
                         <div class="mb-4">
-                            <input type="text" class="form-control form-control-lg" name="searchTerm" 
-                                placeholder="Αναζήτηση με ονοματεπώνυμο ή αριθμό αίτησης..." 
-                                value="<?php echo isset($_POST['searchTerm']) ? htmlspecialchars($_POST['searchTerm']) : ''; ?>">
-                        </div>
-                        
-                        <!-- Date filters -->
-                        <div class="row mb-4">
-                            <!-- Birthday Date Range -->
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Ημερομηνία Γέννησης:</label>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                            <input type="date" class="form-control" name="birthdayFrom" 
-                                                value="<?php echo isset($_POST['birthdayFrom']) ? $_POST['birthdayFrom'] : ''; ?>">
-                                        </div>
-                                        <small class="text-muted">Από</small>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                            <input type="date" class="form-control" name="birthdayTo" 
-                                                value="<?php echo isset($_POST['birthdayTo']) ? $_POST['birthdayTo'] : ''; ?>">
-                                        </div>
-                                        <small class="text-muted">Έως</small>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Registration Date Range -->
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Ημερομηνία Εγγραφής Στους Καταλόγους:</label>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                            <input type="date" class="form-control" name="registrationFrom" 
-                                                value="<?php echo isset($_POST['registrationFrom']) ? $_POST['registrationFrom'] : ''; ?>">
-                                        </div>
-                                        <small class="text-muted">Από</small>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                            <input type="date" class="form-control" name="registrationTo" 
-                                                value="<?php echo isset($_POST['registrationTo']) ? $_POST['registrationTo'] : ''; ?>">
-                                        </div>
-                                        <small class="text-muted">Έως</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Year & Season Dropdowns - New Section -->
+
+                         <!-- Year & Season Dropdowns - New Section -->
 <div class="mb-4">
     <label class="form-label fw-bold">Έτος & Περίοδος:</label>
     <div class="row g-2">
@@ -753,6 +700,64 @@ if (isset($_POST['searchApplicants'])) {
                             </div>
                             <small class="text-muted">Επιλέξτε μια κατηγορία για να εμφανιστούν οι αντίστοιχοι υποψήφιοι</small>
                         </div>
+                            <input type="text" class="form-control form-control-lg" name="searchTerm" 
+                                placeholder="Αναζήτηση με ονοματεπώνυμο ή αριθμό αίτησης..." 
+                                value="<?php echo isset($_POST['searchTerm']) ? htmlspecialchars($_POST['searchTerm']) : ''; ?>">
+                    <small class="text-muted">Επιλέξτε έτος, περίοδο και κατηγορία για να εφαρμώσετε έξτρα φίλτρα</small>
+
+                        </div>
+                        
+                        
+                        <!-- Date filters -->
+                        <div class="row mb-4">
+                            <!-- Birthday Date Range -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Ημερομηνία Γέννησης:</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                            <input type="date" class="form-control" name="birthdayFrom" 
+                                                value="<?php echo isset($_POST['birthdayFrom']) ? $_POST['birthdayFrom'] : ''; ?>">
+                                        </div>
+                                        <small class="text-muted">Από</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                            <input type="date" class="form-control" name="birthdayTo" 
+                                                value="<?php echo isset($_POST['birthdayTo']) ? $_POST['birthdayTo'] : ''; ?>">
+                                        </div>
+                                        <small class="text-muted">Έως</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Registration Date Range -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Ημερομηνία Εγγραφής Στους Καταλόγους:</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                            <input type="date" class="form-control" name="registrationFrom" 
+                                                value="<?php echo isset($_POST['registrationFrom']) ? $_POST['registrationFrom'] : ''; ?>">
+                                        </div>
+                                        <small class="text-muted">Από</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                            <input type="date" class="form-control" name="registrationTo" 
+                                                value="<?php echo isset($_POST['registrationTo']) ? $_POST['registrationTo'] : ''; ?>">
+                                        </div>
+                                        <small class="text-muted">Έως</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                       
                         
                                     
 
@@ -907,6 +912,18 @@ if (isset($_POST['searchApplicants'])) {
                                 }
                             }
                         }
+
+                        // Filter to show each candidate only once per category
+                        $uniqueApplicants = [];
+                        $filteredApplicants = [];
+                        foreach ($displayApplicants as $applicant) {
+                            $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'] . '|' . $applicant['categoryID'];
+                            if (!isset($uniqueApplicants[$uniqueKey])) {
+                                $uniqueApplicants[$uniqueKey] = true;
+                                $filteredApplicants[] = $applicant;
+                            }
+                        }
+                        $displayApplicants = $filteredApplicants;
                         
                         if (!empty($displayApplicants)): 
                         ?>
@@ -1181,7 +1198,7 @@ if (isset($_POST['searchApplicants'])) {
         $(document).ready(function() {
     // Select all checkbox functionality
     $('#selectAll').change(function() {
-        $('.applicant-check').prop('checked', $(this).prop('checked'));
+        $('.applicant-check').prop('checked', $(this).prop('checked'));$displayApplicants = $filteredApplicants;
     });
 
     $('#clearFilters').click(function() {
@@ -1264,6 +1281,23 @@ if (isset($_POST['searchApplicants'])) {
         $('#categoryFilter').prop('disabled', true).val('');
     }
 }
+
+function updateFilterInputsState() {
+        const categorySelected = $('#categoryFilter').val() !== '';
+        // Disable/enable name and date filters
+        $('input[name="searchTerm"]').prop('disabled', !categorySelected);
+        $('input[name="birthdayFrom"]').prop('disabled', !categorySelected);
+        $('input[name="birthdayTo"]').prop('disabled', !categorySelected);
+        $('input[name="registrationFrom"]').prop('disabled', !categorySelected);
+        $('input[name="registrationTo"]').prop('disabled', !categorySelected);
+    }
+
+    // Initial check on page load
+    updateFilterInputsState();
+
+    // Check on category change
+    $('#categoryFilter').on('change', updateFilterInputsState);
+
 
 // Initial check on page load
 updateCategoryDropdownState();
