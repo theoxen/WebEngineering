@@ -166,15 +166,15 @@ $pageTitle = "Select Report";
                     <div class="card report-card">
                         <div class="card-body text-center p-4">
                             <i class="fas fa-chart-line report-icon"></i>
-                            <h3 class="report-title">Επιλογή Αναφοράς Θέσεων</h3>
+                            <h3 class="report-title">Position Report</h3>
                             <p class="report-description">
-                                Επιλέξτε στοιχεία για να δείτε τις αλλαγές θέσεων.
+                                Complete form to view position changes for candidates.
                             </p>
                             <form action="position-changes.php" method="get" id="selectReportForm" class="text-start">
                                 <div class="mb-3">
-                                    <label for="year" class="form-label">Έτος</label>
+                                    <label for="year" class="form-label">Year</label>
                                     <select name="year" id="year" class="form-select" required>
-                                        <option value="">-- Επιλέξτε έτος --</option>
+                                        <option value="">-- Choose Year --</option>
                                         <?php
                                         $years = $mysqli->query("SELECT DISTINCT year FROM categories ORDER BY year DESC");
                                         while ($row = $years->fetch_assoc()) {
@@ -184,17 +184,17 @@ $pageTitle = "Select Report";
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="season" class="form-label">Περίοδος</label>
+                                    <label for="season" class="form-label">Season</label>
                                     <select name="season" id="season" class="form-select" required>
-                                        <option value="">-- Επιλέξτε περίοδο --</option>
+                                        <option value="">-- Choose Season --</option>
                                         <option value="Winter">Χειμώνας</option>
                                         <option value="Summer">Καλοκαίρι</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="type" class="form-label">Τύπος</label>
+                                    <label for="type" class="form-label">Type</label>
                                     <select name="type" id="type" class="form-select" required>
-                                        <option value="">-- Επιλέξτε τύπο --</option>
+                                        <option value="">-- Choose Type --</option>
                                         <option value="Δημοτική">Δημοτική</option>
                                         <option value="Ειδική Εκπαίδευση">Ειδική Εκπαίδευση</option>
                                         <option value="Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες">Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες</option>
@@ -204,13 +204,13 @@ $pageTitle = "Select Report";
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="field" class="form-label">Πεδίο</label>
+                                    <label for="field" class="form-label">Field</label>
                                     <select name="field" id="field" class="form-select" required>
-                                        <option value="">-- Επιλέξτε πεδίο --</option>
+                                        <option value="">-- Choose Field --</option>
                                     </select>
                                 </div>
                                 <button type="submit" class="btn btn-primary w-100 mt-2">
-                                    Προβολή Αναφοράς <i class="fas fa-arrow-right ms-2"></i>
+                                    View Report <i class="fas fa-arrow-right ms-2"></i>
                                 </button>
                             </form>
                         </div>
@@ -240,10 +240,10 @@ $pageTitle = "Select Report";
                     <div class="card report-card">
                         <div class="card-body text-center p-5">
                             <i class="fas fa-users-gear report-icon"></i>
-                            <h3 class="report-title">New Users Report</h3>
-                            <p class="report-description">
-                                View user registration statistics for a custom date range.
-                            </p>
+                            <h3 class="report-title">Position Changes Report</h3>
+            <p class="report-description">
+                Select criteria to view position changes.
+            </p>
                             <form action="user-statistics.php" method="GET" class="text-start mb-3">
                                 <div class="mb-3">
                                     <label for="start_date" class="form-label">Start Date</label>

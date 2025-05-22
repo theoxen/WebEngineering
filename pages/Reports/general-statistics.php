@@ -18,10 +18,30 @@ $category_stats = $mysqli->query(
      ORDER BY c.year DESC, c.season DESC"
 )->fetch_all(MYSQLI_ASSOC);
 
-// Experience distribution
-$experience_stats = $mysqli->query(
-    "SELECT FLOOR(experience) as exp_years, COUNT(*) as count FROM rankinglist GROUP BY FLOOR(experience) ORDER BY exp_years"
-)->fetch_all(MYSQLI_ASSOC);
+// Experience distribution (binned into ranges)
+$experience_stats = [];
+$ranges = [
+    [0, 2], [2, 5], [5, 10], [10, 15], [15, 20], [20, 25], [25, 30], [30, 100]
+];
+
+foreach ($ranges as $range) {
+    $stmt = $mysqli->prepare(
+        "SELECT COUNT(*) as count 
+         FROM rankinglist 
+         WHERE experience >= ? AND experience < ?"
+    );
+    $stmt->bind_param("dd", $range[0], $range[1]);
+    $stmt->execute();
+    $count = $stmt->get_result()->fetch_assoc()['count'];
+    $range_label = $range[0] . "-" . $range[1];
+    if ($range[1] == 100) {
+        $range_label = $range[0] . "+";
+    }
+    $experience_stats[] = [
+        'range' => $range_label,
+        'count' => $count
+    ];
+}
 
 // Points distribution (bins 0-1, 1-2, ..., 9-10)
 $points_stats = [];
@@ -221,17 +241,52 @@ new Chart(document.getElementById('pointsChart'), {
 new Chart(document.getElementById('experienceChart'), {
     type: 'bar',
     data: {
-        labels: <?= json_encode(array_map(fn($i) => $i['exp_years'].' years', $experience_stats)) ?>,
+        labels: <?= json_encode(array_column($experience_stats, 'range')) ?>,
         datasets: [{
             label: 'Number of Candidates',
             data: <?= json_encode(array_column($experience_stats, 'count')) ?>,
-            backgroundColor: '#36b9cc'
+            backgroundColor: '#36b9cc',
+            borderColor: '#2c9faf',
+            borderWidth: 1
         }]
     },
     options: {
         responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, title: { display: true, text: 'Number of Candidates' }, ticks: { stepSize: 1 } } }
+        plugins: { 
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return `Candidates: ${context.raw}`;
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: { 
+                    display: true, 
+                    text: 'Number of Candidates',
+                    font: {
+                        weight: 'bold'
+                    }
+                },
+                ticks: { 
+                    stepSize: 1,
+                    precision: 0
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Years of Experience',
+                    font: {
+                        weight: 'bold'
+                    }
+                }
+            }
+        }
     }
 });
 new Chart(document.getElementById('fieldTypeChart'), {
