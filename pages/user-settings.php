@@ -381,7 +381,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <?php
     include_once('../components/sidebar/sidebar.php');
     ?>
-    <div class="main-content">
+    <div class="main-content" style="padding-left: 0; padding-right: 0;">
         <div class="page">
             <!-- Toast notifications with fixed positioning -->
             <?php if ($message): ?>
@@ -399,7 +399,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
             <?php endif; ?>
 
-            <div class="container-fluid content-wrapper">
+            <div class="container-fluid content-wrapper" style="padding-left: 0; padding-right: 0;">
                 <div class="page-header" style="justify-content: center; justify-self: center;">
                     <h1 class="page-title"><?php echo $pageTitle; ?></h1>
                     <p class="text-muted" style="text-align: center;">Manage your profile information, password, and notification preferences.</p>
