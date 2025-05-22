@@ -37,12 +37,6 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
 
                 <?php if ($isLoggedIn): ?>
                     <!-- Logged in user options -->
-                    <li class="nav-item">
-                        <a href="<?php echo $baseUrl ?>myprofile.php"
-                            class="nav-link <?php echo $currentPage == 'profile.php' ? 'active' : ''; ?>">
-                            <i class="fas fa-user me-2"></i> Profile
-                        </a>
-                    </li>
 
                     <li class="nav-item">
                         <a href="<?php echo $baseUrl ?>user-settings.php"
