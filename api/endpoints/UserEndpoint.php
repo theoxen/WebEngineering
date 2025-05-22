@@ -17,9 +17,6 @@ function handleUserRequest($method, $pathSegments) {
                 // Get specific user by ID
                 requireAuth();
                 
-                // MODIFIED: Allow API users to access any user's data
-                // Removed the check restricting users to their own data
-                
                 $user = $db->fetchOne(
                     "SELECT userId, username, email, role FROM users WHERE userId = ?", 
                     "i", 
@@ -44,7 +41,6 @@ function handleUserRequest($method, $pathSegments) {
             } else {
                 // List users (with pagination)
                 requireAuth();
-                // MODIFIED: Removed the admin check - all users can list users
                 
                 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
                 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
@@ -115,7 +111,6 @@ function handleAdminUserRequest($method, $pathSegments) {
                 // Hash password
                 $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
                 
-                // MODIFIED: Allow setting role for any authenticated user
                 // Default role is 'user' unless specified
                 $role = isset($data['role']) ? $data['role'] : 'user';
                 

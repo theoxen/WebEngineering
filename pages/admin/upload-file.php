@@ -20,6 +20,7 @@ header('Content-Type: text/html; charset=utf-8'); // Set UTF-8 encoding
 include_once('../../database/db_connect.php');
 require '../../vendor/autoload.php'; // Include the PDF parser library
 include_once('../../components/sidebar/sidebar.php');
+include_once('../../utils/mail.php'); // Include the mail functions
 
 use Smalot\PdfParser\Parser;
 
@@ -32,6 +33,76 @@ $pageTitle = "Admin API Keys Management";
 // Variable to hold the response message
 $responseMessage = '';
 $responseClass = '';
+
+// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
+//     // Λήψη πληροφοριών για το μεταφορτωμένο αρχείο
+//     $fileName = $_FILES['file']['name'];
+//     $fileTmpName = $_FILES['file']['tmp_name'];
+//     $fileError = $_FILES['file']['error'];
+//     $fileType = $_FILES['file']['type'];
+
+//     // Επικύρωση τύπου αρχείου (επιτρέπονται μόνο PDF)
+//     if ($fileType !== 'application/pdf') {
+//         $responseMessage = "Σφάλμα: Επιτρέπονται μόνο αρχεία PDF.";
+//         $responseClass = 'error-message';
+//     } else {
+//         // Δημιουργία μοναδικού ονόματος αρχείου για αποφυγή συγκρούσεων
+//         $uniqueFileName = uniqid('pdf_', true) . '.pdf';
+//         $targetFile = $uploadDir . $uniqueFileName;
+
+//         // Διασφάλιση ότι ο κατάλογος μεταφόρτωσης υπάρχει
+//         if (!is_dir($uploadDir)) {
+//             mkdir($uploadDir, 0777, true);
+//         }
+
+//         // Μετακίνηση του μεταφορτωμένου αρχείου
+//         if (move_uploaded_file($fileTmpName, $targetFile)) {
+//             $uploadSuccess = true;
+
+//             // Parse the PDF file
+//             $parser = new Parser();
+//             $pdf = $parser->parseFile($targetFile);
+//             $pdfText = $pdf->getText(); // Extract text from the PDF
+
+//             // Get form data
+//             $year = (int)$_POST['year'];
+//             $season = $_POST['season'];
+//             $type = $_POST['type'];
+//             $fields = $_POST['fields'] ?? ''; // Assuming you have a "fields" input in your form
+
+//             // Insert metadata into the database
+//             $stmt = $mysqli->prepare("
+//                 INSERT INTO `categories` (`year`, `season`, `type`, `fields`, `file_path`, `pdf_content`)
+//                 VALUES (?, ?, ?, ?, ?, ?)
+//             ");
+//             if ($stmt) {
+//                 $stmt->bind_param(
+//                     "isssss", // Data types: s = string
+//                     $year,
+//                     $season,
+//                     $type,
+//                     $fields,
+//                     $targetFile,
+//                     $pdfText
+//                 );
+//                 $stmt->execute();
+//                 $stmt->close();
+
+//                 $responseMessage = "File uploaded and metadata saved successfully.";
+//                 $responseClass = 'success-message';
+//             } else {
+//                 $responseMessage = "Database error: " . $mysqli->error;
+//                 $responseClass = 'error-message';
+//             }
+//         } else {
+//             $responseMessage = "Failed to move the uploaded file.";
+//             $responseClass = 'error-message';
+//         }
+//     }
+// } else {
+//   //  $responseMessage = "No file uploaded or an error occurred.";
+//     $responseClass = 'error-message';
+// }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
     // Λήψη πληροφοριών για το μεταφορτωμένο αρχείο
@@ -64,10 +135,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
             $pdfText = $pdf->getText(); // Extract text from the PDF
 
             // Get form data
-            $year = (int)$_POST['year'];
+            $year = (int) $_POST['year'];
             $season = $_POST['season'];
             $type = $_POST['type'];
             $fields = $_POST['fields'] ?? ''; // Assuming you have a "fields" input in your form
+
+            // Check if this category already exists (for notification purposes only)
+            $isNewCatalog = true; // Default assumption
+            $catalogName = "$season $year - $type ($fields)";
+
+            $checkStmt = $mysqli->prepare("
+                SELECT categoryID FROM categories 
+                WHERE year = ? AND season = ? AND type = ? AND fields = ?
+            ");
+
+            if ($checkStmt) {
+                $checkStmt->bind_param("isss", $year, $season, $type, $fields);
+                $checkStmt->execute();
+                $checkStmt->store_result();
+
+                if ($checkStmt->num_rows > 0) {
+                    // This is an update to an existing category
+                    $isNewCatalog = false;
+                }
+                $checkStmt->close();
+            }
 
             // Insert metadata into the database
             $stmt = $mysqli->prepare("
@@ -85,9 +177,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
                     $pdfText
                 );
                 $stmt->execute();
+                $categoryId = $mysqli->insert_id;
                 $stmt->close();
 
-                $responseMessage = "File uploaded and metadata saved successfully.";
+                if ($isNewCatalog) {
+                    // Find users who have opted in for new catalog notifications
+                    $userQuery = $mysqli->prepare("
+                        SELECT u.userId, u.username, u.email 
+                        FROM users u 
+                        JOIN user_notification_settings uns ON u.userId = uns.userId 
+                        WHERE u.email_verified = 1 AND uns.newCatalogNotify = 1
+                    ");
+
+                    $userQuery->execute();
+                    $users = $userQuery->get_result();
+
+                    $notificationCount = 0;
+
+                    // Loop through users and send emails
+                    while ($user = $users->fetch_assoc()) {
+                        // Send notification email to each user
+                        if (
+                            sendCatalogNotificationEmail(
+                                $user['email'],
+                                $user['username'],
+                                'new_catalog',
+                                $catalogName,
+                                'A new catalog has been published.',
+                                $categoryId,
+                                
+                            )
+                        ) {
+                            $notificationCount++;
+                        }
+                    }
+
+                    $userQuery->close();
+                    $responseMessage = "New catalog uploaded and saved successfully. Notifications sent to $notificationCount users.";
+
+                } else {
+                    // Find users who have opted in for catalog update notifications
+                    $userQuery = $mysqli->prepare("
+                        SELECT u.userId, u.username, u.email 
+                        FROM users u 
+                        JOIN user_notification_settings uns ON u.userId = uns.userId 
+                        WHERE u.email_verified = 1 AND uns.catalogUpdateNotify = 1
+                    ");
+
+                    $userQuery->execute();
+                    $users = $userQuery->get_result();
+
+                    $notificationCount = 0;
+
+                    // Loop through users and send emails
+                    while ($user = $users->fetch_assoc()) {
+                        // Send notification email to each user
+                        if (
+                            sendCatalogNotificationEmail(
+                                $user['email'],
+                                $user['username'],
+                                'catalog_update',
+                                $catalogName,
+                                'This catalog has been updated with new information.',
+                                $categoryId
+                            )
+                        ) {
+                            $notificationCount++;
+                        }
+                    }
+
+                    $userQuery->close();
+                    $responseMessage = "Catalog updated and saved successfully. Notifications sent to $notificationCount users.";
+                }
+
                 $responseClass = 'success-message';
             } else {
                 $responseMessage = "Database error: " . $mysqli->error;
@@ -99,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
         }
     }
 } else {
-  //  $responseMessage = "No file uploaded or an error occurred.";
+    //  $responseMessage = "No file uploaded or an error occurred.";
     $responseClass = 'error-message';
 }
 
@@ -112,6 +274,7 @@ $selectedField = $_POST['fields'] ?? '';
 
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -230,7 +393,8 @@ $selectedField = $_POST['fields'] ?? '';
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999; /* Ensure it's above everything */
+            z-index: 9999;
+            /* Ensure it's above everything */
             flex-direction: column;
         }
 
@@ -239,10 +403,10 @@ $selectedField = $_POST['fields'] ?? '';
             background: white;
             padding: 2rem;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             max-width: 80%;
         }
-        
+
         .spinner-border {
             width: 3rem;
             height: 3rem;
@@ -265,6 +429,7 @@ $selectedField = $_POST['fields'] ?? '';
         }
     </style>
 </head>
+
 <body>
     <div class="main-content">
         <h1 class="mb-0">
@@ -297,7 +462,8 @@ $selectedField = $_POST['fields'] ?? '';
                     <select name="season" id="season" class="form-select" required>
                         <option value="">-- Επιλέξτε περίοδο --</option>
                         <option value="Ιούνιος" <?= ($selectedSeason == 'Ιούνιος') ? 'selected' : '' ?>>Ιούνιος</option>
-                        <option value="Φεβρουάριος" <?= ($selectedSeason == 'Φεβρουάριος') ? 'selected' : '' ?>>Φεβρουάριος</option>
+                        <option value="Φεβρουάριος" <?= ($selectedSeason == 'Φεβρουάριος') ? 'selected' : '' ?>>Φεβρουάριος
+                        </option>
                     </select>
                 </div>
 
@@ -306,11 +472,16 @@ $selectedField = $_POST['fields'] ?? '';
                     <select name="type" id="type" class="form-select" required>
                         <option value="">-- Επιλέξτε τύπο --</option>
                         <option value="Δημοτική" <?= ($selectedType == 'Δημοτική') ? 'selected' : '' ?>>Δημοτική</option>
-                        <option value="Ειδική Εκπαίδευση" <?= ($selectedType == 'Ειδική Εκπαίδευση') ? 'selected' : '' ?>>Ειδική Εκπαίδευση</option>
-                        <option value="Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες" <?= ($selectedType == 'Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες') ? 'selected' : '' ?>>Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες</option>
-                        <option value="Μέση Γενική" <?= ($selectedType == 'Μέση Γενική') ? 'selected' : '' ?>>Μέση Γενική</option>
-                        <option value="Μέση Τεχνική" <?= ($selectedType == 'Μέση Τεχνική') ? 'selected' : '' ?>>Μέση Τεχνική</option>
-                        <option value="Προδημοτική" <?= ($selectedType == 'Προδημοτική') ? 'selected' : '' ?>>Προδημοτική</option>
+                        <option value="Ειδική Εκπαίδευση" <?= ($selectedType == 'Ειδική Εκπαίδευση') ? 'selected' : '' ?>>
+                            Ειδική Εκπαίδευση</option>
+                        <option value="Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες" <?= ($selectedType == 'Ειδικοί κατάλογοι εκπαιδευτικών με αναπηρίες') ? 'selected' : '' ?>>Ειδικοί κατάλογοι εκπαιδευτικών
+                            με αναπηρίες</option>
+                        <option value="Μέση Γενική" <?= ($selectedType == 'Μέση Γενική') ? 'selected' : '' ?>>Μέση Γενική
+                        </option>
+                        <option value="Μέση Τεχνική" <?= ($selectedType == 'Μέση Τεχνική') ? 'selected' : '' ?>>Μέση
+                            Τεχνική</option>
+                        <option value="Προδημοτική" <?= ($selectedType == 'Προδημοτική') ? 'selected' : '' ?>>Προδημοτική
+                        </option>
                     </select>
                 </div>
 
@@ -338,7 +509,8 @@ $selectedField = $_POST['fields'] ?? '';
             </div>
 
             <!-- Display messages dynamically -->
-            <div id="responseMessage" class="message <?php echo $responseClass; ?>" style="display: <?php echo ($responseMessage ? 'block' : 'none'); ?>;">
+            <div id="responseMessage" class="message <?php echo $responseClass; ?>"
+                style="display: <?php echo ($responseMessage ? 'block' : 'none'); ?>;">
                 <?php echo $responseMessage; ?>
             </div>
         </div>
@@ -348,17 +520,17 @@ $selectedField = $_POST['fields'] ?? '';
         document.addEventListener('DOMContentLoaded', function () {
             const typeDropdown = document.getElementById('type');
             const fieldsDropdown = document.getElementById('fields');
-            const selectedType = '<?= addslashes($selectedType) ?>'; 
+            const selectedType = '<?= addslashes($selectedType) ?>';
             const selectedField = '<?= addslashes($selectedField) ?>';
-            
-      // Add form submission handler to show loading overlay
-            document.querySelector('.upload-form').addEventListener('submit', function(e) {
+
+            // Add form submission handler to show loading overlay
+            document.querySelector('.upload-form').addEventListener('submit', function (e) {
                 // Validate the form first
                 if (this.checkValidity()) {
                     document.getElementById('loadingOverlay').classList.remove('d-none');
                 }
             });
-            
+
 
             const optionsMap = {
                 "Δημοτική": ["Δασκάλων"],
@@ -391,13 +563,13 @@ $selectedField = $_POST['fields'] ?? '';
                     "Δομικών (Πολιτική Μηχανική Κατασκευές)", "Δομικών (Τοπογραφία)",
                     "Ηλεκτρολογία Εγκαταστάσεων", "Ηλεκτρολογίας (Γενική)", "Ηλεκτρολογίας (Ηλεκτρονική)",
                     "Ηλεκτρολογίας (Ρεύμα Ψηλής Έντασης)", "Ηλεκτρονικών (Επιδιόρθωση Τηλεοράσεων)",
-                    "Κεραμικής-Αγγειοπλαστικής", "Κοπτικής-Ραπτικής","Κομμωτικής (Α5-7)", "Μηχανικής Αυτοκινήτων",
+                    "Κεραμικής-Αγγειοπλαστικής", "Κοπτικής-Ραπτικής", "Κομμωτικής (Α5-7)", "Μηχανικής Αυτοκινήτων",
                     "Μηχανικής Ηλεκτρονικών Υπολογιστών", "Μηχανολογίας (Γενική)",
                     "Μηχανολογίας (Γεωργική Μηχαν/Αρδεύσεις)", "Μηχανολογίας (Γεωργική Μηχανική)",
                     "Μηχανολογίας (Θερμοδυναμικής Ενέργειας)", "Μηχανολογίας (Μηχανική Παραγωγής)",
                     "Ξενοδοχειακών (Γενικά)", "Ξενοδοχειακών (Επιστήμη Τεχνολογίας Τροφίμων)",
                     "Ξενοδοχειακών (Μαγειρική)", "Ξενοδοχειακών (Τεχνολογία Τροφίμων)",
-                    "Ξενοδοχειακών (Τραπεζοκομία Α5)","Ξενοδοχειακών (Τραπεζοκομία Α8)", "Ξυλουργικής-Επιπλοποιίας", "Σχεδίασης Επίπλων",
+                    "Ξενοδοχειακών (Τραπεζοκομία Α5)", "Ξενοδοχειακών (Τραπεζοκομία Α8)", "Ξυλουργικής-Επιπλοποιίας", "Σχεδίασης Επίπλων",
                     "Σχεδίασης-Κατασκευής Ενδυμάτων", "Υποδηματοποιίας", "Χημικής Μηχανικής",
                     "Ψύξης-Κλιματισμού"
                 ],
@@ -408,16 +580,16 @@ $selectedField = $_POST['fields'] ?? '';
             if (selectedType && optionsMap[selectedType]) {
                 populateFieldsDropdown(selectedType, selectedField);
             }
-            
+
             // Event listener for type changes
             typeDropdown.addEventListener('change', function () {
                 populateFieldsDropdown(typeDropdown.value, '');
             });
-            
+
             // Function to populate fields dropdown
             function populateFieldsDropdown(type, fieldToSelect) {
                 fieldsDropdown.innerHTML = '<option value="">-- Επιλέξτε πεδίο --</option>';
-                
+
                 if (optionsMap[type]) {
                     optionsMap[type].forEach(function (field) {
                         const option = document.createElement('option');
@@ -432,12 +604,12 @@ $selectedField = $_POST['fields'] ?? '';
         });
 
         // File validation and form submission handling
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const uploadForm = document.querySelector('.upload-form');
             const fileInput = document.getElementById('pdfFile');
             const loadingOverlay = document.getElementById('loadingOverlay');
-            
-            uploadForm.addEventListener('submit', function(e) {
+
+            uploadForm.addEventListener('submit', function (e) {
                 // Validate the form first
                 if (this.checkValidity() && fileInput.files.length > 0) {
                     // Show loading overlay
@@ -448,4 +620,5 @@ $selectedField = $_POST['fields'] ?? '';
         });
     </script>
 </body>
+
 </html>

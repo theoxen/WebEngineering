@@ -51,14 +51,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                             <i class="fas fa-key"></i> My API Keys
                         </a>
                     </li>
-                    <?php if($isAdmin): ?>
-                    <li class="nav-item">
-                        <a href="<?php echo $baseUrl ?>admin/upload-file.php"
-                            class="nav-link <?php echo $currentPage, 'upload-file.php' ? 'active' : ''; ?>">
-                            <i class="fas fa-upload"></i> Upload File
-                        </a>
-                    </li>
-                    <?php endif; ?>
+
 
                     <!-- /////////////////////////////////////////////////////////////////////////////-->
                     <li class="nav-item">
@@ -107,6 +100,18 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                                 <i class="fas fa-key"></i> API Keys
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="<?php echo $baseUrl ?>admin/upload-file.php"
+                                class="nav-link <?php echo $currentPage, 'upload-file.php' ? 'active' : ''; ?>">
+                                <i class="fas fa-upload"></i> Upload File
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="<?php echo $baseUrl ?>admin/readingPDF_savingInfo.php"
+                                class="nav-link <?php echo $currentPage == 'readingPDF_savingInfo.php' ? 'active' : ''; ?>">
+                                <i class="fas fa-file-pdf me-2"></i> Process PDF Data
+                            </a>
+                        </li>
                     <?php endif; ?>
 
                     <li class="nav-item mt-3">
@@ -142,7 +147,8 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                         <div class="user-name"><?php echo htmlspecialchars($_SESSION['username'] ?? $_SESSION['email']); ?>
                         </div>
                         <div class="user-role small text-muted" style="color: white !important; font-weight: bold;">
-                            <?php echo $isAdmin ? 'Administrator' : 'User'; ?></div>
+                            <?php echo $isAdmin ? 'Administrator' : 'User'; ?>
+                        </div>
                     </div>
                 </div>
             </div>

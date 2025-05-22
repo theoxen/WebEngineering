@@ -177,50 +177,7 @@ function handleLogout($method) {
     }
 }
 
-function handleResetPassword($method) {
-    if ($method !== 'POST') {
-        sendError(405, "Method not allowed");
-    }
-    
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    if (!isset($data['email'])) {
-        sendError(400, "Email is required");
-    }
-    
-    $db = DatabaseHelper::getInstance();
-    
-    // Check if user exists
-    $user = $db->fetchOne(
-        "SELECT id, username FROM users WHERE email = ?", 
-        "s", 
-        [$data['email']]
-    );
-    
-    if ($user) {
-        // Generate reset token
-        $token = bin2hex(random_bytes(32));
-        $expires = date('Y-m-d H:i:s', time() + 3600); // 1 hour expiry
-        
-        // Store reset token
-        $db->executeQuery(
-            "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?",
-            "ssi",
-            [$token, $expires, $user['id']]
-        );
-        
-        // Here you would normally send an email with the reset link
-        // Using the mail.php utility
-        // require_once __DIR__ . '/../../utils/mail.php';
-        // sendPasswordResetEmail($data['email'], $user['username'], $token);
-    }
-    
-    // Always return success for security (don't reveal if email exists)
-    echo json_encode([
-        'status' => 'success',
-        'message' => 'If your email is registered, you will receive password reset instructions'
-    ]);
-}
+
 
 // Only define if not already defined elsewhere
 if (!function_exists('sendError')) {
