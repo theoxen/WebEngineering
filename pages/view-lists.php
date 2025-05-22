@@ -15,7 +15,7 @@ include_once('../database/db_connect.php');
 
 $pageTitle = "View Categories"; // Updated title
 
-// Category data - in a real application, this would come from a database
+
 $categories = [
     [
         'id' => 1, 

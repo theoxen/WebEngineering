@@ -479,7 +479,7 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
                             </div>
                             <h3 class="action-title">Manage Lists</h3>
                             <p class="action-description">Configure candidate lists</p>
-                            <a href="system-settings.php" class="btn btn-success w-100">
+                            <a href="./upload-file.php" class="btn btn-success w-100">
                                 <i class="fas fa-arrow-right"></i> Go to List Management
                             </a>
                         </div>
@@ -495,7 +495,7 @@ $recentUsersResult = $mysqli->query($recentUsersQuery);
                             </div>
                             <h3 class="action-title">Analytics</h3>
                             <p class="action-description">View site statistics and reports</p>
-                            <a href="analytics.php" class="btn btn-info text-white w-100">
+                            <a href="../Reports/select-report.php" class="btn btn-info text-white w-100">
                                 <i class="fas fa-arrow-right"></i> View Reports
                             </a>
                         </div>
