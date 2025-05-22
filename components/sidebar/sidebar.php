@@ -74,13 +74,18 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                         <!-- Admin only options -->
                         <li class="nav-heading mt-3 mb-1 text-uppercase ps-3 small fw-bold text-muted">Admin</li>
                         <li class="nav-item">
-                            <a href="<?php echo $baseUrl?>admin/dashboard.php" class="nav-link <?php echo strpos($currentPage, 'admin/') !== false ? 'active' : ''; ?>">
+                            <a href="<?php echo $baseUrl?>admin/dashboard.php" class="nav-link <?php echo strpos($currentPage, 'dashboard.php') !== false ? 'active' : ''; ?>">
                                 <i class="fas fa-tachometer-alt me-2"></i> Admin Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                        <a href="<?php echo $baseUrl?>admin/api.php" class="nav-link <?php echo strpos($currentPage, 'admin/') !== false ? 'active' : ''; ?>">
-                                <i class="fas fa-key"></i> API Keys
+                            <a href="<?php echo $baseUrl?>admin/api.php" class="nav-link <?php echo $currentPage == 'api.php' ? 'active' : ''; ?>">
+                                <i class="fas fa-key me-2"></i> API Keys
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="<?php echo $baseUrl?>admin/readingPDF_savingInfo.php" class="nav-link <?php echo $currentPage == 'readingPDF_savingInfo.php' ? 'active' : ''; ?>">
+                                <i class="fas fa-file-pdf me-2"></i> Process PDF Data
                             </a>
                         </li>
                     <?php endif; ?>
