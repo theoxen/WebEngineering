@@ -6,60 +6,86 @@ if (!isset($_SESSION['user_id'])) {
 }
 include_once('../../database/db_connect.php');
 
-// Fetch overall stats
-$overall = $mysqli->query("SELECT COUNT(DISTINCT fullName) as total_candidates, AVG(titleGrade) as avg_grade, AVG(experience) as avg_experience, AVG(points) as avg_points FROM rankinglist")->fetch_assoc();
+// Enable caching
+$cacheFile = sys_get_temp_dir() . '/stats_cache.json';
+$cacheExpiry = 300; // 5 minutes
 
-// Category stats
-$category_stats = $mysqli->query(
-    "SELECT c.fields, c.type, c.season, c.year, COUNT(r.id) as candidate_count, AVG(r.points) as avg_points, MAX(r.points) as max_points, MIN(r.points) as min_points
-     FROM categories c
-     JOIN rankinglist r ON c.categoryID = r.categoryID
-     GROUP BY c.fields, c.type, c.season, c.year
-     ORDER BY c.year DESC, c.season DESC"
-)->fetch_all(MYSQLI_ASSOC);
+if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheExpiry) {
+    $cachedData = json_decode(file_get_contents($cacheFile), true);
+    extract($cachedData);
+} else {
+    // Optimize queries by combining them
+    $stats_query = "
+        WITH experience_ranges AS (
+            SELECT 
+                CASE 
+                    WHEN experience < 5 THEN '0-5'
+                    WHEN experience < 10 THEN '5-10'
+                    WHEN experience < 15 THEN '10-15'
+                    WHEN experience < 20 THEN '15-20'
+                    WHEN experience < 25 THEN '20-25'
+                    ELSE '25+'
+                END as range_label,
+                COUNT(*) as count
+            FROM rankinglist
+            WHERE experience IS NOT NULL
+            GROUP BY range_label
+        ),
+        points_ranges AS (
+            SELECT 
+                FLOOR(points) as range_start,
+                COUNT(*) as count
+            FROM rankinglist
+            WHERE points IS NOT NULL
+            GROUP BY FLOOR(points)
+        )
+        SELECT 
+            (SELECT COUNT(DISTINCT fullName) FROM rankinglist) as total_candidates,
+            AVG(titleGrade) as avg_grade,
+            AVG(experience) as avg_experience,
+            AVG(points) as avg_points
+        FROM rankinglist";
 
-// Experience distribution (binned into ranges)
-$experience_stats = [];
-$ranges = [
-    [0, 2], [2, 5], [5, 10], [10, 15], [15, 20], [20, 25], [25, 30], [30, 100]
-];
+    $result = $mysqli->query($stats_query);
+    $overall = $result->fetch_assoc();
 
-foreach ($ranges as $range) {
-    $stmt = $mysqli->prepare(
-        "SELECT COUNT(*) as count 
-         FROM rankinglist 
-         WHERE experience >= ? AND experience < ?"
-    );
-    $stmt->bind_param("dd", $range[0], $range[1]);
-    $stmt->execute();
-    $count = $stmt->get_result()->fetch_assoc()['count'];
-    $range_label = $range[0] . "-" . $range[1];
-    if ($range[1] == 100) {
-        $range_label = $range[0] . "+";
-    }
-    $experience_stats[] = [
-        'range' => $range_label,
-        'count' => $count
+    // Simplified category stats query
+    $category_stats = $mysqli->query("
+        SELECT 
+            c.fields,
+            c.type, 
+            c.season,
+            c.year,
+            COUNT(DISTINCT r.fullName) as candidate_count,
+            ROUND(AVG(r.points), 1) as avg_points,
+            ROUND(MAX(r.points), 1) as max_points,
+            ROUND(MIN(r.points), 1) as min_points
+        FROM categories c
+        LEFT JOIN rankinglist r ON c.categoryID = r.categoryID
+        GROUP BY c.categoryID
+        ORDER BY c.year DESC, c.season DESC
+    ")->fetch_all(MYSQLI_ASSOC);
+
+    // Add field type stats
+    $field_type_stats = $mysqli->query("
+        SELECT 
+            c.fields,
+            c.type,
+            COUNT(DISTINCT r.fullName) as candidate_count
+        FROM categories c
+        LEFT JOIN rankinglist r ON c.categoryID = r.categoryID
+        GROUP BY c.fields, c.type
+        ORDER BY c.fields, c.type
+    ")->fetch_all(MYSQLI_ASSOC);
+
+    // Cache the results
+    $cacheData = [
+        'overall' => $overall,
+        'category_stats' => $category_stats,
+        'field_type_stats' => $field_type_stats
     ];
+    file_put_contents($cacheFile, json_encode($cacheData));
 }
-
-// Points distribution (bins 0-1, 1-2, ..., 9-10)
-$points_stats = [];
-for ($i = 0; $i < 10; $i++) {
-    $range_label = "$i-" . ($i+1);
-    $stmt = $mysqli->prepare("SELECT COUNT(*) as count FROM rankinglist WHERE points >= ? AND points < ?");
-    $min = $i;
-    $max = $i + 1;
-    $stmt->bind_param("dd", $min, $max);
-    $stmt->execute();
-    $count = $stmt->get_result()->fetch_assoc()['count'];
-    $points_stats[] = ['point_range' => $range_label, 'count' => $count];
-}
-
-// Field/type distribution
-$field_type_stats = $mysqli->query(
-    "SELECT c.fields, c.type, COUNT(DISTINCT r.fullName) as candidate_count FROM categories c JOIN rankinglist r ON c.categoryID = r.categoryID GROUP BY c.fields, c.type ORDER BY c.fields, c.type"
-)->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,7 +95,8 @@ $field_type_stats = $mysqli->query(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../components/sidebar/sidebar.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Defer chart.js loading -->
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .content-wrapper { margin-left: 250px; padding: 30px 15px 50px 15px; max-width: 100%; }
         @media (max-width: 990px) { .content-wrapper { margin-left: 0; padding: 15px 5px 50px 5px; } }
@@ -128,8 +155,8 @@ $field_type_stats = $mysqli->query(
             </div>
             <div class="col-md-12 mb-4">
                 <div class="card"><div class="card-header"><h5 class="mb-0">Candidates by Field and Type</h5></div>
-                <div class="card-body" style="overflow-x:auto;">
-                    <canvas id="fieldTypeChart" height="400"></canvas>
+                <div class="card-body">
+                    <canvas id="fieldTypeChart" height="300"></canvas>
                 </div></div>
             </div>
         </div>
@@ -207,111 +234,134 @@ $field_type_stats = $mysqli->query(
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Charts
-new Chart(document.getElementById('pointsChart'), {
-    type: 'line', // Changed from 'bar' to 'line'
-    data: {
-        labels: <?= json_encode(array_column($points_stats, 'point_range')) ?>,
-        datasets: [{
-            label: 'Number of Candidates',
-            data: <?= json_encode(array_column($points_stats, 'count')) ?>,
-            borderColor: '#4e73df',
-            backgroundColor: 'rgba(78, 115, 223, 0.1)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 5,
-            pointBackgroundColor: '#4e73df'
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Number of Candidates' },
-                ticks: { stepSize: 1 }
-            },
-            x: {
-                title: { display: true, text: 'Points Range' }
-            }
-        }
-    }
-});
-new Chart(document.getElementById('experienceChart'), {
-    type: 'bar',
-    data: {
-        labels: <?= json_encode(array_column($experience_stats, 'range')) ?>,
-        datasets: [{
-            label: 'Number of Candidates',
-            data: <?= json_encode(array_column($experience_stats, 'count')) ?>,
-            backgroundColor: '#36b9cc',
-            borderColor: '#2c9faf',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { 
-            legend: { display: false },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return `Candidates: ${context.raw}`;
-                    }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: { 
-                    display: true, 
-                    text: 'Number of Candidates',
-                    font: {
-                        weight: 'bold'
-                    }
-                },
-                ticks: { 
-                    stepSize: 1,
-                    precision: 0
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Years of Experience',
-                    font: {
-                        weight: 'bold'
-                    }
-                }
-            }
-        }
-    }
-});
-new Chart(document.getElementById('fieldTypeChart'), {
-    type: 'bar',
-    data: {
-        labels: <?= json_encode(array_map(fn($i) => $i['fields'].' ('.$i['type'].')', $field_type_stats)) ?>,
-        datasets: [{
-            label: 'Number of Candidates',
-            data: <?= json_encode(array_column($field_type_stats, 'candidate_count')) ?>,
-            backgroundColor: '#f6c23e'
-        }]
-    },
-    options: {
-        indexAxis: 'y', // horizontal bars
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-            x: { beginAtZero: true, title: { display: true, text: 'Number of Candidates' } },
-            y: { title: { display: true, text: 'Field (Type)' } }
-        }
-    }
-});
-
-// Pagination + Search
 document.addEventListener('DOMContentLoaded', function() {
+    // Lazy load charts when they become visible
+    const observerOptions = {
+        root: null,
+        rootMargin: '50px',
+        threshold: 0.1
+    };
+
+    const chartObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const chartId = entry.target.id;
+                initializeChart(chartId);
+                chartObserver.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Observe chart canvases
+    document.querySelectorAll('canvas').forEach(canvas => {
+        chartObserver.observe(canvas);
+    });
+
+    function initializeChart(chartId) {
+        // Fetch chart data via AJAX when needed
+        fetch(`get_chart_data.php?chart=${chartId}`)
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById(chartId).getContext('2d');
+                switch(chartId) {
+                    case 'pointsChart':
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: data.chartData,
+                            options: {
+                                responsive: true,
+                                animation: false, // Disable animations for faster rendering
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: { maxTicksLimit: 5 }
+                                    }
+                                }
+                            }
+                        });
+                        break;
+                    case 'experienceChart':
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: data.chartData,
+                            options: {
+                                responsive: true,
+                                animation: false,
+                                indexAxis: 'y',
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                return `Candidates: ${context.raw}`;
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Number of Candidates'
+                                        }
+                                    },
+                                    y: {
+                                        ticks: {
+                                            callback: function(value) {
+                                                const label = this.getLabelForValue(value);
+                                                return label.length > 30 ? label.substr(0, 27) + '...' : label;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        break;
+                    case 'fieldTypeChart':
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: data.chartData,
+                            options: {
+                                responsive: true,
+                                animation: false,
+                                indexAxis: 'y',
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                return `Candidates: ${context.raw}`;
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Number of Candidates'
+                                        }
+                                    },
+                                    y: {
+                                        ticks: {
+                                            callback: function(value) {
+                                                const label = this.getLabelForValue(value);
+                                                return label.length > 30 ? label.substr(0, 27) + '...' : label;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        break;
+                }
+            });
+    }
+
+    // Pagination + Search
     const rowsPerPage = 10;
     let currentPage = 1;
     let filteredRows = [];
