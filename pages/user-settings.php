@@ -76,6 +76,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errors[] = "Phone should not be empty";
         }
 
+        if (!empty($dateOfBirth)) { // Check whether the date is in the past when updating profile fo the user
+            $today = new DateTime();
+            $birthDate = new DateTime($dateOfBirth);
+
+            if ($birthDate > $today) {
+                $errors[] = "Date must be in the past";
+            }
+        }
+
         if (empty($errors)) {
             // Update user data
             $sql = "UPDATE users SET username = ?, phoneNumber = ?, dateOfBirth = ? WHERE userId = ?";
@@ -402,7 +411,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="container-fluid content-wrapper" style="padding-left: 0; padding-right: 0;">
                 <div class="page-header" style="justify-content: center; justify-self: center;">
                     <h1 class="page-title"><?php echo $pageTitle; ?></h1>
-                    <p class="text-muted" style="text-align: center;">Manage your profile information, password, and notification preferences.</p>
+                    <p class="text-muted" style="text-align: center;">Manage your profile information, password, and
+                        notification preferences.</p>
                 </div>
 
                 <div class="row" style="justify-self: center;">
