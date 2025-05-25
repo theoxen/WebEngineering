@@ -17,6 +17,8 @@ if (isset($_GET['return']) && $_GET['return'] == 'search' && !isset($_POST['sear
 if (isset($_POST['searchApplicants']) || isset($_POST['categoryFilter'])) {
     $_SESSION['last_search'] = $_POST;
 
+    // If only the category filter was changed (without clicking search)
+    // add the searchApplicants key to ensure the search is executed when returning
     if (!isset($_POST['searchApplicants'])) {
         $_SESSION['last_search']['searchApplicants'] = true;
     }
@@ -35,7 +37,6 @@ $monthNames = [
     6 => "Ιούνιος"
 ];
 
-// Starting year
 $startYear = 2016;
 ?>
 <!DOCTYPE html>
@@ -65,6 +66,7 @@ $startYear = 2016;
 
 
     <style>
+        /* Additional homepage styles */
         body {
             font-family: 'Open Sans', sans-serif;
             background-color: #f8f9fc;
@@ -117,6 +119,7 @@ $startYear = 2016;
             margin-bottom: 1rem;
         }
 
+        /* Vertical card styling */
         .catalog-card {
             transition: all 0.3s ease;
             border: none;
@@ -424,6 +427,8 @@ $startYear = 2016;
     <?php
     include_once('../components/sidebar/sidebar.php');
 
+    
+
     if (isset($_SESSION['userId']) || isset($_SESSION['user_id'])) {
         $userId = isset($_SESSION['userId']) ? $_SESSION['userId'] : $_SESSION['user_id'];
 
@@ -435,14 +440,22 @@ $startYear = 2016;
         $result = $mysqli->query($sql);
 
         if ($result && $result->num_rows > 0) {
-            // Categories table exists
+            // Categories table exists 
             $sql = "SELECT t.*, r.*, c.fields, t.trackingID, t.isOwnCandidate 
                     FROM trackings t
                     JOIN rankinglist r ON (r.fullName = t.candidateFullName 
                                     AND r.birthdayDate = t.candidateBirthdayDate)
                     LEFT JOIN categories c ON r.categoryID = c.categoryID
                     WHERE t.userID = ?";
-        } 
+        } else {
+            // No categories table, just query rankinglist
+            $sql = "SELECT t.*, r.*, 'Unknown' as fields 
+                    FROM trackings t
+                    JOIN rankinglist r ON (r.fullName = t.candidateFullName 
+                                       AND r.birthdayDate = t.candidateBirthdayDate
+                                       AND r.appNum = t.appNum)
+                    WHERE t.userID = ?";
+        }
 
         $stmt = $mysqli->prepare($sql);
         $stmt->bind_param("i", $userId);
@@ -451,7 +464,6 @@ $startYear = 2016;
 
         if ($result && $result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                // Make sure fields exists
                 if (!isset($row['fields'])) {
                     $row['fields'] = 'N/A';
                 }
@@ -490,12 +502,41 @@ $startYear = 2016;
                 $sql .= " AND r.categoryID = '$categoryFilter'";
             }
 
-            // Add search conditions - now including category name in the search
             if (!empty($searchTerm)) {
                 $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.fields LIKE '%$searchTerm%')";
             }
 
-            // Add birthday date filter
+            if (!empty($birthdayFrom)) {
+                $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
+            }
+            if (!empty($birthdayTo)) {
+                $sql .= " AND r.birthdayDate <= '$birthdayTo'";
+            }
+
+            if (!empty($registrationFrom)) {
+                $sql .= " AND r.registrationDate >= '$registrationFrom'";
+            }
+            if (!empty($registrationTo)) {
+                $sql .= " AND r.registrationDate <= '$registrationTo'";
+            }
+
+            // Get limit from URL parameter (default to 50)
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+            if (!in_array($limit, [25, 50, 100])) {
+                $limit = 50;
+            }
+
+            $sql .= " ORDER BY r.ranking ASC";
+        } else {
+            // Base SQL without categories
+            $sql = "SELECT r.*, 'Unknown' as fields 
+                FROM rankinglist r WHERE 1=1";
+
+            if (!empty($searchTerm)) {
+                $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
+            }
+
             if (!empty($birthdayFrom)) {
                 $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
             }
@@ -511,16 +552,14 @@ $startYear = 2016;
                 $sql .= " AND r.registrationDate <= '$registrationTo'";
             }
 
-            // Get limit from URL parameter
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 
-            // Validate the limit to only allow 25, 50, or 100
             if (!in_array($limit, [25, 50, 100])) {
                 $limit = 50;
             }
 
             $sql .= " ORDER BY r.ranking ASC";
-        } 
+        }
 
         // Execute query
         $result = $mysqli->query($sql);
@@ -784,7 +823,6 @@ $startYear = 2016;
                                         $sql .= " AND r.registrationDate <= '$registrationTo'";
                                     }
 
-                                    // Get limit from URL parameter (default to 50)
                                     $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 
                                     // Validate the limit to only allow 25, 50, or 100
@@ -792,7 +830,45 @@ $startYear = 2016;
                                         $limit = 50;
                                     }
 
-                                    
+                                    $sql .= " ORDER BY r.ranking ASC";
+                                } else {
+                                    // Base SQL without categories
+                                    $sql = "SELECT r.*, 'Unknown' as fields 
+                                    FROM rankinglist r WHERE 1=1";
+
+                                    // Add search conditions
+                                    if (!empty($_POST['searchTerm'])) {
+                                        $searchTerm = $mysqli->real_escape_string($_POST['searchTerm']);
+                                        $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
+                                    }
+
+                                    // Add birthday date filter
+                                    if (!empty($_POST['birthdayFrom'])) {
+                                        $birthdayFrom = $mysqli->real_escape_string($_POST['birthdayFrom']);
+                                        $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
+                                    }
+                                    if (!empty($_POST['birthdayTo'])) {
+                                        $birthdayTo = $mysqli->real_escape_string($_POST['birthdayTo']);
+                                        $sql .= " AND r.birthdayDate <= '$birthdayTo'";
+                                    }
+
+                                    // Add registration date filter
+                                    if (!empty($_POST['registrationFrom'])) {
+                                        $registrationFrom = $mysqli->real_escape_string($_POST['registrationFrom']);
+                                        $sql .= " AND r.registrationDate >= '$registrationFrom'";
+                                    }
+                                    if (!empty($_POST['registrationTo'])) {
+                                        $registrationTo = $mysqli->real_escape_string($_POST['registrationTo']);
+                                        $sql .= " AND r.registrationDate <= '$registrationTo'";
+                                    }
+
+                                    // Get limit from URL parameter (default to 50)
+                                    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+                                    if (!in_array($limit, [25, 50, 100])) {
+                                        $limit = 50;
+                                    }
+
                                     $sql .= " ORDER BY r.ranking ASC";
                                 }
 
@@ -808,14 +884,6 @@ $startYear = 2016;
 
                             $uniqueApplicants = [];
                             $filteredApplicants = [];
-
-                            
-                            usort($displayApplicants, function($a, $b) {
-                                $dateA = strtotime($a['registrationDate'] ?? '0000-00-00');
-                                $dateB = strtotime($b['registrationDate'] ?? '0000-00-00');
-                                return $dateB - $dateA; // Descending order (newest first)
-                            });
-
                             foreach ($displayApplicants as $applicant) {
                                 $hasNameSearch = !empty($_POST['searchTerm']);
                                 $hasDateFilters = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']) || 
@@ -824,12 +892,10 @@ $startYear = 2016;
                                 
                                 $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
                                 
-                                
                                 if ($isCategoryFilterOnly) {
                                     $uniqueKey .= '|' . $applicant['categoryID'];
                                 }
 
-                                // Only add if this exact applicant hasn't been seen before
                                 if (!isset($uniqueApplicants[$uniqueKey])) {
                                     $uniqueApplicants[$uniqueKey] = true;
                                     $filteredApplicants[] = $applicant;
@@ -1265,7 +1331,6 @@ $startYear = 2016;
                                         .html('<i class="fas fa-user-plus"></i>');
                                 }
                             } else {
-                                // If in search results, update button appearance
                                 $button.removeClass('btn-danger').addClass('btn-primary');
                                 $button.removeClass('untrack-btn').addClass('track-single');
                                 $button.html('<i class="fas fa-user-plus"></i>');
@@ -1277,7 +1342,6 @@ $startYear = 2016;
                                 // Update tracked section
                                 $.post('get-tracked-section.php', {}, function(data) {
                                     $('.card-header.bg-success').closest('.card').find('.card-body').html(data);
-                                    // Rebind event handlers for newly added elements
                                     bindTrackedEvents();
                                 });
                             }
@@ -1297,7 +1361,6 @@ $startYear = 2016;
 
                     // If checking a candidate
                     if (isChecked) {
-                        // Disable other checkboxes and use tooltips
                         $('.own-candidate-check:not(:checked)').prop('disabled', true);
                         $('.own-candidate-check:not(:checked)').attr('title', 'Αποεπιλέξτε τον υπάρχοντα υποψήφιο πρώτα');
 
@@ -1307,7 +1370,6 @@ $startYear = 2016;
                             return new bootstrap.Tooltip(tooltipTriggerEl);
                         });
 
-                        // Add info message if it doesn't exist
                         if ($('#own-candidate-info').length === 0) {
                             $('.card-header.bg-success').closest('.card').find('.card-body').prepend(
                                 '<div id="own-candidate-info" class="alert alert-info mb-3">' +
@@ -1358,7 +1420,6 @@ $startYear = 2016;
 
             // Initialize own candidate checkboxes - disable other checkboxes if one is already checked
             if ($('.own-candidate-check:checked').length > 0) {
-                // Just disable the checkboxes and use tooltips instead of text messages
                 $('.own-candidate-check:not(:checked)').prop('disabled', true);
                 $('.own-candidate-check:not(:checked)').attr('title', 'Αποεπιλέξτε τον υπάρχοντα υποψήφιο πρώτα');
 
