@@ -19,17 +19,6 @@ if (!isset($_SESSION['tracked_applicants'])) {
     $_SESSION['tracked_applicants'] = [];
 }
 
-// // Database connection
-// $servername = "localhost";
-// $username = "root"; 
-// $password = ""; 
-// $dbname = "cei326omada1";
-
-// $conn = new mysqli($servername, $username, $password, $dbname);
-
-// if ($conn->connect_error) {
-//     die("Connection failed: " . $conn->connect_error);
-// }
 
 // Function to fetch applicant data from database
 function getApplicantData($mysqli, $applicantID) {
@@ -62,9 +51,8 @@ function getApplicantData($mysqli, $applicantID) {
     return null;
 }
 
-// Function to add tracking to database - using the actual trackings table structure
 function addTrackingToDatabase($mysqli, $userId, $applicantData) {
-    // Check if tracking already exists - now checking by name and birthday only
+   
     $sql = "SELECT trackingID FROM trackings 
             WHERE userID = ? AND candidateFullName = ? AND candidateBirthdayDate = ?";
     $stmt = $mysqli->prepare($sql);
@@ -73,7 +61,6 @@ function addTrackingToDatabase($mysqli, $userId, $applicantData) {
     $result = $stmt->get_result();
     
     if ($result->num_rows == 0) {
-        // Insert new tracking record - without appNum
         $sql = "INSERT INTO trackings (userID, candidateFullName, candidateBirthdayDate, candidateTitleDate, isOwnCandidate) 
                 VALUES (?, ?, ?, ?, 0)";
         $stmt = $mysqli->prepare($sql);
@@ -84,7 +71,6 @@ function addTrackingToDatabase($mysqli, $userId, $applicantData) {
     return false;
 }
 
-// Function to remove tracking from database
 function removeTrackingFromDatabase($mysqli, $userId, $applicantData) {
     $sql = "DELETE FROM trackings 
             WHERE userID = ? AND candidateFullName = ? AND candidateBirthdayDate = ?";

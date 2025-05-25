@@ -7,7 +7,6 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 include '../database/db_connect.php';
-// Check if we're returning from applicant-details.php with preserved search parameters
 if (isset($_GET['return']) && $_GET['return'] == 'search' && !isset($_POST['searchApplicants']) && isset($_SESSION['last_search'])) {
     // Restore the previous search from session
     $_POST = $_SESSION['last_search'];
@@ -18,8 +17,6 @@ if (isset($_GET['return']) && $_GET['return'] == 'search' && !isset($_POST['sear
 if (isset($_POST['searchApplicants']) || isset($_POST['categoryFilter'])) {
     $_SESSION['last_search'] = $_POST;
 
-    // If only the category filter was changed (without clicking search)
-    // add the searchApplicants key to ensure the search is executed when returning
     if (!isset($_POST['searchApplicants'])) {
         $_SESSION['last_search']['searchApplicants'] = true;
     }
@@ -31,7 +28,7 @@ if (isset($_POST['searchApplicants']) || isset($_POST['categoryFilter'])) {
 $pageTitle = "Κατάλογοι Διοριστέων";
 
 $currentYear = date("Y");
-$currentMonth = date("n"); // Numeric representation of the month (1-12)
+$currentMonth = date("n"); 
 
 $monthNames = [
     2 => "Φεβρουάριος",
@@ -68,7 +65,6 @@ $startYear = 2016;
 
 
     <style>
-        /* Additional homepage styles */
         body {
             font-family: 'Open Sans', sans-serif;
             background-color: #f8f9fc;
@@ -86,9 +82,6 @@ $startYear = 2016;
         .table-responsive {
             width: 100%;
             max-width: 1200px;
-
-            /* Increase this value as needed */
-
             margin: 0 auto;
         }
 
@@ -124,7 +117,6 @@ $startYear = 2016;
             margin-bottom: 1rem;
         }
 
-        /* Vertical card styling */
         .catalog-card {
             transition: all 0.3s ease;
             border: none;
@@ -154,7 +146,6 @@ $startYear = 2016;
             background-color: #4e73df;
             color: white;
             padding: 1.5rem 1rem;
-            /* Reduced horizontal padding */
             width: 200px;
             position: relative;
             overflow: hidden;
@@ -431,20 +422,7 @@ $startYear = 2016;
 
 <body>
     <?php
-    // Include sidebar
     include_once('../components/sidebar/sidebar.php');
-
-    // // Database connection
-    // $servername = "localhost";
-    // $username = "root"; 
-    // $password = ""; 
-    // $dbname = "cei326omada1";
-
-    // $conn = new mysqli($servername, $username, $password, $dbname);
-
-    // if ($conn->connect_error) {
-    //     die("Connection failed: " . $conn->connect_error);
-    // }
 
     if (isset($_SESSION['userId']) || isset($_SESSION['user_id'])) {
         $userId = isset($_SESSION['userId']) ? $_SESSION['userId'] : $_SESSION['user_id'];
@@ -464,15 +442,7 @@ $startYear = 2016;
                                     AND r.birthdayDate = t.candidateBirthdayDate)
                     LEFT JOIN categories c ON r.categoryID = c.categoryID
                     WHERE t.userID = ?";
-        } else {
-            // No categories table, just query rankinglist
-            $sql = "SELECT t.*, r.*, 'Unknown' as fields 
-                    FROM trackings t
-                    JOIN rankinglist r ON (r.fullName = t.candidateFullName 
-                                       AND r.birthdayDate = t.candidateBirthdayDate
-                                       AND r.appNum = t.appNum)
-                    WHERE t.userID = ?";
-        }
+        } 
 
         $stmt = $mysqli->prepare($sql);
         $stmt->bind_param("i", $userId);
@@ -541,7 +511,7 @@ $startYear = 2016;
                 $sql .= " AND r.registrationDate <= '$registrationTo'";
             }
 
-            // Get limit from URL parameter (default to 50)
+            // Get limit from URL parameter
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 
             // Validate the limit to only allow 25, 50, or 100
@@ -549,45 +519,8 @@ $startYear = 2016;
                 $limit = 50;
             }
 
-            // Add the LIMIT clause to your SQL query
             $sql .= " ORDER BY r.ranking ASC";
-        } else {
-            // Base SQL without categories
-            $sql = "SELECT r.*, 'Unknown' as fields 
-                FROM rankinglist r WHERE 1=1";
-
-            // Add search conditions - without category search since table doesn't exist
-            if (!empty($searchTerm)) {
-                $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
-            }
-
-            // Add birthday date filter
-            if (!empty($birthdayFrom)) {
-                $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
-            }
-            if (!empty($birthdayTo)) {
-                $sql .= " AND r.birthdayDate <= '$birthdayTo'";
-            }
-
-            // Add registration date filter
-            if (!empty($registrationFrom)) {
-                $sql .= " AND r.registrationDate >= '$registrationFrom'";
-            }
-            if (!empty($registrationTo)) {
-                $sql .= " AND r.registrationDate <= '$registrationTo'";
-            }
-
-            // Get limit from URL parameter (default to 50)
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
-
-            // Validate the limit to only allow 25, 50, or 100
-            if (!in_array($limit, [25, 50, 100])) {
-                $limit = 50;
-            }
-
-            // Add the LIMIT clause to your SQL query
-            $sql .= " ORDER BY r.ranking ASC";
-        }
+        } 
 
         // Execute query
         $result = $mysqli->query($sql);
@@ -793,7 +726,6 @@ $startYear = 2016;
                             // Get applicants to display (either search results or filtered by category)
                             $displayApplicants = [];
 
-                            // Check if we have a category filter or search parameters
                             $categoryFilter = isset($_POST['categoryFilter']) && !empty($_POST['categoryFilter']) ?
                                 $mysqli->real_escape_string($_POST['categoryFilter']) : '';
                             $hasSearchTerm = !empty($_POST['searchTerm']);
@@ -813,7 +745,7 @@ $startYear = 2016;
                                         // Special case - show all applicants
                                         $sql = "SELECT r.*, c.fields 
                                           FROM rankinglist r 
-                                          LEFT JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
+                                          NATURAL JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
                                     } else {
                                         // Normal filtering by specific category
                                         $sql = "SELECT r.*, c.fields 
@@ -860,48 +792,7 @@ $startYear = 2016;
                                         $limit = 50;
                                     }
 
-                                    // Add the LIMIT clause to your SQL query
-                                    $sql .= " ORDER BY r.ranking ASC";
-                                } else {
-                                    // Base SQL without categories
-                                    $sql = "SELECT r.*, 'Unknown' as fields 
-                                    FROM rankinglist r WHERE 1=1";
-
-                                    // Add search conditions
-                                    if (!empty($_POST['searchTerm'])) {
-                                        $searchTerm = $mysqli->real_escape_string($_POST['searchTerm']);
-                                        $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
-                                    }
-
-                                    // Add birthday date filter
-                                    if (!empty($_POST['birthdayFrom'])) {
-                                        $birthdayFrom = $mysqli->real_escape_string($_POST['birthdayFrom']);
-                                        $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
-                                    }
-                                    if (!empty($_POST['birthdayTo'])) {
-                                        $birthdayTo = $mysqli->real_escape_string($_POST['birthdayTo']);
-                                        $sql .= " AND r.birthdayDate <= '$birthdayTo'";
-                                    }
-
-                                    // Add registration date filter
-                                    if (!empty($_POST['registrationFrom'])) {
-                                        $registrationFrom = $mysqli->real_escape_string($_POST['registrationFrom']);
-                                        $sql .= " AND r.registrationDate >= '$registrationFrom'";
-                                    }
-                                    if (!empty($_POST['registrationTo'])) {
-                                        $registrationTo = $mysqli->real_escape_string($_POST['registrationTo']);
-                                        $sql .= " AND r.registrationDate <= '$registrationTo'";
-                                    }
-
-                                    // Get limit from URL parameter (default to 50)
-                                    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
-
-                                    // Validate the limit to only allow 25, 50, or 100
-                                    if (!in_array($limit, [25, 50, 100])) {
-                                        $limit = 50;
-                                    }
-
-                                    // Add the LIMIT clause to your SQL query
+                                    
                                     $sql .= " ORDER BY r.ranking ASC";
                                 }
 
@@ -915,22 +806,30 @@ $startYear = 2016;
                                 }
                             }
 
-                            // Filter to show each candidate only once per category
                             $uniqueApplicants = [];
                             $filteredApplicants = [];
+
+                            
+                            usort($displayApplicants, function($a, $b) {
+                                $dateA = strtotime($a['registrationDate'] ?? '0000-00-00');
+                                $dateB = strtotime($b['registrationDate'] ?? '0000-00-00');
+                                return $dateB - $dateA; // Descending order (newest first)
+                            });
+
                             foreach ($displayApplicants as $applicant) {
                                 $hasNameSearch = !empty($_POST['searchTerm']);
                                 $hasDateFilters = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']) || 
                                                 !empty($_POST['registrationFrom']) || !empty($_POST['registrationTo']);
-                                $specificCategoryFilterApplied = !empty($_POST['categoryFilter']) && empty($hasNameSearch) && empty($hasDateFilters);
+                                $isCategoryFilterOnly = !empty($_POST['categoryFilter']) && !$hasNameSearch && !$hasDateFilters;
                                 
-                                if ($specificCategoryFilterApplied) {
-                                    $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'] . '|' . $applicant['categoryID'];
-                                } else {
-                                    // For ANY type of search (name, dates) or combined filters, show each applicant only once
-                                    $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
+                                $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
+                                
+                                
+                                if ($isCategoryFilterOnly) {
+                                    $uniqueKey .= '|' . $applicant['categoryID'];
                                 }
 
+                                // Only add if this exact applicant hasn't been seen before
                                 if (!isset($uniqueApplicants[$uniqueKey])) {
                                     $uniqueApplicants[$uniqueKey] = true;
                                     $filteredApplicants[] = $applicant;
@@ -1104,7 +1003,6 @@ $startYear = 2016;
                         $monthNum = 2;
                         $monthName = $monthNames[$monthNum];
 
-                        // $cardUrl = "year-season-details.php?year=" . $year . "&month=" . $monthNum;
 
                         $cardUrl = "season-categories.php?year=" . $year . "&season=Φεβρουάριος";
 
