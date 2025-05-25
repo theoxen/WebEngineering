@@ -7,7 +7,6 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 include '../database/db_connect.php';
-// Check if we're returning from applicant-details.php with preserved search parameters
 if (isset($_GET['return']) && $_GET['return'] == 'search' && !isset($_POST['searchApplicants']) && isset($_SESSION['last_search'])) {
     // Restore the previous search from session
     $_POST = $_SESSION['last_search'];
@@ -31,14 +30,13 @@ if (isset($_POST['searchApplicants']) || isset($_POST['categoryFilter'])) {
 $pageTitle = "Κατάλογοι Διοριστέων";
 
 $currentYear = date("Y");
-$currentMonth = date("n"); // Numeric representation of the month (1-12)
+$currentMonth = date("n"); 
 
 $monthNames = [
     2 => "Φεβρουάριος",
     6 => "Ιούνιος"
 ];
 
-// Starting year
 $startYear = 2016;
 ?>
 <!DOCTYPE html>
@@ -86,9 +84,6 @@ $startYear = 2016;
         .table-responsive {
             width: 100%;
             max-width: 1200px;
-
-            /* Increase this value as needed */
-
             margin: 0 auto;
         }
 
@@ -154,7 +149,6 @@ $startYear = 2016;
             background-color: #4e73df;
             color: white;
             padding: 1.5rem 1rem;
-            /* Reduced horizontal padding */
             width: 200px;
             position: relative;
             overflow: hidden;
@@ -431,20 +425,9 @@ $startYear = 2016;
 
 <body>
     <?php
-    // Include sidebar
     include_once('../components/sidebar/sidebar.php');
 
-    // // Database connection
-    // $servername = "localhost";
-    // $username = "root"; 
-    // $password = ""; 
-    // $dbname = "cei326omada1";
-
-    // $conn = new mysqli($servername, $username, $password, $dbname);
-
-    // if ($conn->connect_error) {
-    //     die("Connection failed: " . $conn->connect_error);
-    // }
+    
 
     if (isset($_SESSION['userId']) || isset($_SESSION['user_id'])) {
         $userId = isset($_SESSION['userId']) ? $_SESSION['userId'] : $_SESSION['user_id'];
@@ -457,7 +440,7 @@ $startYear = 2016;
         $result = $mysqli->query($sql);
 
         if ($result && $result->num_rows > 0) {
-            // Categories table exists
+            // Categories table exists 
             $sql = "SELECT t.*, r.*, c.fields, t.trackingID, t.isOwnCandidate 
                     FROM trackings t
                     JOIN rankinglist r ON (r.fullName = t.candidateFullName 
@@ -481,7 +464,6 @@ $startYear = 2016;
 
         if ($result && $result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                // Make sure fields exists
                 if (!isset($row['fields'])) {
                     $row['fields'] = 'N/A';
                 }
@@ -520,12 +502,10 @@ $startYear = 2016;
                 $sql .= " AND r.categoryID = '$categoryFilter'";
             }
 
-            // Add search conditions - now including category name in the search
             if (!empty($searchTerm)) {
                 $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%' OR c.fields LIKE '%$searchTerm%')";
             }
 
-            // Add birthday date filter
             if (!empty($birthdayFrom)) {
                 $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
             }
@@ -533,7 +513,6 @@ $startYear = 2016;
                 $sql .= " AND r.birthdayDate <= '$birthdayTo'";
             }
 
-            // Add registration date filter
             if (!empty($registrationFrom)) {
                 $sql .= " AND r.registrationDate >= '$registrationFrom'";
             }
@@ -544,24 +523,20 @@ $startYear = 2016;
             // Get limit from URL parameter (default to 50)
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 
-            // Validate the limit to only allow 25, 50, or 100
             if (!in_array($limit, [25, 50, 100])) {
                 $limit = 50;
             }
 
-            // Add the LIMIT clause to your SQL query
             $sql .= " ORDER BY r.ranking ASC";
         } else {
             // Base SQL without categories
             $sql = "SELECT r.*, 'Unknown' as fields 
                 FROM rankinglist r WHERE 1=1";
 
-            // Add search conditions - without category search since table doesn't exist
             if (!empty($searchTerm)) {
                 $sql .= " AND (r.fullName LIKE '%$searchTerm%' OR r.appNum LIKE '%$searchTerm%')";
             }
 
-            // Add birthday date filter
             if (!empty($birthdayFrom)) {
                 $sql .= " AND r.birthdayDate >= '$birthdayFrom'";
             }
@@ -577,15 +552,12 @@ $startYear = 2016;
                 $sql .= " AND r.registrationDate <= '$registrationTo'";
             }
 
-            // Get limit from URL parameter (default to 50)
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 
-            // Validate the limit to only allow 25, 50, or 100
             if (!in_array($limit, [25, 50, 100])) {
                 $limit = 50;
             }
 
-            // Add the LIMIT clause to your SQL query
             $sql .= " ORDER BY r.ranking ASC";
         }
 
@@ -636,7 +608,7 @@ $startYear = 2016;
                                                 <select class="form-select" name="yearFilter" id="yearFilter">
                                                     <option value="">-- Επιλέξτε Έτος --</option>
                                                     <?php
-                                                    $sql = "SELECT DISTINCT CONCAT('20', LEFT(categoryID, 2)) AS year FROM categories ORDER BY year DESC";
+                                                    $sql = "SELECT DISTINCT year FROM categories ORDER BY year DESC";                                                    
                                                     $yearResult = $mysqli->query($sql);
                                                     if ($yearResult && $yearResult->num_rows > 0) {
                                                         while ($yearRow = $yearResult->fetch_assoc()) {
@@ -677,10 +649,10 @@ $startYear = 2016;
                                             <?php
                                             $yearFilter = isset($_POST['yearFilter']) ? $mysqli->real_escape_string($_POST['yearFilter']) : '';
                                             $seasonFilter = isset($_POST['seasonFilter']) ? $mysqli->real_escape_string($_POST['seasonFilter']) : '';
-                                            $sql = "SELECT categoryID, fields, season, CONCAT('20', LEFT(categoryID, 2)) AS year 
+                                            $sql = "SELECT categoryID, fields, season, year 
                                             FROM categories WHERE 1=1 ";
                                             if (!empty($yearFilter)) {
-                                                $sql .= "AND CONCAT('20', LEFT(categoryID, 2)) = '$yearFilter' ";
+                                                $sql .= "AND year = '$yearFilter' ";
                                             }
                                             if (!empty($seasonFilter)) {
                                                 $sql .= "AND season = '$seasonFilter' ";
@@ -793,7 +765,6 @@ $startYear = 2016;
                             // Get applicants to display (either search results or filtered by category)
                             $displayApplicants = [];
 
-                            // Check if we have a category filter or search parameters
                             $categoryFilter = isset($_POST['categoryFilter']) && !empty($_POST['categoryFilter']) ?
                                 $mysqli->real_escape_string($_POST['categoryFilter']) : '';
                             $hasSearchTerm = !empty($_POST['searchTerm']);
@@ -813,7 +784,7 @@ $startYear = 2016;
                                         // Special case - show all applicants
                                         $sql = "SELECT r.*, c.fields 
                                           FROM rankinglist r 
-                                          LEFT JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
+                                          NATURAL JOIN categories c ON r.categoryID = c.categoryID WHERE 1=1";
                                     } else {
                                         // Normal filtering by specific category
                                         $sql = "SELECT r.*, c.fields 
@@ -852,7 +823,6 @@ $startYear = 2016;
                                         $sql .= " AND r.registrationDate <= '$registrationTo'";
                                     }
 
-                                    // Get limit from URL parameter (default to 50)
                                     $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 
                                     // Validate the limit to only allow 25, 50, or 100
@@ -860,7 +830,6 @@ $startYear = 2016;
                                         $limit = 50;
                                     }
 
-                                    // Add the LIMIT clause to your SQL query
                                     $sql .= " ORDER BY r.ranking ASC";
                                 } else {
                                     // Base SQL without categories
@@ -896,12 +865,10 @@ $startYear = 2016;
                                     // Get limit from URL parameter (default to 50)
                                     $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 
-                                    // Validate the limit to only allow 25, 50, or 100
                                     if (!in_array($limit, [25, 50, 100])) {
                                         $limit = 50;
                                     }
 
-                                    // Add the LIMIT clause to your SQL query
                                     $sql .= " ORDER BY r.ranking ASC";
                                 }
 
@@ -915,20 +882,18 @@ $startYear = 2016;
                                 }
                             }
 
-                            // Filter to show each candidate only once per category
                             $uniqueApplicants = [];
                             $filteredApplicants = [];
                             foreach ($displayApplicants as $applicant) {
                                 $hasNameSearch = !empty($_POST['searchTerm']);
                                 $hasDateFilters = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']) || 
                                                 !empty($_POST['registrationFrom']) || !empty($_POST['registrationTo']);
-                                $specificCategoryFilterApplied = !empty($_POST['categoryFilter']) && empty($hasNameSearch) && empty($hasDateFilters);
+                                $isCategoryFilterOnly = !empty($_POST['categoryFilter']) && !$hasNameSearch && !$hasDateFilters;
                                 
-                                if ($specificCategoryFilterApplied) {
-                                    $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'] . '|' . $applicant['categoryID'];
-                                } else {
-                                    // For ANY type of search (name, dates) or combined filters, show each applicant only once
-                                    $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
+                                $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
+                                
+                                if ($isCategoryFilterOnly) {
+                                    $uniqueKey .= '|' . $applicant['categoryID'];
                                 }
 
                                 if (!isset($uniqueApplicants[$uniqueKey])) {
@@ -1104,7 +1069,6 @@ $startYear = 2016;
                         $monthNum = 2;
                         $monthName = $monthNames[$monthNum];
 
-                        // $cardUrl = "year-season-details.php?year=" . $year . "&month=" . $monthNum;
 
                         $cardUrl = "season-categories.php?year=" . $year . "&season=Φεβρουάριος";
 
@@ -1367,7 +1331,6 @@ $startYear = 2016;
                                         .html('<i class="fas fa-user-plus"></i>');
                                 }
                             } else {
-                                // If in search results, update button appearance
                                 $button.removeClass('btn-danger').addClass('btn-primary');
                                 $button.removeClass('untrack-btn').addClass('track-single');
                                 $button.html('<i class="fas fa-user-plus"></i>');
@@ -1379,7 +1342,6 @@ $startYear = 2016;
                                 // Update tracked section
                                 $.post('get-tracked-section.php', {}, function(data) {
                                     $('.card-header.bg-success').closest('.card').find('.card-body').html(data);
-                                    // Rebind event handlers for newly added elements
                                     bindTrackedEvents();
                                 });
                             }
@@ -1399,7 +1361,6 @@ $startYear = 2016;
 
                     // If checking a candidate
                     if (isChecked) {
-                        // Disable other checkboxes and use tooltips
                         $('.own-candidate-check:not(:checked)').prop('disabled', true);
                         $('.own-candidate-check:not(:checked)').attr('title', 'Αποεπιλέξτε τον υπάρχοντα υποψήφιο πρώτα');
 
@@ -1409,7 +1370,6 @@ $startYear = 2016;
                             return new bootstrap.Tooltip(tooltipTriggerEl);
                         });
 
-                        // Add info message if it doesn't exist
                         if ($('#own-candidate-info').length === 0) {
                             $('.card-header.bg-success').closest('.card').find('.card-body').prepend(
                                 '<div id="own-candidate-info" class="alert alert-info mb-3">' +
@@ -1460,7 +1420,6 @@ $startYear = 2016;
 
             // Initialize own candidate checkboxes - disable other checkboxes if one is already checked
             if ($('.own-candidate-check:checked').length > 0) {
-                // Just disable the checkboxes and use tooltips instead of text messages
                 $('.own-candidate-check:not(:checked)').prop('disabled', true);
                 $('.own-candidate-check:not(:checked)').attr('title', 'Αποεπιλέξτε τον υπάρχοντα υποψήφιο πρώτα');
 
