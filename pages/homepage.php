@@ -636,7 +636,7 @@ $startYear = 2016;
                                                 <select class="form-select" name="yearFilter" id="yearFilter">
                                                     <option value="">-- Επιλέξτε Έτος --</option>
                                                     <?php
-                                                    $sql = "SELECT DISTINCT CONCAT('20', LEFT(categoryID, 2)) AS year FROM categories ORDER BY year DESC";
+                                                    $sql = "SELECT DISTINCT year FROM categories ORDER BY year DESC";                                                    
                                                     $yearResult = $mysqli->query($sql);
                                                     if ($yearResult && $yearResult->num_rows > 0) {
                                                         while ($yearRow = $yearResult->fetch_assoc()) {
@@ -677,10 +677,10 @@ $startYear = 2016;
                                             <?php
                                             $yearFilter = isset($_POST['yearFilter']) ? $mysqli->real_escape_string($_POST['yearFilter']) : '';
                                             $seasonFilter = isset($_POST['seasonFilter']) ? $mysqli->real_escape_string($_POST['seasonFilter']) : '';
-                                            $sql = "SELECT categoryID, fields, season, CONCAT('20', LEFT(categoryID, 2)) AS year 
+                                            $sql = "SELECT categoryID, fields, season, year 
                                             FROM categories WHERE 1=1 ";
                                             if (!empty($yearFilter)) {
-                                                $sql .= "AND CONCAT('20', LEFT(categoryID, 2)) = '$yearFilter' ";
+                                                $sql .= "AND year = '$yearFilter' ";
                                             }
                                             if (!empty($seasonFilter)) {
                                                 $sql .= "AND season = '$seasonFilter' ";
