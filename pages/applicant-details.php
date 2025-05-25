@@ -74,7 +74,7 @@ $historySql = "SELECT
         r.ranking, 
         c.fields, 
         c.season, 
-        CONCAT('20', LEFT(c.categoryID, 2)) AS year 
+        c.year 
     FROM rankinglist r
     JOIN categories c ON r.categoryID = c.categoryID
     WHERE r.fullName = ? AND r.birthdayDate = ?
