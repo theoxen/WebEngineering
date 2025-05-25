@@ -30,11 +30,192 @@ include_once('../components/sidebar/sidebar.php');
     <style>
         .main-content{
             margin-left: 250px;
-            width: 80%;
+            width: calc(100% - 250px);
             transition: all 0.3s;
             padding: 1rem;
             min-height: 100vh;
         }
+        
+        /* Mobile responsive styles */
+        @media (max-width: 991px) {
+            .main-content {
+                margin-left: 250;
+                width: calc(100%-250px);
+                padding: 0.5rem;
+            }
+            
+            
+            /* Stack header elements on mobile */
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            /* Make buttons full width on mobile */
+            .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            /* Adjust table buttons */
+            .table .btn {
+                width: auto;
+                margin-bottom: 0;
+            }
+            
+            /* Card responsive */
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            /* Modal responsive */
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+            
+            .modal-xl {
+                max-width: 100%;
+            }
+            
+            /* Hide sidebar navigation in modal on mobile */
+            .modal-body .col-md-3 {
+                display: none;
+            }
+            
+            .modal-body .col-md-9 {
+                max-width: 100%;
+                flex: 0 0 100%;
+            }
+            
+            /* Fixed buttons positioning on mobile */
+            .doc-btn {
+                bottom: 70px;
+                right: 10px;
+                font-size: 0.875rem;
+                padding: 0.375rem 0.75rem;
+            }
+            
+            #refreshIndicator {
+                bottom: 10px;
+                right: 10px;
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+            
+            /* Lead text smaller on mobile */
+            .lead {
+                font-size: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.75rem;
+            }
+            
+            /* Permission badges responsive */
+            .permission-badge {
+                min-width: 60px;
+                font-size: 0.75rem;
+            }
+            
+            /* Code blocks responsive */
+            .code-block {
+                font-size: 0.8rem;
+                padding: 10px;
+                overflow-x: auto;
+            }
+            
+            .code-block pre {
+                margin: 0;
+                white-space: pre;
+                overflow-x: auto;
+            }
+            
+            /* API key container responsive */
+            .api-key-container {
+                padding: 0.5rem;
+            }
+            
+            .api-key-display {
+                font-size: 0.75rem;
+            }
+            
+            /* Table responsive improvements */
+            .table-responsive {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .table {
+                font-size: 0.875rem;
+            }
+            
+            .table td, .table th {
+                padding: 0.5rem;
+                vertical-align: middle;
+            }
+            
+
+            
+            /* Alert responsive */
+            .alert {
+                font-size: 0.875rem;
+                padding: 0.75rem;
+            }
+            
+            .alert .fa-2x {
+                font-size: 1.5rem;
+            }
+            
+            /* Input group responsive */
+            .input-group {
+                flex-wrap: nowrap;
+            }
+            
+            .input-group .form-control {
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 0.5rem;
+            }
+        }
+        
+        /* Tablet responsive adjustments */
+        @media (min-width: 768px) and (max-width: 991px) {
+            .modal-body .col-md-3 {
+                display: block;
+                max-width: 200px;
+                flex: 0 0 200px;
+            }
+            
+            .modal-body .col-md-9 {
+                max-width: calc(100% - 200px);
+                flex: 0 0 calc(100% - 200px);
+            }
+            
+            .d-flex.justify-content-between {
+                flex-direction: row;
+            }
+            
+            .btn {
+                width: auto;
+            }
+        }
+
+         
+        
+        /* Small desktop adjustments */
+        @media (min-width: 992px) and (max-width: 1199px) {
+            .main-content {
+                margin-left: 250px;
+                width: calc(100% - 250px);
+            }
+        }
+        
         .card {
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             border-radius: 0.5rem;
@@ -115,6 +296,30 @@ include_once('../components/sidebar/sidebar.php');
             background-color: #e9ecef;
             border-radius: 0 4px 0 4px;
         }
+        
+        /* Ensure modals are properly layered */
+        .modal-backdrop {
+            z-index: 1040;
+        }
+        
+        .modal {
+            z-index: 1050;
+        }
+        
+        /* Responsive table styles */
+        @media (max-width: 767px) {
+            .table-responsive table {
+                min-width: 600px;
+            }
+        }
+        
+        /* Ensure code blocks don't break layout */
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+       
     </style>
 </head>
 <body>
@@ -130,7 +335,7 @@ include_once('../components/sidebar/sidebar.php');
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h1 class="mb-0"><i class="fas fa-key text-primary me-2"></i>My API Keys</h1>
                         <button class="btn btn-outline-primary" onclick="showApiUsageModal()">
-                            <i class="fas fa-book me-2"></i>API Documentation
+                            <i class="fas fa-book me-2"></i><span class="d-none d-sm-inline">API </span>Documentation
                         </button>
                     </div>
                     
@@ -150,28 +355,29 @@ include_once('../components/sidebar/sidebar.php');
                     
                     <!-- Full API Key display (shown when user clicks "Show Key") -->
                     <div id="fullKeyAlert" class="alert alert-success d-none fade-in" role="alert">
-                        <div class="d-flex">
-                            <div class="me-3">
-                            <i class="fas fa-key fa-2x"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5>Your API Key</h5>
-                            <p>Copy your API key now. For security reasons, it won't be shown again.</p>
-                            <div class="api-key-container mb-2">
-                                <div class="input-group">
-                                    <input type="text" id="fullApiKey" class="form-control api-key-display" readonly>
-                                    <button class="btn btn-outline-primary btn-copy" type="button" onclick="copyFullApiKey()">
-                                        <i class="fas fa-copy me-1"></i> Copy
-                                    </button>
+                        <div class="d-flex flex-column flex-md-row">
+                            <div class="me-0 me-md-3 mb-3 mb-md-0 text-center text-md-start">
+                                <i class="fas fa-key fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5>Your API Key</h5>
+                                <p>Copy your API key now. For security reasons, it won't be shown again.</p>
+                                <div class="api-key-container mb-2">
+                                    <div class="input-group">
+                                        <input type="text" id="fullApiKey" class="form-control api-key-display" readonly>
+                                        <button class="btn btn-outline-primary btn-copy" type="button" onclick="copyFullApiKey()">
+                                            <i class="fas fa-copy me-1"></i> <span class="d-none d-sm-inline">Copy</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12 text-end">
+                                        <small class="text-muted">For security reasons, this key will be hidden when you close this message or leave the page.</small>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-12 text-end">
-                                    <small class="text-muted">For security reasons, this key will be hidden when you close this message or leave the page.</small>
-                                </div>
-                            </div>
+                            <button type="button" class="btn-close ms-auto" onclick="hideFullKey()"></button>
                         </div>
-                        <button type="button" class="btn-close" onclick="hideFullKey()"></button>
                     </div>
                 </div>
             </div>
@@ -183,7 +389,7 @@ include_once('../components/sidebar/sidebar.php');
                         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0"><i class="fas fa-list me-2"></i>Your API Keys</h5>
                             <button class="btn btn-sm btn-light" onclick="loadApiKeys()">
-                                <i class="fas fa-sync-alt me-1"></i> Refresh
+                                <i class="fas fa-sync-alt me-1"></i> <span class="d-none d-sm-inline">Refresh</span>
                             </button>
                         </div>
                         <div class="card-body p-0">
@@ -202,8 +408,8 @@ include_once('../components/sidebar/sidebar.php');
                                         <tr>
                                             <th>Name</th>
                                             <th>Key</th>
-                                            <th>Permissions</th>
-                                            <th>Created</th>
+                                            <th class="d-none d-md-table-cell">Permissions</th>
+                                            <th class="d-none d-sm-table-cell">Created</th>
                                             <th>Expires</th>
                                             <th class="text-end">Actions</th>
                                         </tr>
@@ -326,11 +532,24 @@ include_once('../components/sidebar/sidebar.php');
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <!-- Mobile dropdown for navigation -->
+                <div class="d-block d-md-none mb-3">
+                    <select class="form-select" onchange="switchTab(this.value)">
+                        <option value="#getting-started">Getting Started</option>
+                        <option value="#authentication">Authentication</option>
+                        <option value="#endpoints">Endpoints</option>
+                        <option value="#error-handling">Error Handling</option>
+                        <option value="#rate-limits">Rate Limits</option>
+                        <option value="#code-examples">Code Examples</option>
+                        <option value="#best-practices">Best Practices</option>
+                    </select>
+                </div>
+                
                 <div class="row">
                     <!-- Left side navigation -->
-                    <div class="col-md-3 mb-4">
+                    <div class="col-md-3 mb-4 d-none d-md-block">
                         <div class="list-group sticky-top pt-2">
-                            <a href="#getting-started" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <a href="#getting-started" class="list-group-item list-group-item-action active" data-bs-toggle="list">
                                 <i class="fas fa-rocket me-2"></i>Getting Started
                             </a>
                             <a href="#authentication" class="list-group-item list-group-item-action" data-bs-toggle="list">
@@ -608,44 +827,46 @@ X-API-Key: YOUR_API_KEY_HERE</pre>
                                 <p class="lead">Our API uses standard HTTP status codes and consistent error messages.</p>
                                 
                                 <h5 class="mt-4">HTTP Status Codes</h5>
-                                <table class="table table-bordered">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Code</th>
-                                            <th>Description</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><code>200 OK</code></td>
-                                            <td>The request was successful</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>400 Bad Request</code></td>
-                                            <td>The request contains invalid parameters</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>401 Unauthorized</code></td>
-                                            <td>Authentication failed or API key is missing</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>403 Forbidden</code></td>
-                                            <td>The API key doesn't have the required permissions</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>404 Not Found</code></td>
-                                            <td>The requested resource was not found</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>429 Too Many Requests</code></td>
-                                            <td>Rate limit exceeded</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>500 Internal Server Error</code></td>
-                                            <td>An error occurred on the server</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Code</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><code>200 OK</code></td>
+                                                <td>The request was successful</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>400 Bad Request</code></td>
+                                                <td>The request contains invalid parameters</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>401 Unauthorized</code></td>
+                                                <td>Authentication failed or API key is missing</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>403 Forbidden</code></td>
+                                                <td>The API key doesn't have the required permissions</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>404 Not Found</code></td>
+                                                <td>The requested resource was not found</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>429 Too Many Requests</code></td>
+                                                <td>Rate limit exceeded</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>500 Internal Server Error</code></td>
+                                                <td>An error occurred on the server</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                                 
                                 <h5 class="mt-4">Error Response Format</h5>
                                 <p>All error responses follow this format:</p>
@@ -684,32 +905,30 @@ X-API-Key: YOUR_API_KEY_HERE</pre>
                                 <h5>Rate Limit Headers</h5>
                                 <p>Each response includes headers that show your current rate limit status:</p>
                                 
-                                <table class="table table-bordered">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Header</th>
-                                            <th>Description</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><code>X-RateLimit-Limit</code></td>
-                                            <td>Maximum number of requests allowed per period</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>X-RateLimit-Remaining</code></td>
-                                            <td>Number of requests remaining in the current period</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>X-RateLimit-Remaining</code></td>
-                                            <td>Number of requests remaining in the current period</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>X-RateLimit-Reset</code></td>
-                                            <td>Time when the rate limit will reset (Unix timestamp)</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Header</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><code>X-RateLimit-Limit</code></td>
+                                                <td>Maximum number of requests allowed per period</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>X-RateLimit-Remaining</code></td>
+                                                <td>Number of requests remaining in the current period</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>X-RateLimit-Reset</code></td>
+                                                <td>Time when the rate limit will reset (Unix timestamp)</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                                 
                                 <div class="alert alert-warning mt-4">
                                     <i class="fas fa-exclamation-circle me-2"></i>
@@ -1062,19 +1281,22 @@ print(data)</pre>
                     const permissionsHtml = permissionBadges.length > 0 
                         ? permissionBadges.join('') 
                         : '<span class="badge bg-secondary">None</span>';
+                    
+                    // Mobile-friendly permissions (show count on mobile)
+                    const mobilePermissionsHtml = `<span class="d-md-none">${permissionBadges.length} perms</span>`;
 
                     keysTableBody.insertAdjacentHTML('beforeend', `
                         <tr class="${highlight}" data-key-id="${key.id}" data-expires-in="${isExpired ? 0 : (key.days_remaining*86400 + key.hours_remaining*3600 + key.minutes_remaining*60 + (key.seconds_remaining || 0))}">
                             <td>${key.name}</td>
                             <td><code>${key.masked_key}</code></td>
-                            <td>${permissionsHtml}</td>
-                            <td>${new Date(key.created_at).toLocaleString()}</td>
+                            <td class="d-none d-md-table-cell">${permissionsHtml}</td>
+                            <td class="d-none d-sm-table-cell">${new Date(key.created_at).toLocaleDateString()}</td>
                             <td class="${expiryClass}" data-expiry-cell="${key.id}">${expiryText}</td>
                             <td class="text-end">
                                 <button class="btn btn-sm btn-outline-info" 
                                         ${isExpired ? 'disabled' : ''} 
                                         onclick="showApiKey(${key.id}, '${key.name}')">
-                                    <i class="fas fa-eye"></i> Show Key
+                                    <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">Show Key</span>
                                 </button>
                             </td>
                         </tr>`);
@@ -1293,7 +1515,12 @@ print(data)</pre>
             disp = `${secsLeft}s`;
         }
         
-        indicator.innerHTML = `Key "${nearestExpiryKey.name}" expires in ${disp}`;
+        // Truncate key name on mobile
+        const keyName = window.innerWidth <= 576 ? 
+            (nearestExpiryKey.name.length > 10 ? nearestExpiryKey.name.substring(0, 10) + '...' : nearestExpiryKey.name) :
+            nearestExpiryKey.name;
+        
+        indicator.innerHTML = `Key "${keyName}" expires in ${disp}`;
         indicator.style.backgroundColor = secsLeft < 300
             ? 'rgba(220,53,69,0.9)' 
             : 'rgba(0,0,0,0.7)';
@@ -1367,8 +1594,8 @@ print(data)</pre>
         const apiUsageModal = new bootstrap.Modal(document.getElementById('apiUsageModal'));
         apiUsageModal.show();
         
-                // Ensure the "Getting Started" tab is active when the modal opens
-                document.querySelector('a[href="#getting-started"]').classList.add('active');
+        // Ensure the "Getting Started" tab is active when the modal opens
+        document.querySelector('a[href="#getting-started"]').classList.add('active');
         document.getElementById('getting-started').classList.add('show', 'active');
         
         // Make sure other tabs are not active
@@ -1398,6 +1625,36 @@ print(data)</pre>
             });
         });
     }
+    
+    // Function to switch tabs in mobile dropdown
+    function switchTab(tabId) {
+        // Hide all tab panes
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('show', 'active');
+        });
+        
+        // Show selected tab pane
+        const selectedPane = document.querySelector(tabId);
+        if (selectedPane) {
+            selectedPane.classList.add('show', 'active');
+        }
+        
+        // Update desktop navigation if visible
+        const desktopNav = document.querySelectorAll('.list-group-item');
+        desktopNav.forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('href') === tabId) {
+                item.classList.add('active');
+            }
+        });
+    }
+    
+    // Add resize listener to update the floating indicator text
+    window.addEventListener('resize', function() {
+        if (nearestExpiryKey) {
+            updateFloatingIndicator();
+        }
+    });
     </script>
 </body>
 </html>
