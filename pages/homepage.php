@@ -919,7 +919,18 @@ $startYear = 2016;
                             $uniqueApplicants = [];
                             $filteredApplicants = [];
                             foreach ($displayApplicants as $applicant) {
-                                $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'] . '|' . $applicant['categoryID'];
+                                $hasNameSearch = !empty($_POST['searchTerm']);
+                                $hasDateFilters = !empty($_POST['birthdayFrom']) || !empty($_POST['birthdayTo']) || 
+                                                !empty($_POST['registrationFrom']) || !empty($_POST['registrationTo']);
+                                $specificCategoryFilterApplied = !empty($_POST['categoryFilter']) && empty($hasNameSearch) && empty($hasDateFilters);
+                                
+                                if ($specificCategoryFilterApplied) {
+                                    $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'] . '|' . $applicant['categoryID'];
+                                } else {
+                                    // For ANY type of search (name, dates) or combined filters, show each applicant only once
+                                    $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
+                                }
+
                                 if (!isset($uniqueApplicants[$uniqueKey])) {
                                     $uniqueApplicants[$uniqueKey] = true;
                                     $filteredApplicants[] = $applicant;
@@ -935,7 +946,9 @@ $startYear = 2016;
                                         <table class="table table-hover">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th><input type="checkbox" id="selectAll" class="form-check-input"> Επιλογή</th>
+                                                    <?php if (isset($_SESSION['user_id']) || isset($_SESSION['userId'])): ?>
+                                                        <th><input type="checkbox" id="selectAll" class="form-check-input"> Επιλογή</th>
+                                                    <?php endif; ?>
                                                     <th>Κατάταξη</th>
                                                     <th>Ονοματεπώνυμο</th>
                                                     <th>Αρ. Αίτησης</th>
@@ -958,10 +971,12 @@ $startYear = 2016;
                                                     }
                                                 ?>
                                                     <tr<?php echo $isTracked ? ' class="table-light"' : ''; ?>>
-                                                        <td>
-                                                            <input type="checkbox" name="track_applicants[]" value="<?php echo $applicant['id']; ?>"
-                                                                class="form-check-input applicant-check" <?php echo $isTracked ? 'checked' : ''; ?>>
-                                                        </td>
+                                                        <?php if (isset($_SESSION['user_id']) || isset($_SESSION['userId'])): ?>
+                                                            <td>
+                                                                <input type="checkbox" name="track_applicants[]" value="<?php echo $applicant['id']; ?>"
+                                                                    class="form-check-input applicant-check" <?php echo $isTracked ? 'checked' : ''; ?>>
+                                                            </td>
+                                                        <?php endif; ?>
                                                         <td><?php echo $applicant['ranking']; ?></td>
                                                         <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
                                                         <td><?php echo $applicant['appNum']; ?></td>
@@ -970,8 +985,6 @@ $startYear = 2016;
                                                         <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
                                                         <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
                                                         <td class="action-buttons">
-
-
                                                             <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
                                                                 <i class="fas fa-info-circle"></i>
                                                             </a>
@@ -982,9 +995,11 @@ $startYear = 2016;
                                         </table>
                                     </div>
                                     <div class="d-flex justify-content-end mt-3">
-                                        <button type="submit" class="btn btn-success" name="track_selected">
-                                            <i class="fas fa-user-check me-2"></i> Παρακολούθηση Επιλεγμένων
-                                        </button>
+                                        <?php if (isset($_SESSION['user_id']) || isset($_SESSION['userId'])): ?>
+                                            <button type="submit" class="btn btn-success" name="track_selected">
+                                                <i class="fas fa-user-check me-2"></i> Παρακολούθηση Επιλεγμένων
+                                            </button>
+                                        <?php endif; ?>
                                     </div>
                                 </form>
                             <?php else: ?>
@@ -1000,68 +1015,71 @@ $startYear = 2016;
                     </div>
                 </div>
 
-                <!-- Tracked Applicants Section -->
-                <div class="card shadow-sm mt-4">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-user-check me-2"></i> Υπό Παρακολούθηση Υποψήφιοι</h5>
-                    </div>
-                    <div class="card-body">
-                        <?php if (!empty($trackedApplicants)): ?>
-                            <div class="table-responsive table-fixed-height">
-                                <table class="table table-hover">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Δικός μου</th>
-                                            <th>Ονοματεπώνυμο</th>
-                                            <th>Αρ. Αίτησης</th>
-                                            <th>Κατηγορία</th>
-                                            <th>Ημ. Εγγραφής</th>
-                                            <th>Ημ. Πτυχίου</th>
-                                            <th>Ενέργειες</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php
-                                        $uniqueApplicants = [];
-                                        foreach ($trackedApplicants as $applicant):
-                                            $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
-                                            if (isset($uniqueApplicants[$uniqueKey])) continue;
-                                            $uniqueApplicants[$uniqueKey] = true;
-                                            $isOwn = isset($applicant['isOwnCandidate']) && $applicant['isOwnCandidate'] == 1;
-                                        ?>
-                                            <tr class="<?php echo $isOwn ? 'table-success' : ''; ?>">
-                                                <td>
-                                                    <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input own-candidate-check"
-                                                            data-id="<?php echo $applicant['trackingID']; ?>"
-                                                            <?php echo $isOwn ? 'checked' : ''; ?>>
-                                                    </div>
-                                                </td>
-                                                <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
-                                                <td><?php echo $applicant['appNum']; ?></td>
-                                                <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
-                                                <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
-                                                <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
-                                                <td class="action-buttons">
-                                                    <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
-                                                        <i class="fas fa-user-minus"></i>
-                                                    </button>
-                                                    <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
-                                                        <i class="fas fa-info-circle"></i>
-                                                    </a>
-                                                </td>
+                <?php if (isset($_SESSION['user_id']) || isset($_SESSION['userId'])): ?>
+
+                    <!-- Tracked Applicants Section -->
+                    <div class="card shadow-sm mt-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-user-check me-2"></i> Υπό Παρακολούθηση Υποψήφιοι</h5>
+                        </div>
+                        <div class="card-body">
+                            <?php if (!empty($trackedApplicants)): ?>
+                                <div class="table-responsive table-fixed-height">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Δικός μου</th>
+                                                <th>Ονοματεπώνυμο</th>
+                                                <th>Αρ. Αίτησης</th>
+                                                <th>Κατηγορία</th>
+                                                <th>Ημ. Εγγραφής</th>
+                                                <th>Ημ. Πτυχίου</th>
+                                                <th>Ενέργειες</th>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php else: ?>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i> Δεν έχετε προσθέσει ακόμη υποψηφίους για παρακολούθηση.
-                            </div>
-                        <?php endif; ?>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $uniqueApplicants = [];
+                                            foreach ($trackedApplicants as $applicant):
+                                                $uniqueKey = $applicant['fullName'] . '|' . $applicant['birthdayDate'];
+                                                if (isset($uniqueApplicants[$uniqueKey])) continue;
+                                                $uniqueApplicants[$uniqueKey] = true;
+                                                $isOwn = isset($applicant['isOwnCandidate']) && $applicant['isOwnCandidate'] == 1;
+                                            ?>
+                                                <tr class="<?php echo $isOwn ? 'table-success' : ''; ?>">
+                                                    <td>
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input own-candidate-check"
+                                                                data-id="<?php echo $applicant['trackingID']; ?>"
+                                                                <?php echo $isOwn ? 'checked' : ''; ?>>
+                                                        </div>
+                                                    </td>
+                                                    <td><?php echo htmlspecialchars($applicant['fullName']); ?></td>
+                                                    <td><?php echo $applicant['appNum']; ?></td>
+                                                    <td><?php echo isset($applicant['fields']) ? htmlspecialchars($applicant['fields']) : 'N/A'; ?></td>
+                                                    <td><?php echo isset($applicant['registrationDate']) ? date('d/m/Y', strtotime($applicant['registrationDate'])) : 'N/A'; ?></td>
+                                                    <td><?php echo isset($applicant['titleDate']) ? date('d/m/Y', strtotime($applicant['titleDate'])) : 'N/A'; ?></td>
+                                                    <td class="action-buttons">
+                                                        <button type="button" class="btn btn-sm btn-danger untrack-btn" data-id="<?php echo $applicant['id']; ?>">
+                                                            <i class="fas fa-user-minus"></i>
+                                                        </button>
+                                                        <a href="applicant-details.php?id=<?php echo $applicant['id']; ?>&return=search" class="btn btn-sm btn-info">
+                                                            <i class="fas fa-info-circle"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php else: ?>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> Δεν έχετε προσθέσει ακόμη υποψηφίους για παρακολούθηση.
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                </div>
+                <?php endif; ?>
             </div>
 
             <div class="catalogs-container">
@@ -1284,11 +1302,11 @@ $startYear = 2016;
             function updateFilterInputsState() {
                 const categorySelected = $('#categoryFilter').val() !== '';
                 // Disable/enable name and date filters
-                $('input[name="searchTerm"]').prop('disabled', !categorySelected);
-                $('input[name="birthdayFrom"]').prop('disabled', !categorySelected);
-                $('input[name="birthdayTo"]').prop('disabled', !categorySelected);
-                $('input[name="registrationFrom"]').prop('disabled', !categorySelected);
-                $('input[name="registrationTo"]').prop('disabled', !categorySelected);
+                $('input[name="searchTerm"]').prop('disabled', false);
+                $('input[name="birthdayFrom"]').prop('disabled', false);
+                $('input[name="birthdayTo"]').prop('disabled', false);
+                $('input[name="registrationFrom"]').prop('disabled', false);
+                $('input[name="registrationTo"]').prop('disabled', false);
             }
 
             // Initial check on page load
