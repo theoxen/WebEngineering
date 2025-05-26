@@ -103,13 +103,13 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                         <li class="nav-item">
                             <a href="<?php echo $baseUrl ?>admin/upload-file.php"
                                 class="nav-link <?php echo $currentPage, 'upload-file.php' ? 'active' : ''; ?>">
-                                <i class="fas fa-upload"></i> Upload File
+                                <i class="fas fa-upload"></i> Καταχώριση Αρχείου
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="<?php echo $baseUrl ?>admin/readingPDF_savingInfo.php"
                                 class="nav-link <?php echo $currentPage == 'readingPDF_savingInfo.php' ? 'active' : ''; ?>">
-                                <i class="fas fa-file-pdf me-2"></i> Process PDF Data
+                                <i class="fas fa-file-pdf me-2"></i> Επεξεργασία PDF
                             </a>
                         </li>
                     <?php endif; ?>

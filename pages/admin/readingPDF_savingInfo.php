@@ -182,22 +182,22 @@ if (!isset($_POST['process_category'])) {
         <div class="main-content">
             <div class="container-fluid">
                 <div class="page-header d-flex align-items-center">
-                    <h1 class="page-title"><i class="fas fa-file-pdf me-2 text-primary"></i>Process PDF Data</h1>
+                    <h1 class="page-title"><i class="fas fa-file-pdf me-2 text-primary"></i>Επεξεργασία Δεδομένων PDF</h1>
                 </div>
                 
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <i class="fas fa-filter"></i>Filter Options
+                                <i class="fas fa-filter"></i>Επιλογή Φίλτρων
                             </div>
                             <div class="card-body">
                                 <!-- Filter Form -->
                                 <form method="get" class="row g-3">
                                     <div class="col-md-4">
-                                        <label for="filter_year" class="form-label"><i class="fas fa-calendar me-1"></i> Filter by Year:</label>
+                                        <label for="filter_year" class="form-label"><i class="fas fa-calendar me-1"></i> Φιλτράρισμα ανά Χρόνο:</label>
                                         <select name="filter_year" id="filter_year" class="form-select">
-                                            <option value="">All Years</option>
+                                            <option value="">Ολα τα Χρόνια</option>
                                             <?php while ($year = $yearsResult->fetch_assoc()): ?>
                                                 <option value="<?= $year['year'] ?>" <?= ($filterYear == $year['year']) ? 'selected' : '' ?>>
                                                     <?= $year['year'] ?>
@@ -207,9 +207,9 @@ if (!isset($_POST['process_category'])) {
                                     </div>
                                     
                                     <div class="col-md-4">
-                                        <label for="filter_season" class="form-label"><i class="fas fa-sun me-1"></i> Filter by Season:</label>
+                                        <label for="filter_season" class="form-label"><i class="fas fa-sun me-1"></i> Φιλτράρισμα Εποχής:</label>
                                         <select name="filter_season" id="filter_season" class="form-select">
-                                            <option value="">All Seasons</option>
+                                            <option value="">Όλες οι Εποχές</option>
                                             <?php while ($season = $seasonsResult->fetch_assoc()): ?>
                                                 <option value="<?= $season['season'] ?>" <?= ($filterSeason == $season['season']) ? 'selected' : '' ?>>
                                                     <?= $season['season'] ?>
@@ -220,11 +220,11 @@ if (!isset($_POST['process_category'])) {
                                     
                                     <div class="col-md-4 d-flex align-items-end">
                                         <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-search me-1"></i> Apply Filters
+                                            <i class="fas fa-search me-1"></i> Εφαρμογή Φίλτρων
                                         </button>
                                         <?php if ($filterYear || $filterSeason): ?>
                                             <a href="?" class="btn btn-outline-secondary ms-2">
-                                                <i class="fas fa-times me-1"></i> Clear Filters
+                                                <i class="fas fa-times me-1"></i> Καθαρισμός Φίλτρων
                                             </a>
                                         <?php endif; ?>
                                     </div>
@@ -234,15 +234,15 @@ if (!isset($_POST['process_category'])) {
                         
                         <div class="card">
                             <div class="card-header">
-                                <i class="fas fa-cogs"></i>Process Categories
+                                <i class="fas fa-cogs"></i>Επεξεργασία Λιστών
                             </div>
                             <div class="card-body">
                                 <!-- Process Form -->
                                 <form method="post">
                                     <div class="mb-3">
-                                        <label for="category_id" class="form-label"><i class="fas fa-list me-1"></i> Select Category to Process:</label>
+                                        <label for="category_id" class="form-label"><i class="fas fa-list me-1"></i> Επιλέξτε Λίστα Για Επεξεργασία:</label>
                                         <select name="category_id" id="category_id" class="form-select" required>
-                                            <option value="">-- Select Category --</option>
+                                            <option value="">-- Επιλέξτε Λίστα --</option>
                                             <?php while ($cat = $categoriesListResult->fetch_assoc()): ?>
                                                 <option value="<?= $cat['categoryID'] ?>">
                                                     ID: <?= $cat['categoryID'] ?> - <?= htmlspecialchars($cat['fields']) ?> (<?= $cat['type'] ?>) - 
@@ -253,10 +253,10 @@ if (!isset($_POST['process_category'])) {
                                     </div>
                                     <div class="d-flex gap-2">
                                         <button type="submit" name="process_category" class="btn btn-primary">
-                                            <i class="fas fa-play me-1"></i> Process Selected Category
+                                            <i class="fas fa-play me-1"></i> Επεξεργασία Επιλεγμένης Λίστας
                                         </button>
                                         <button type="submit" name="process_all" class="btn btn-warning">
-                                            <i class="fas fa-play-circle me-1"></i> Process All Categories
+                                            <i class="fas fa-play-circle me-1"></i> Επεξεργασία Όλων των Λιστών
                                         </button>
                                     </div>
                                     
