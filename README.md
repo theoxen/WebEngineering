@@ -94,7 +94,7 @@ The API documentation is available within the application at `pages/documentatio
 - Session-based authentication
 - HTTPS recommended for production
 
-##Team Members (Omada1)
+## Team Members (Omada1)
 - Andreas Nikitas
 - Antreas Pelekanos
 - Dimitrios Kaouris
