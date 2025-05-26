@@ -101,7 +101,6 @@ The API documentation is available within the application at `pages/documentatio
 - Kirikos Stavrides
 - Theodosis Xenophontos
 - Panayotis Antoniou
--
 
 ## License
 
