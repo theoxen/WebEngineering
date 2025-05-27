@@ -34,75 +34,6 @@ $pageTitle = "Admin API Keys Management";
 $responseMessage = '';
 $responseClass = '';
 
-// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
-//     // Λήψη πληροφοριών για το μεταφορτωμένο αρχείο
-//     $fileName = $_FILES['file']['name'];
-//     $fileTmpName = $_FILES['file']['tmp_name'];
-//     $fileError = $_FILES['file']['error'];
-//     $fileType = $_FILES['file']['type'];
-
-//     // Επικύρωση τύπου αρχείου (επιτρέπονται μόνο PDF)
-//     if ($fileType !== 'application/pdf') {
-//         $responseMessage = "Σφάλμα: Επιτρέπονται μόνο αρχεία PDF.";
-//         $responseClass = 'error-message';
-//     } else {
-//         // Δημιουργία μοναδικού ονόματος αρχείου για αποφυγή συγκρούσεων
-//         $uniqueFileName = uniqid('pdf_', true) . '.pdf';
-//         $targetFile = $uploadDir . $uniqueFileName;
-
-//         // Διασφάλιση ότι ο κατάλογος μεταφόρτωσης υπάρχει
-//         if (!is_dir($uploadDir)) {
-//             mkdir($uploadDir, 0777, true);
-//         }
-
-//         // Μετακίνηση του μεταφορτωμένου αρχείου
-//         if (move_uploaded_file($fileTmpName, $targetFile)) {
-//             $uploadSuccess = true;
-
-//             // Parse the PDF file
-//             $parser = new Parser();
-//             $pdf = $parser->parseFile($targetFile);
-//             $pdfText = $pdf->getText(); // Extract text from the PDF
-
-//             // Get form data
-//             $year = (int)$_POST['year'];
-//             $season = $_POST['season'];
-//             $type = $_POST['type'];
-//             $fields = $_POST['fields'] ?? ''; // Assuming you have a "fields" input in your form
-
-//             // Insert metadata into the database
-//             $stmt = $mysqli->prepare("
-//                 INSERT INTO `categories` (`year`, `season`, `type`, `fields`, `file_path`, `pdf_content`)
-//                 VALUES (?, ?, ?, ?, ?, ?)
-//             ");
-//             if ($stmt) {
-//                 $stmt->bind_param(
-//                     "isssss", // Data types: s = string
-//                     $year,
-//                     $season,
-//                     $type,
-//                     $fields,
-//                     $targetFile,
-//                     $pdfText
-//                 );
-//                 $stmt->execute();
-//                 $stmt->close();
-
-//                 $responseMessage = "File uploaded and metadata saved successfully.";
-//                 $responseClass = 'success-message';
-//             } else {
-//                 $responseMessage = "Database error: " . $mysqli->error;
-//                 $responseClass = 'error-message';
-//             }
-//         } else {
-//             $responseMessage = "Failed to move the uploaded file.";
-//             $responseClass = 'error-message';
-//         }
-//     }
-// } else {
-//   //  $responseMessage = "No file uploaded or an error occurred.";
-//     $responseClass = 'error-message';
-// }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
     // Λήψη πληροφοριών για το μεταφορτωμένο αρχείο
@@ -144,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
             $isNewCatalog = true; // Default assumption
             $catalogName = "$season $year - $type ($fields)";
 
+            $existingCategoryId = null;
             $checkStmt = $mysqli->prepare("
                 SELECT categoryID FROM categories 
                 WHERE year = ? AND season = ? AND type = ? AND fields = ?
@@ -152,23 +84,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
             if ($checkStmt) {
                 $checkStmt->bind_param("isss", $year, $season, $type, $fields);
                 $checkStmt->execute();
-                $checkStmt->store_result();
-
-                if ($checkStmt->num_rows > 0) {
-                    // This is an update to an existing category
-                    $isNewCatalog = false;
-                }
+                $checkStmt->bind_result($existingCategoryId);
+                $checkStmt->fetch();
                 $checkStmt->close();
             }
 
-            // Insert metadata into the database
+            // Αν υπάρχει ήδη, διαγράφουμε την παλιά εγγραφή
+            if ($existingCategoryId !== null) {
+                $deleteStmt = $mysqli->prepare("DELETE FROM categories WHERE categoryID = ?");
+                if ($deleteStmt) {
+                    $deleteStmt->bind_param("i", $existingCategoryId);
+                    $deleteStmt->execute();
+                    $deleteStmt->close();
+                }
+                $isNewCatalog = false; // Δεν είναι νέα καταχώρηση, είναι update
+            } else {
+                $isNewCatalog = true; // Είναι νέα καταχώρηση
+            }
+
+            // Κάνουμε εισαγωγή της νέας εγγραφής (insert)
             $stmt = $mysqli->prepare("
                 INSERT INTO `categories` (`year`, `season`, `type`, `fields`, `file_path`, `pdf_content`)
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
+
             if ($stmt) {
                 $stmt->bind_param(
-                    "isssss", // Data types: s = string
+                    "isssss",
                     $year,
                     $season,
                     $type,
@@ -179,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
                 $stmt->execute();
                 $categoryId = $mysqli->insert_id;
                 $stmt->close();
+
 
                 if ($isNewCatalog) {
                     // Find users who have opted in for new catalog notifications
@@ -382,6 +325,17 @@ $selectedField = $_POST['fields'] ?? '';
             color: red;
         }
 
+       
+
+        #fileName {
+            flex-grow: 1;
+            min-width: 0;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+
         /* Loading Overlay */
         .loading-overlay {
             position: fixed;
@@ -432,16 +386,20 @@ $selectedField = $_POST['fields'] ?? '';
 <body>
     <div class="main-content">
         <h1 class="mb-0">
-            <i class="fas fa-upload text-primary me-2"></i>Upload File
+            <i class="fas fa-upload text-primary me-2"></i>Καταχώρηση Αρχείου
         </h1>
         <div class="container mt-5">
             <h2>Ανεβάστε Αρχείο και Επιλέξτε Στοιχεία</h2>
             <form action="upload-file.php" method="post" enctype="multipart/form-data" class="upload-form">
-                <div class="mb-3">
-                    <label for="file" class="form-label">Επιλέξτε αρχείο:</label>
-                    <input type="file" name="file" id="file" class="form-control" required>
-                </div>
+            <div class="mb-3">
+                <label for="file" class="form-label">Επιλέξτε αρχείο:</label>
+                <input type="file" name="file" id="file" class="form-control d-none" required>
 
+                <div class="input-group w-100">
+                    <button type="button" id="customFileButton" class="btn btn-primary">Επιλέξτε Αρχείο</button>
+                    <input type="text" id="fileName" class="form-control" value="Κανένα αρχείο δεν επιλέχθηκε" readonly>
+                </div>
+            </div>
                 <div class="mb-3">
                     <label for="year" class="form-label">Επιλέξτε έτος:</label>
                     <select name="year" id="year" class="form-select" required>
@@ -500,10 +458,10 @@ $selectedField = $_POST['fields'] ?? '';
             <div id="loadingOverlay" class="loading-overlay d-none">
                 <div class="spinner-container">
                     <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                        <span class="visually-hidden">Φόρτωση...</span>
                     </div>
-                    <h4 class="mt-3">Processing your file</h4>
-                    <p class="text-muted">Please wait while we upload and analyze the PDF...</p>
+                    <h4 class="mt-3">Επεξεργασία αρχείου</h4>
+                    <p class="text-muted">Παρακαλώ περιμένετε όσο επεξεργαζόμαστε το PDF...</p>
                 </div>
             </div>
 
@@ -604,19 +562,40 @@ $selectedField = $_POST['fields'] ?? '';
 
         // File validation and form submission handling
         document.addEventListener('DOMContentLoaded', function () {
-            const uploadForm = document.querySelector('.upload-form');
-            const fileInput = document.getElementById('pdfFile');
-            const loadingOverlay = document.getElementById('loadingOverlay');
+        const uploadForm = document.querySelector('.upload-form');
+        const fileInput = document.getElementById('file'); // Updated to match your new file input ID
+        const customFileButton = document.getElementById('customFileButton');
+        const fileNameDisplay = document.getElementById('fileName');
+        const loadingOverlay = document.getElementById('loadingOverlay');
 
-            uploadForm.addEventListener('submit', function (e) {
-                // Validate the form first
-                if (this.checkValidity() && fileInput.files.length > 0) {
-                    // Show loading overlay
-                    loadingOverlay.classList.remove('d-none');
-                }
-            });
-
+        // Handle custom file button click
+        customFileButton.addEventListener('click', function () {
+            fileInput.click(); // Trigger the hidden file input
         });
+
+        // Update file name display when a file is selected
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files.length > 0) {
+                fileNameDisplay.value = fileInput.files[0].name;
+            } else {
+                fileNameDisplay.value = 'Κανένα αρχείο δεν επιλέχθηκε';
+            }
+        });
+
+        // Handle form submission
+        uploadForm.addEventListener('submit', function (e) {
+            // Validate the form first
+            if (this.checkValidity() && fileInput.files.length > 0) {
+                // Show loading overlay
+                loadingOverlay.classList.remove('d-none');
+            } else {
+                e.preventDefault(); // Prevent form submission if validation fails
+                if (fileInput.files.length === 0) {
+                    alert('Παρακαλώ επιλέξτε ένα αρχείο πριν την υποβολή.'); // Alert if no file is selected
+                }
+            }
+        });
+    });
     </script>
 </body>
 
