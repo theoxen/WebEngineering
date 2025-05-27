@@ -43,7 +43,7 @@ try {
     
     // Start a new session to set flash message
     session_start();
-    $_SESSION['message'] = "Your account has been successfully deleted";
+    $_SESSION['message'] = "Ο λογαριασμός σας διαγράφηκε με επιτυχία!";
     $_SESSION['toastClass'] = "success";
     
     // Redirect to homepage
@@ -56,7 +56,7 @@ try {
     
     // Set error message
     session_start();
-    $_SESSION['flash_message'] = "Error deleting account: " . $e->getMessage();
+    $_SESSION['flash_message'] = "Σφάλμα διαγραφής λογαριασμού: " . $e->getMessage();
     $_SESSION['flash_class'] = "danger";
     
     // Redirect back to settings page

@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 
 include_once('../database/db_connect.php');
 
-$pageTitle = "User Settings";
+$pageTitle = "Ρυθμίσεις Χρήστη";
 
 $message = '';
 $toastClass = '';
@@ -69,11 +69,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors = [];
 
         if (empty($username)) {
-            $errors[] = "Username is required";
+            $errors[] = "Το Username είναι υποχρεωτικό";
         }
 
         if (empty($phoneNumber)) {
-            $errors[] = "Phone should not be empty";
+            $errors[] = "Ο αριθμός τηλεφώνου είναι υποχρεωτικός";
         }
 
         if (!empty($dateOfBirth)) { // Check whether the date is in the past when updating profile fo the user
@@ -81,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $birthDate = new DateTime($dateOfBirth);
 
             if ($birthDate > $today) {
-                $errors[] = "Date must be in the past";
+                $errors[] = "Η ημερομηνία γέννησης δεν μπορεί να είναι στο μέλλον";
             }
         }
 
@@ -113,7 +113,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['flash_message'] = implode("<br>", $errors);
             $_SESSION['flash_class'] = "danger";
         }
-    } elseif (isset($_POST['change_password'])) { // TODO CHANGE PASSWORD TO MATCH THE OPTIONS IN THE REGISTER PAGE
+    } elseif (isset($_POST['change_password'])) {
         // Change password
         $currentPassword = $_POST['currentPassword'];
         $newPassword = $_POST['newPassword'];
@@ -123,11 +123,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors = [];
 
         if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
-            $errors[] = "All password fields are required";
+            $errors[] = "Όλα τα πεδία είναι υποχρεωτικά";
         } elseif ($newPassword !== $confirmPassword) {
-            $errors[] = "New passwords do not match";
+            $errors[] = "Ο κωδικός επαλήθευσης δεν ταιριάζει με τον νέο κωδικό";
         } elseif (strlen($newPassword) < 8) {
-            $errors[] = "New password must be at least 8 characters";
+            $errors[] = "Ο κωδικός πρέπει να είναι τουλάχιστον 8 χαρακτήρες";
         }
 
         if (empty($errors)) {
@@ -147,14 +147,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt->bind_param("si", $hashedPassword, $userId);
 
                 if ($stmt->execute()) {
-                    $_SESSION['flash_message'] = "Password changed successfully";
+                    $_SESSION['flash_message'] = "Ο κωδικός άλλαξε επιτυχώς";
                     $_SESSION['flash_class'] = "success";
                 } else {
-                    $_SESSION['flash_message'] = "Error changing password: " . $mysqli->error;
+                    $_SESSION['flash_message'] = "Σφαλμα στην αλλαγή κωδικού: " . $mysqli->error;
                     $_SESSION['flash_class'] = "danger";
                 }
             } else {
-                $_SESSION['flash_message'] = "Current password is incorrect";
+                $_SESSION['flash_message'] = "Ο τρέχων κωδικός δεν είναι σωστός";
                 $_SESSION['flash_class'] = "danger";
             }
         } else {
@@ -172,7 +172,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_param("iiis", $newCatalogNotify, $positionChangeNotify, $catalogUpdateNotify, $userId);
 
         if ($stmt->execute()) {
-            $_SESSION['flash_message'] = "Notification settings updated successfully";
+            $_SESSION['flash_message'] = "Οι ρυθμίσεις ειδοποιήσεων ενημερώθηκαν επιτυχώς";
             $_SESSION['flash_class'] = "success";
 
             // Update settings data
@@ -180,7 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $settingsData['positionChangeNotify'] = $positionChangeNotify;
             $settingsData['catalogUpdateNotify'] = $catalogUpdateNotify;
         } else {
-            $_SESSION['flash_message'] = "Error updating notification settings: " . $mysqli->error;
+            $_SESSION['flash_message'] = "Σφάλμα στην ενημέρωση ειδοποιήσεων: " . $mysqli->error;
             $_SESSION['flash_class'] = "danger";
         }
     }
@@ -411,8 +411,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="container-fluid content-wrapper" style="padding-left: 0; padding-right: 0;">
                 <div class="page-header" style="justify-content: center; justify-self: center;">
                     <h1 class="page-title"><?php echo $pageTitle; ?></h1>
-                    <p class="text-muted" style="text-align: center;">Manage your profile information, password, and
-                        notification preferences.</p>
+                    <p class="text-muted" style="text-align: center;">Διαχειριστείτε τις πληροφορίες του προφίλ σας, τον
+                        κωδικό πρόσβασης και τις προτιμήσεις ειδοποιήσεων.</p>
                 </div>
 
                 <div class="row" style="justify-self: center;">
@@ -420,7 +420,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <!-- Account Summary -->
                         <div class="card mb-4">
                             <div class="card-header">
-                                <i class="fas fa-id-card"></i> Account Summary
+                                <i class="fas fa-id-card"></i> Σύνοψη Λογαριασμού
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-center mb-4">
@@ -438,7 +438,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
 
                                 <div class="mb-3">
-                                    <strong><i class="fas fa-clock me-2 text-muted"></i> Account Created:</strong>
+                                    <strong><i class="fas fa-clock me-2 text-muted"></i> Δημιουργία
+                                        Λογαριασμού:</strong>
                                     <p class="text-muted"><?php echo date('F j, Y'); ?></p>
                                 </div>
                             </div>
@@ -447,16 +448,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <!-- Quick Actions -->
                         <div class="card">
                             <div class="card-header">
-                                <i class="fas fa-bolt"></i> Quick Actions
+                                <i class="fas fa-bolt"></i> Γρήγορες Ενέργειες
                             </div>
                             <div class="card-body">
                                 <div class="list-group">
                                     <a href="homepage.php" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-home me-2"></i> Go to Homepage
+                                        <i class="fas fa-home me-2"></i> Μετάβαση στην Αρχική Σελίδα
                                     </a>
                                     <a href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal"
                                         data-bs-target="#deleteAccountModal">
-                                        <i class="fas fa-user-times me-2 text-danger"></i> Delete Account
+                                        <i class="fas fa-user-times me-2 text-danger"></i> Διαγραφή Λογαριασμού
                                     </a>
                                     <a href="logout.php" class="list-group-item list-group-item-action">
                                         <i class="fas fa-sign-out-alt me-2"></i> Log Out
@@ -469,12 +470,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <!-- Personal Information -->
                         <div class="card mb-4">
                             <div class="card-header">
-                                <i class="fas fa-user-circle"></i> Personal Information
+                                <i class="fas fa-user-circle"></i> Προσωπικές Πληροφορίες
                             </div>
                             <div class="card-body">
                                 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
                                     <div class="mb-3">
-                                        <label for="username" class="form-label">Username</label>
+                                        <label for="username" class="form-label">Όνομα Χρηστη</label>
                                         <input type="text" class="form-control" id="username" name="username"
                                             value="<?php echo htmlspecialchars($userData['username']); ?>" required>
                                     </div>
@@ -483,25 +484,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <label for="email" class="form-label">Email</label>
                                         <input type="email" class="form-control disabled-input" id="email"
                                             value="<?php echo htmlspecialchars($userData['email']); ?>" readonly>
-                                        <div class="form-text text-muted">Email cannot be changed. Please contact
-                                            support if
-                                            you need to update your email.</div>
+                                        <div class="form-text text-muted">Το email δεν μπορεί να αλλάξει. Παρακαλούμε
+                                            όπως επικοινωνίσετε με την εξηπηρέτηση πελατών αν επιθυμείτε να το αλλάξετε.
+                                        </div>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="phoneNumber" class="form-label">Phone Number</label>
+                                        <label for="phoneNumber" class="form-label">Αριθμός Τηλεφώνου</label>
                                         <input type="text" class="form-control" id="phoneNumber" name="phoneNumber"
                                             value="<?php echo htmlspecialchars($userData['phoneNumber'] ?? ''); ?>">
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                                        <label for="dateOfBirth" class="form-label">Ημερομηνία Γέννησης</label>
                                         <input type="date" class="form-control" id="dateOfBirth" name="dateOfBirth"
                                             value="<?php echo htmlspecialchars($userData['dateOfBirth'] ?? ''); ?>">
                                     </div>
 
-                                    <button type="submit" name="update_profile" class="btn btn-primary">Save
-                                        Changes</button>
+                                    <button type="submit" name="update_profile" class="btn btn-primary"> Αποθήκευση
+                                        Αλλαγών
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -509,7 +511,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <!-- Change Password -->
                         <div class="card mb-4">
                             <div class="card-header">
-                                <i class="fas fa-lock"></i> Change Password
+                                <i class="fas fa-lock"></i> Αλλαγή Κωδικού Πρόσβασης
                             </div>
                             <div class="card-body">
                                 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
@@ -526,7 +528,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="newPassword" class="form-label">New Password</label>
+                                        <label for="newPassword" class="form-label">Νέος Κωδικός</label>
                                         <div class="input-group">
                                             <input type="password" class="form-control" id="newPassword"
                                                 name="newPassword" minlength="8" required>
@@ -535,11 +537,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                     data-target="newPassword"></i>
                                             </span>
                                         </div>
-                                        <div class="form-text text-muted">Must be at least 8 characters long.</div>
+                                        <div class="form-text text-muted">Πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες.
+                                        </div>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                        <label for="confirmPassword" class="form-label">Επαλήθευση Νέου Κωδικου</label>
                                         <div class="input-group">
                                             <input type="password" class="form-control" id="confirmPassword"
                                                 name="confirmPassword" required>
@@ -550,8 +553,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </div>
                                     </div>
 
-                                    <button type="submit" name="change_password" class="btn btn-primary">Change
-                                        Password</button>
+                                    <button type="submit" name="change_password" class="btn btn-primary">Αλλαγή Κωδικου
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -559,7 +562,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <!-- Notification Settings -->
                         <div class="card mb-4">
                             <div class="card-header">
-                                <i class="fas fa-bell"></i> Email Notification Settings
+                                <i class="fas fa-bell"></i> Ρυθμίσεις Ειδοποιήσεων Mέσω Email
                             </div>
                             <div class="card-body">
                                 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
@@ -567,9 +570,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <input class="form-check-input" type="checkbox" id="newCatalogNotify"
                                             name="newCatalogNotify" <?php echo $settingsData['newCatalogNotify'] ? 'checked' : ''; ?>>
                                         <label class="form-check-label" for="newCatalogNotify">
-                                            <strong>New Catalog</strong>
-                                            <p class="text-muted mb-0">Receive notifications when new catalogs are
-                                                published
+                                            <strong>Νέος Καταλόγου</strong>
+                                            <p class="text-muted mb-0">Λάβετε ειδοποιήσεις όταν δημοσιεύονται νέοι κατάλογοι
                                             </p>
                                         </label>
                                     </div>
@@ -578,15 +580,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <input class="form-check-input" type="checkbox" id="catalogUpdateNotify"
                                             name="catalogUpdateNotify" <?php echo $settingsData['catalogUpdateNotify'] ? 'checked' : ''; ?>>
                                         <label class="form-check-label" for="catalogUpdateNotify">
-                                            <strong>Catalog Update</strong>
-                                            <p class="text-muted mb-0">Get reminders about existing catalog catalogs
-                                                that
-                                                have been updated</p>
+                                            <strong>Ενημέρωση Καταλόγου</strong>
+                                            <p class="text-muted mb-0">Λάβετε ειδοποιήσεις για υπάρχοντες καταλόγους που έχουν ενημερωθεί</p>
                                         </label>
                                     </div>
 
-                                    <button type="submit" name="update_notifications" class="btn btn-primary">Save
-                                        Notification Settings</button>
+                                    <button type="submit" name="update_notifications" class="btn btn-primary">Αποθήκευση Ρυθμίσεων Ειδοποιήσεων</button>
                                 </form>
                             </div>
                         </div>
@@ -601,27 +600,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="deleteAccountModalLabel">Delete Account</h5>
+                            <h5 class="modal-title" id="deleteAccountModalLabel">Διαγραφή Λογαριασμού</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="text-center mb-4">
                                 <i class="fas fa-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
                             </div>
-                            <p>Are you sure you want to delete your account? This action cannot be undone.</p>
-                            <p>All your personal data and settings will be permanently removed.</p>
+                            <p>Είστε βέβαιοι ότι θέλετε να διαγράψετε τον λογαριασμό σας; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.</p>
+                            <p>Όλα τα προσωπικά σας δεδομένα και οι ρυθμίσεις θα διαγραφούν μόνιμα.</p>
 
                             <form id="deleteAccountForm" method="post" action="delete-user.php">
                                 <div class="mb-3">
-                                    <label for="deleteConfirm" class="form-label">Type "DELETE" to confirm</label>
+                                    <label for="deleteConfirm" class="form-label">Πληκτρολογίστε "DELETE" για να επαληθεύσετε</label>
                                     <input type="text" class="form-control" id="deleteConfirm" required>
                                 </div>
                             </form>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>Delete
-                                Account</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>
+                            <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>Διαγραφή Λογαριασμού</button>
                         </div>
                     </div>
                 </div>

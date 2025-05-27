@@ -19,7 +19,7 @@ if (ini_get("session.use_cookies")) {
 session_destroy();
 
 session_start();
-$_SESSION['message'] = "You have been successfully logged out";
+$_SESSION['message'] = "Η αποσύνδεση πραγματοποιήθηκε με επιτυχία!";
 $_SESSION['toastClass'] = "success";
 
 header("Location: login.php");

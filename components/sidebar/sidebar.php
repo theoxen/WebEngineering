@@ -31,7 +31,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                 <li class="nav-item">
                     <a href="<?php echo $baseUrl ?>homepage.php"
                         class="nav-link <?php echo $currentPage == 'homepage.php' ? 'active' : ''; ?>">
-                        <i class="fas fa-home me-2"></i> Home
+                        <i class="fas fa-home me-2"></i> Αρχική
                     </a>
                 </li>
 
@@ -41,14 +41,14 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                     <li class="nav-item">
                         <a href="<?php echo $baseUrl ?>user-settings.php"
                             class="nav-link <?php echo $currentPage == 'user-settings.php' ? 'active' : ''; ?>">
-                            <i class="fas fa-cog me-2"></i> Settings
+                            <i class="fas fa-cog me-2"></i> Ρυθμίσεις
                         </a>
                     </li>
 
                     <li class="nav-item">
                         <a href="<?php echo $baseUrl ?>user-api-keys.php"
                             class="nav-link <?php echo $currentPage == 'user-api-keys.php' ? 'active' : ''; ?>">
-                            <i class="fas fa-key"></i> My API Keys
+                            <i class="fas fa-key"></i> Τα API κλειδιά μου
                         </a>
                     </li>
 
@@ -57,7 +57,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                     <li class="nav-item">
                         <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#reportsSubmenu">
                             <i class="fas fa-chart-line"></i>
-                            <span>Reports</span>
+                            <span>Αναφορές</span>
                             <i class="fas fa-angle-down ms-auto"></i>
                         </a>
                         <div class="collapse" id="reportsSubmenu">
@@ -65,19 +65,19 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                                 <li class="nav-item">
                                     <a href="/WebEngineering/pages/Reports/select-report.php" class="nav-link">
                                         <i class="fas fa-file-alt"></i>
-                                        <span>Select Report</span>
+                                        <span>Επιλογή Αναφοράς</span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="/WebEngineering/pages/Reports/general-statistics.php" class="nav-link">
                                         <i class="fas fa-chart-bar"></i>
-                                        <span>General Statistics</span>
+                                        <span>Γενικές Στατιστικές</span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="/WebEngineering/pages/Reports/user-statistics.php" class="nav-link">
                                         <i class="fas fa-users"></i>
-                                        <span>User Statistics</span>
+                                        <span>Στατιστικές Χριστών</span>
                                     </a>
                                 </li>
                             </ul>
@@ -87,17 +87,17 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                     <?php if ($isAdmin): ?>
                         <!-- Admin only options -->
                         <li class="nav-heading mt-3 mb-1 text-uppercase ps-3 small fw-bold text-muted"
-                            style="color: white !important;">Admin</li>
+                            style="color: white !important;">Διαχειριστής</li>
                         <li class="nav-item">
                             <a href="<?php echo $baseUrl ?>admin/dashboard.php"
                                 class="nav-link <?php echo strpos($currentPage, 'admin/') !== false ? 'active' : ''; ?>">
-                                <i class="fas fa-tachometer-alt me-2"></i> Admin Dashboard
+                                <i class="fas fa-tachometer-alt me-2"></i> Πίνακας Ελέγχου Διαχειριστή
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="<?php echo $baseUrl ?>admin/api.php"
                                 class="nav-link <?php echo strpos($currentPage, 'admin/') !== false ? 'active' : ''; ?>">
-                                <i class="fas fa-key"></i> API Keys
+                                <i class="fas fa-key"></i> API Κλειδιά
                             </a>
                         </li>
                         <li class="nav-item">
@@ -116,7 +116,7 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
 
                     <li class="nav-item mt-3">
                         <a href="<?php echo $baseUrl ?>logout.php" class="nav-link text-danger">
-                            <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            <i class="fas fa-sign-out-alt me-2"></i> Αποσύνδεση
                         </a>
                     </li>
                 <?php else: ?>
@@ -124,13 +124,13 @@ $baseUrl = $isLocalhost ? "/WebEngineering/pages/" : "/pages/";
                     <li class="nav-item mt-3">
                         <a href="<?php echo $baseUrl ?>login.php"
                             class="nav-link <?php echo $currentPage == 'login.php' ? 'active' : ''; ?>">
-                            <i class="fas fa-sign-in-alt me-2"></i> Login
+                            <i class="fas fa-sign-in-alt me-2"></i> Σύνδεση
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="<?php echo $baseUrl ?>register.php"
                             class="nav-link <?php echo $currentPage == 'register.php' ? 'active' : ''; ?>">
-                            <i class="fas fa-user-plus me-2"></i> Register
+                            <i class="fas fa-user-plus me-2"></i> Εγγραφή
                         </a>
                     </li>
                 <?php endif; ?>

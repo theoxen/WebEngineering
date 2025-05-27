@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate email format
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $_SESSION['message'] = "Invalid email format";
+        $_SESSION['message'] = "Λάθος μορφή email";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // Check if email is verified
         if (!$user['email_verified']) {
-            $_SESSION['message'] = "Please verify your email first. Check your inbox for the verification link.";
+            $_SESSION['message'] = "Παρακαλούμε επαληθεύστε πρώτα το email σας. Ελέγξτε τα εισερχόμενά σας για τον σύνδεσμο επαλήθευσης.";
             $_SESSION['toastClass'] = "warning";
             header("Location: " . $_SERVER['PHP_SELF']);
             exit();
@@ -58,22 +58,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($updateStmt->execute()) {
             // Send reset email
             if (sendPasswordResetEmail($email, $username, $resetToken)) {
-                $_SESSION['message'] = "Password reset link has been sent to your email.";
+                $_SESSION['message'] = "Ο σύνδεσμος επαναφοράς κωδικού πρόσβασης έχει σταλεί στο email σας.";
                 $_SESSION['toastClass'] = "success";
                 header("Location: login.php");
                 exit();
             } else {
-                $_SESSION['message'] = "Failed to send email. Please try again later.";
+                $_SESSION['message'] = "Αποτυχία αποστολής email. Παρακαλούμε δοκιμάστε ξανά.";
                 $_SESSION['toastClass'] = "danger";
             }
         } else {
-            $_SESSION['message'] = "An error occurred. Please try again.";
+            $_SESSION['message'] = "Προέκυψε σφάλμα. Παρακαλούμε δοκιμάστε ξανά.";
             $_SESSION['toastClass'] = "danger";
         }
         $updateStmt->close();
     } else {
         // Don't reveal if email exists for security
-        $_SESSION['message'] = "If your email exists in our system, you will receive a password reset link.";
+        $_SESSION['message'] = "Εάν το email σας υπάρχει στο σύστημά μας, θα λάβετε έναν σύνδεσμο επαναφοράς κωδικού πρόσβασης.";
         $_SESSION['toastClass'] = "success";
         header("Location: login.php");
         exit();
@@ -221,23 +221,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <div class="p-5">
                                     <div class="text-center">
                                         <i class="fas fa-unlock-alt auth-icon fa-4x"></i>
-                                        <h1 class="h4 text-gray-900 mb-4">Forgot Your Password?</h1>
-                                        <p class="mb-4">Enter your email address and we'll send you a link to reset your password.</p>
+                                        <h1 class="h4 text-gray-900 mb-4">Ξεχάσατε τον Κωδικό Πρόσβασής σας;</h1>
+                                        <p class="mb-4">Εισάγετε τη διεύθυνση email σας και θα σας στείλουμε έναν σύνδεσμο για την επαναφορά του κωδικού πρόσβασής σας.</p>
                                     </div>
                                     <form class="user" method="post">
                                         <div class="input-group mb-3">
                                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                             <input type="email" class="form-control" id="email" name="email"
-                                                placeholder="Email Address" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                                                placeholder="Διεύθυνση Email" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
                                                 title="Please enter a valid email in format: name@example.com">
                                         </div>
 
                                         <button type="submit" class="btn btn-primary btn-block w-100 mt-3">
-                                            Reset Password
+                                            Eπαναφορά Κωδικού Πρόσβασης
                                         </button>
                                     </form>
                                     <div class="text-center mt-3">
-                                        <a class="link-secondary" href="login.php"><i class="fas fa-arrow-left me-1"></i> Back to Login</a>
+                                        <a class="link-secondary" href="login.php"><i class="fas fa-arrow-left me-1"></i> Πίσω στην Σύνδεση</a>
                                     </div>
                                 </div>
                             </div>

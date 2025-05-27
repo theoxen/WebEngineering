@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate required fields
     if (empty($_POST['email']) || empty($_POST['password'])) {
-        $_SESSION['message'] = "Email and password are required";
+        $_SESSION['message'] = "Το email και ο κωδικός πρόσβασης είναι υποχρεωτικά πεδία.";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate email format
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $_SESSION['message'] = "Invalid email format";
+        $_SESSION['message'] = "Λάθος μορφή email";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -71,20 +71,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     header("Location: homepage.php");
                     exit();
                 } else {
-                    $_SESSION['message'] = "Please verify your email before logging in. Check your inbox for the verification link.";
+                    $_SESSION['message'] = "Παρακαλούμε επαληθεύστε το email σας πριν συνδεθείτε. Ελέγξτε τα εισερχόμενά σας για τον σύνδεσμο επαλήθευσης.";
                     $_SESSION['toastClass'] = "warning";
                 }
             } else {
-                $_SESSION['message'] = "Invalid email or password";
+                $_SESSION['message'] = "Λάθος email ή κωδικός πρόσβασης";
                 $_SESSION['toastClass'] = "warning";
             }
         } else {
-            $_SESSION['message'] = "Invalid email or password";
+            $_SESSION['message'] = "Λάθος email ή κωδικός πρόσβασης";
             $_SESSION['toastClass'] = "warning";
         }
         $stmt->close();
     } else {
-        $_SESSION['message'] = "Database query error";
+        $_SESSION['message'] = "Σφάλμα ερωτήματος βάσης δεδομένων";
         $_SESSION['toastClass'] = "danger";
     }
 
@@ -289,21 +289,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <div class="box-input-field-container">
                                     <div class="text-center">
                                         <i class="fas fa-user-circle auth-icon fa-4x"></i>
-                                        <h1 class="h4 text-gray-900 mb-4">Sign In</h1>
+                                        <h1 class="h4 text-gray-900 mb-4">Σύνδεση</h1>
                                     </div>
                                     <form class="user" method="post" id="loginForm">
                                         <div class="input-group mb-3">
                                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                             <input type="email" class="form-control" id="email" name="email"
-                                                placeholder="Email Address" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
-                                                title="Please enter a valid email in format: name@example.com"
+                                                placeholder="Διεύθυνση Email" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                                                title="Παρακαλώ εισάγετε έγκυρο email σε μορφή: example@example.com"
                                                 value="<?php echo isset($formData['email']) ? htmlspecialchars($formData['email']) : ''; ?>">
                                         </div>
 
                                         <div class="input-group mb-3 password-container">
                                             <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                             <input type="password" class="form-control" id="password" name="password"
-                                                placeholder="Password" required>
+                                                placeholder="Κωδικός Πρόσβασης" required>
                                             <i class="fas fa-eye password-toggle" id="togglePassword"></i>
                                         </div>
 
@@ -312,13 +312,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </button>
                                     </form>
                                     <div class="text-center mb-3" style="margin-top: 5px;">
-                                        <a href="forgot-password.php" class="link-secondary">Forgot Password?</a>
+                                        <a href="forgot-password.php" class="link-secondary">Ξεχάσατε τον Κωδικό Πρόσβασής σας;</a>
                                     </div>
                                     <div class="divider">
-                                        <span>OR</span>
+                                        <span>Ή</span>
                                     </div>
                                     <div class="text-center">
-                                        <p>Don't have an account? <a class="link-secondary" href="./register.php">Create Account</a></p>
+                                        <p>Δεν έχετε λογαριασμό; <a class="link-secondary" href="./register.php">Δημιουργία Λογαριασμού</a></p>
                                     </div>
                                 </div>
                             </div>

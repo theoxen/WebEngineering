@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $validToken) {
 
     // Validate password
     if (strlen($password) < 8) {
-        $_SESSION['message'] = "Password must be at least 8 characters long";
+        $_SESSION['message'] = "Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες";
         $_SESSION['toastClass'] = "warning";
         header("Location: reset-password.php?token=" . $token);
         exit();
@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $validToken) {
 
     // Check if passwords match
     if ($password !== $confirmPassword) {
-        $_SESSION['message'] = "Passwords do not match";
+        $_SESSION['message'] = "Ο κωδικός επαλήθευσης δεν ταιριάζει με τον νέο κωδικό πρόσβασης";
         $_SESSION['toastClass'] = "warning";
         header("Location: reset-password.php?token=" . $token);
         exit();
@@ -62,14 +62,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $validToken) {
     $updateStmt->bind_param("si", $passwordHash, $userId);
 
     if ($updateStmt->execute()) {
-        $_SESSION['message'] = "Your password has been reset successfully. You can now login with your new password.";
+        $_SESSION['message'] = "Ο κωδικός πρόσβασής σας έχει επαναρυθμιστεί με επιτυχία. Μπορείτε τώρα να συνδεθείτε.";
         $_SESSION['toastClass'] = "success";
         header("Location: login.php");
         $updateStmt->close();
         exit();
 
     } else {
-        $_SESSION['message'] = "Error resetting password: " . $mysqli->error;
+        $_SESSION['message'] = "Σφάλμα επαναφοράς κωδικού πρόσβασης: " . $mysqli->error;
         $_SESSION['toastClass'] = "danger";
         header("Location: reset-password.php?token=" . $token);
         $updateStmt->close();
@@ -78,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $validToken) {
 }
 
 if (!$validToken && !empty($token)) {
-    $_SESSION['message'] = "Invalid or expired reset token. Please request a new password reset link.";
+    $_SESSION['message'] = "Μη έγκυρο ή ληγμένο σύνδεσμο επαναφοράς κωδικού πρόσβασης.";
     $_SESSION['toastClass'] = "warning";
     header("Location: forgot-password.php");
     exit();
@@ -239,9 +239,8 @@ if (!$validToken && !empty($token)) {
                                     <div class="p-5">
                                         <div class="text-center">
                                             <i class="fas fa-key auth-icon fa-4x"></i>
-                                            <h1 class="h4 text-gray-900 mb-4">Reset Your Password</h1>
-                                            <p class="mb-4">Hello <?php echo htmlspecialchars($username); ?>, please create
-                                                a new password.</p>
+                                            <h1 class="h4 text-gray-900 mb-4">Επαναφορά Κωδικού Προσβασης</h1>
+                                            <p class="mb-4">Γεια σου <?php echo htmlspecialchars($username); ?>, παρακαλώ πληκτρολογήστε τον νέο κωδικό πρόσβασης.</p>
                                         </div>
                                         <form class="user" method="post">
                                             <div class="input-group mb-3 password-container">
@@ -251,7 +250,7 @@ if (!$validToken && !empty($token)) {
                                                 <i class="fas fa-eye password-toggle" id="togglePassword"></i>
                                             </div>
                                             <div class="form-text text-muted mb-2">
-                                                Password must be at least 8 characters long
+                                                Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες
                                             </div>
 
                                             <div class="progress mb-3">
@@ -261,7 +260,7 @@ if (!$validToken && !empty($token)) {
                                                 </div>
                                             </div>
                                             <small id="passwordHelpBlock" class="form-text text-muted mb-3">
-                                                Password strength: <span id="password-strength-text">No password</span>
+                                                Δύναμη Κωδικού: <span id="password-strength-text">Κανένας Κωδικός</span>
                                             </small>
 
                                             <div class="input-group mb-3 password-container">
@@ -272,7 +271,7 @@ if (!$validToken && !empty($token)) {
                                             </div>
 
                                             <button type="submit" class="btn btn-primary btn-block w-100 mt-3">
-                                                Reset Password
+                                                Επαναφορά Κωδικού
                                             </button>
                                         </form>
                                     </div>
@@ -283,10 +282,9 @@ if (!$validToken && !empty($token)) {
                                 <div class="card-body p-0">
                                     <div class="p-5 text-center">
                                         <i class="fas fa-exclamation-triangle auth-icon fa-4x text-warning"></i>
-                                        <h1 class="h4 text-gray-900 mb-4">Invalid Reset Link</h1>
-                                        <p>The password reset link is invalid or has expired.</p>
-                                        <a href="forgot-password.php" class="btn btn-primary mt-3">Request New Reset
-                                            Link</a>
+                                        <h1 class="h4 text-gray-900 mb-4">Λάθος Σύνδεσμος Επαναφοράς Κωδικου</h1>
+                                        <p>Ο σύνδεσμος επαναφοράς κωδικού πρόσβασης είναι μη έγκυρος ή έχει λήξει.</p>
+                                        <a href="forgot-password.php" class="btn btn-primary mt-3">Ζητήστε Νέο Σύνδεσμο Επαναφοράς</a>
                                     </div>
                                 </div>
                             </div>

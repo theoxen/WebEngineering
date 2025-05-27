@@ -28,20 +28,20 @@ if (isset($_GET['token']) && !empty($_GET['token'])) {
         $updateStmt->bind_param("i", $userId);
         
         if ($updateStmt->execute()) {
-            $message = "Your email has been verified successfully! You can now log in.";
+            $message = "Το email σας έχει επαληθευτεί με επιτυχία! Μπορείτε τώρα να συνδεθείτε.";
             $messageClass = "success";
         } else {
-            $message = "Error verifying email: " . $mysqli->error;
+            $message = "Σφάλμα επαλήθευσης email: " . $mysqli->error;
             $messageClass = "danger";
         }
         $updateStmt->close();
     } else {
-        $message = "Invalid or expired verification token.";
+        $message = "Μη έγκυρο ή ληγμένο token επαλήθευσης.";
         $messageClass = "warning";
     }
     $stmt->close();
 } else {
-    $message = "No verification token provided.";
+    $message = "Δεν παρέχεται token επαλήθευσης.";
     $messageClass = "warning";
 }
 

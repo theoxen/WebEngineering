@@ -27,7 +27,7 @@ function sendVerificationEmail($to, $username, $token)
         $sendgrid = new \SendGrid('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');
         $email = new \SendGrid\Mail\Mail();
         $email->setFrom('theodosisx874@gmail.com', 'WebEngineering');
-        $email->setSubject('Verify Your Email Address');
+        $email->setSubject('Επαλήθευση Διεύθυνσης Email');
         $email->addTo($to);
 
         $email->addContent("text/html", "
@@ -43,13 +43,13 @@ function sendVerificationEmail($to, $username, $token)
         <body>
             <div class='container'>
                 <div class='content'>
-                    <p>Hello {$username},</p>
-                    <p>Thank you for registering! Please verify your email address by clicking the button below:</p>
+                    <p>Γεια σας {$username},</p>
+                    <p>Ευχαριστούμε για την εγγραφή σας! Παρακαλούμε επαληθεύστε τη διεύθυνση email σας κάνοντας κλικ στο παρακάτω κουμπί:</p>
                     <p style='text-align: center;'>
-                        <a href='{$verificationLink}' class='button'>Verify Email Address</a>
+                        <a href='{$verificationLink}' class='button'>Επαλήθευση Διεύθυνσης Email</a>
                     </p>
-                    <p>If you didn't create this account, you can ignore this email.</p>
-                    <p>Alternatively, copy and paste this link into your browser:</p>
+                    <p>Αν δεν δημιουργήσατε εσείς αυτόν τον λογαριασμό, μπορείτε να αγνοήσετε αυτό το email.</p>
+                    <p>Εναλλακτικά, αντιγράψτε και επικολλήστε αυτόν τον σύνδεσμο στον περιηγητή σας:</p>
                     <p>{$verificationLink}</p>
                 </div>
             </div>
@@ -79,7 +79,7 @@ function sendPasswordResetEmail($to, $username, $token)
         $sendgrid = new \SendGrid('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');
         $email = new \SendGrid\Mail\Mail();
         $email->setFrom('theodosisx874@gmail.com', 'WebEngineering');
-        $email->setSubject('Reset Your Password');
+        $email->setSubject('Επαναφορά Κωδικού Πρόσβασης');
         $email->addTo($to);
 
         $email->addContent("text/html", "
@@ -96,18 +96,18 @@ function sendPasswordResetEmail($to, $username, $token)
         <body>
             <div class='container'>
                 <div class='content'>
-                    <h2>Reset Your Password</h2>
-                    <p>Hello {$username},</p>
-                    <p>We received a request to reset your password. Click the button below:</p>
+                    <h2>Επαναφορά του Κωδικού Πρόσβασής σας</h2>
+                    <p>Γεια σας {$username},</p>
+                    <p>Λάβαμε ένα αίτημα για επαναφορά του κωδικού πρόσβασής σας. Κάντε κλικ στο παρακάτω κουμπί:</p>
                     <p style='text-align: center;'>
-                        <a href='{$resetLink}' class='button'>Reset Password</a>
+                        <a href='{$resetLink}' class='button'>Επαναφορά Κωδικού</a>
                     </p>
-                    <p class='warning'>This link will expire in 1 hour.</p>
-                    <p>If you didn’t request this, just ignore this email.</p>
+                    <p class='warning'>Αυτός ο σύνδεσμος θα λήξει σε 1 ώρα.</p>
+                    <p>Αν δεν ζητήσατε εσείς αυτήν την επαναφορά, παρακαλούμε αγνοήστε αυτό το email.</p>
                     <p>{$resetLink}</p>
                 </div>
             </div>
-        </body>
+</body>
         </html>");
 
         $response = $sendgrid->send($email);
@@ -130,24 +130,24 @@ function sendCatalogNotificationEmail($to, $username, $notificationType, $catalo
     // Generate appropriate subject and title based on notification type
     switch ($notificationType) {
         case 'new_catalog':
-            $subject = "New Catalog Published: $catalogName";
-            $title = "New Catalog Available";
-            $message = "A new catalog has been published.";
+            $subject = "Νέος Κατάλογος Δημοσιεύτηκε: $catalogName";
+            $title = "Νέος Κατάλογος Διαθέσιμος";
+            $message = "Ένας νέος κατάλογος έχει δημοσιευτεί.";
             break;
         case 'catalog_update':
-            $subject = "Catalog Updated: $catalogName";
-            $title = "Catalog Update";
-            $message = "The catalog has been updated with new information.";
+            $subject = "Ενημέρωση Καταλόγου: $catalogName";
+            $title = "Ενημέρωση Καταλόγου";
+            $message = "Ο κατάλογος έχει ενημερωθεί με νέες πληροφορίες.";
             break;
         case 'position_change':
-            $subject = "Position Change in $catalogName";
-            $title = "Your Position Has Changed";
-            $message = "There has been a change in your position.";
+            $subject = "Αλλαγή Θέσης στον $catalogName";
+            $title = "Η Θέση σας Άλλαξε";
+            $message = "Υπήρξε αλλαγή στη θέση σας.";
             break;
         default:
-            $subject = "Catalog Notification: $catalogName";
-            $title = "Catalog Notification";
-            $message = "There is new information about your catalog.";
+            $subject = "Ειδοποίηση Καταλόγου: $catalogName";
+            $title = "Ειδοποίηση Καταλόγου";
+            $message = "Υπάρχουν νέες πληροφορίες για τον κατάλογό σας.";
     }
 
     // Build catalog link
@@ -177,22 +177,22 @@ function sendCatalogNotificationEmail($to, $username, $notificationType, $catalo
             </style>
         </head>
         <body>
-            <div class='container'>
+           <div class='container'>
                 <div class='content'>
                     <h2>{$title}</h2>
-                    <p>Hello {$username},</p>
+                    <p>Γεια σας {$username},</p>
                     <p>{$message}</p>
                     
                     <div class='details'>
-                        <p>Catalog: <span class='catalog-name'>{$catalogName}</span></p>
+                        <p>Κατάλογος: <span class='catalog-name'>{$catalogName}</span></p>
                         " . ($details ? "<p>{$details}</p>" : "") . "
                     </div>
                     
                     <p style='text-align: center;'>
-                        <a href='{$catalogLink}' class='button'>View Catalog</a>
+                        <a href='{$catalogLink}' class='button'>Προβολή Καταλόγου</a>
                     </p>
                     
-                    <p>If you wish to change your notification preferences, visit your account settings.</p>
+                    <p>Αν επιθυμείτε να αλλάξετε τις προτιμήσεις ειδοποιήσεών σας, επισκεφθείτε τις ρυθμίσεις του λογαριασμού σας.</p>
                 </div>
             </div>
         </body>

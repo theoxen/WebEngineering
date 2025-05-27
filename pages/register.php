@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         empty($_POST['phone']) || empty($_POST['dob']) ||
         empty($_POST['password']) || empty($_POST['confirm_password'])
     ) {
-        $_SESSION['message'] = "All fields are required";
+        $_SESSION['message'] = "Όλα τα πεδία είναι υποχρεωτικά";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate password length
     if (strlen($_POST['password']) < 8) {
-        $_SESSION['message'] = "Password must be at least 8 characters long";
+        $_SESSION['message'] = "Ο κωδικός πρόσβασης πρέπει να έχει τουλάχιστον 8 χαρακτήρες";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Check if passwords match
     if ($_POST['password'] !== $_POST['confirm_password']) {
-        $_SESSION['message'] = "Passwords do not match";
+        $_SESSION['message'] = "Ό κωδικός επαλήθευσης δεν ταιριάζει με τον αρχικό κωδικό";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate email format
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $_SESSION['message'] = "Invalid email format";
+        $_SESSION['message'] = "Λάθος μορφή email";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -74,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate phone number (backend validation)
     if (!ctype_digit($phone)) {
-        $_SESSION['message'] = "Phone number must contain only digits";
+        $_SESSION['message'] = "Ο αριθμός τηλεφώνου πρέπει να περιέχουν μόνο αριθμούς";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validate date of birth
     $dateObj = DateTime::createFromFormat('Y-m-d', $dob);
     if (!$dateObj || $dateObj->format('Y-m-d') !== $dob) {
-        $_SESSION['message'] = "Invalid date format";
+        $_SESSION['message'] = "Λάθος μορφή ημερομηνίας γέννησης";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -92,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check if date of birth is in the past
     $today = new DateTime('today');
     if ($dateObj >= $today) {
-        $_SESSION['message'] = "Date of birth must be in the past";
+        $_SESSION['message'] = "Η ημερομηνία γέννησης πρέπει να είναι στο παρελθόν";
         $_SESSION['toastClass'] = "warning";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -118,13 +118,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $checkUsernameStmt->store_result();
 
     if ($checkEmailStmt->num_rows > 0) {
-        $_SESSION['message'] = "Email address already exists";
+        $_SESSION['message'] = "Το email ήδη υπάρχει";
         $_SESSION['toastClass'] = "warning";
     } else if ($checkPhoneStmt->num_rows > 0) {
-        $_SESSION['message'] = "Phone number already exists";
+        $_SESSION['message'] = "Το τηλέφωνο ήδη υπάρχει";
         $_SESSION['toastClass'] = "warning";
     } else if ($checkUsernameStmt->num_rows > 0) {
-        $_SESSION['message'] = "Username already exists";
+        $_SESSION['message'] = "Το όνομα χρήστη ήδη υπάρχει";
         $_SESSION['toastClass'] = "warning";
     } else {
 
@@ -148,13 +148,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Send verification email
             if (sendVerificationEmail($email, $username, $verificationToken)) {
-                $_SESSION['message'] = "Account created successfully! Please check your email to verify your account.";
+                $_SESSION['message'] = "Ο λογαριασμός σας δημιουργήθηκε με επιτυχία! Παρακαλούμε ελέγξτε το email σας για να επαληθεύσετε τον λογαριασμό σας.";
                 $_SESSION['toastClass'] = "success";
 
                 header("Location: login.php");
                 exit();
             } else {
-                $_SESSION['message'] = "Account created but unable to send verification email. Please contact support.";
+                $_SESSION['message'] = "Σφάλμα κατά την αποστολή του email επαλήθευσης. Παρακαλούμε δοκιμάστε ξανά.";
                 $_SESSION['toastClass'] = "warning";
 
                 header("Location: login.php");
@@ -374,29 +374,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <div class="box-input-field-container">
                                     <div class="text-center">
                                         <i class="fas fa-user-circle auth-icon fa-4x"></i>
-                                        <h1 class="h4 text-gray-900 mb-4">Create Your Account</h1>
+                                        <h1 class="h4 text-gray-900 mb-4">Δημιουργήστε τον Λογαριασμό σας</h1>
                                     </div>
                                     <form class="user" method="post" id="registerForm">
                                         <div class="input-group mb-3">
                                             <span class="input-group-text"><i class="fas fa-user"></i></span>
                                             <input type="text" class="form-control" id="username" name="username"
-                                                placeholder="Username" required
+                                                placeholder="Όνομα Χρήστη" required
                                                 value="<?php echo isset($formData['username']) ? htmlspecialchars($formData['username']) : ''; ?>">
                                         </div>
 
                                         <div class="input-group mb-3">
                                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                             <input type="email" class="form-control" id="email" name="email"
-                                                placeholder="Email Address" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
-                                                title="Please enter a valid email in format: name@example.com"
+                                                placeholder="Διεύθυνση Email" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                                                title="Παρακαλώ εισάγετε μια έγκυρη διεύθυνση email (π.χ. example@gmail.com)"
                                                 value="<?php echo isset($formData['email']) ? htmlspecialchars($formData['email']) : ''; ?>">
                                         </div>
 
                                         <div class="input-group mb-3">
                                             <span class="input-group-text"><i class="fas fa-phone"></i></span>
                                             <input type="tel" class="form-control" id="phone" name="phone"
-                                                placeholder="Phone Number" required pattern="[0-9]+"
-                                                title="Please enter numbers only"
+                                                placeholder="Αριθμός Τηλεφώνου" required pattern="[0-9]+"
+                                                title="Μονο αριθμοί επιτρέπονται"
                                                 oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                                 value="<?php echo isset($formData['phone']) ? htmlspecialchars($formData['phone']) : ''; ?>">
                                         </div>
@@ -404,17 +404,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <div class="input-group mb-3">
                                             <span class="input-group-text"><i class="fas fa-calendar"></i></span>
                                             <input type="date" class="form-control" id="dob" name="dob"
-                                                placeholder="Date of Birth" required
+                                                placeholder="Ημερομηνία Γέννησης" required
                                                 value="<?php echo isset($formData['dob']) ? htmlspecialchars($formData['dob']) : ''; ?>">
                                         </div>
                                         <div class="input-group mb-3 password-container">
                                             <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                             <input type="password" class="form-control" id="password" name="password"
-                                                placeholder="Password" required>
+                                                placeholder="Κωδικός Πρόσβασης" required>
                                             <i class="fas fa-eye password-toggle" id="togglePassword"></i>
                                         </div>
                                         <div class="form-text text-muted mb-2">
-                                            Password must be at least 8 characters long
+                                            Ο κωδικός πρόσβασης πρέπει να έχει τουλάχιστον 8 χαρακτήρες
                                         </div>
 
                                         <div class="progress mb-3" style="height: 5px;">
@@ -424,27 +424,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             </div>
                                         </div>
                                         <small id="passwordHelpBlock" class="form-text text-muted mb-3">
-                                            Password strength: <span id="password-strength-text">No password</span>
+                                            Δύναμη Κωδικού: <span id="password-strength-text">Κανένας Κωδικός</span>
                                         </small>
 
                                         <div class="input-group mb-3 password-container">
                                             <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                             <input type="password" class="form-control" id="confirm_password"
-                                                name="confirm_password" placeholder="Confirm Password" required>
+                                                name="confirm_password" placeholder="Επαλήθευση Κωδικου Πρόσβασης" required>
                                             <i class="fas fa-eye password-toggle" id="toggleConfirmPassword"></i>
                                         </div>
                                         <div id="password-match-message" class="form-text text-muted mb-3"></div>
 
                                         <button type="submit" class="btn btn-primary btn-block w-100 mt-3">
-                                            Create Account
+                                            Δημιουργία Λογαριασμού
                                         </button>
                                     </form>
                                     <div class="divider">
-                                        <span>OR</span>
+                                        <span>Ή</span>
                                     </div>
                                     <div class="text-center">
-                                        <p>Already have an account? <a class="link-secondary" href="./login.php">Sign
-                                                In</a></p>
+                                        <p>Έχετε ήδη λογαριασμό; <a class="link-secondary" href="./login.php">
+                                            Συνδεθείτε Εδώ
+                                        </a></p>
                                     </div>
                                 </div>
                             </div>
@@ -554,10 +555,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             if (passwordValue === confirmValue) {
-                passwordMatchMessage.textContent = 'Passwords match';
+                passwordMatchMessage.textContent = 'Οι κωδικοί ταιριάζουν';
                 passwordMatchMessage.style.setProperty('color', '#28a745', 'important');
             } else {
-                passwordMatchMessage.textContent = 'Passwords do not match';
+                passwordMatchMessage.textContent = 'Οι κωδικοί δεν ταιριάζουν';
                 passwordMatchMessage.style.setProperty('color', '#dc3545', 'important');
             }
         }
@@ -569,7 +570,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if (passwordValue !== confirmValue) {
                 e.preventDefault();
-                passwordMatchMessage.textContent = 'Passwords do not match';
+                passwordMatchMessage.textContent = 'Οι κωδικοί δεν ταιριάζουν';
                 passwordMatchMessage.style.color = '#dc3545';
             }
         });
