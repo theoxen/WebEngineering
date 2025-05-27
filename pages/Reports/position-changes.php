@@ -110,7 +110,7 @@ if (count($semesters) < 2) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Position Changes Report</title>
+    <title>Αναφορά Αλλαγών Θέσης</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../components/sidebar/sidebar.css">
     <style>
@@ -140,33 +140,33 @@ if (count($semesters) < 2) {
         <div class="container">
             <div class="mb-3">
                 <a href="select-report.php" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back
+                    <i class="fas fa-arrow-left"></i> Πίσω
                 </a>
             </div>
             
             <div class="page-header mb-4">
-                <h1>Position Changes Report</h1>
+                <h1>Αναφορά Αλλαγών Θέσης</h1>
                 <?php if (isset($current['year'])): ?>
                 <p class="text-muted">
-                    Comparing <?= htmlspecialchars($current['season'] . ' ' . $current['year']) ?> 
-                    to <?= htmlspecialchars($previous['season'] . ' ' . $previous['year']) ?>
+                    Σύγκριση <?= htmlspecialchars($current['season'] . ' ' . $current['year']) ?> 
+                    με <?= htmlspecialchars($previous['season'] . ' ' . $previous['year']) ?>
                 </p>
                 <div class="badge bg-primary">
-                    Field: <?= htmlspecialchars($field) ?> | Type: <?= htmlspecialchars($type) ?>
+                    Πεδίο: <?= htmlspecialchars($field) ?> | Τύπος: <?= htmlspecialchars($type) ?>
                 </div>
                 <?php endif; ?>
             </div>
 
             <?php if (isset($error)): ?>
-                <div class="alert alert-warning"><?= htmlspecialchars($error) ?></div>
+                <div class="alert alert-warning">Δεν υπάρχουν αρκετά δεδομένα για σύγκριση - απαιτούνται τουλάχιστον δύο εξάμηνα.</div>
             <?php else: ?>
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="search-box mb-3">
                             <input type="text" id="searchInput" class="form-control" 
-                                   placeholder="Search candidates...">
+                                   placeholder="Αναζήτηση υποψηφίων...">
                             <div class="spinner-border text-primary spinner-sm" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                                <span class="visually-hidden">Φόρτωση...</span>
                             </div>
                         </div>
                         
@@ -174,18 +174,18 @@ if (count($semesters) < 2) {
                             <table class="table table-hover">
                                 <thead class="sticky-header">
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Current Rank</th>
-                                        <th>Previous Rank</th>
-                                        <th>Change</th>
-                                        <th>Current Points</th>
-                                        <th>Previous Points</th>
-                                        <th>Points Change</th>
+                                        <th>Όνομα</th>
+                                        <th>Τρέχουσα Θέση</th>
+                                        <th>Προηγούμενη Θέση</th>
+                                        <th>Αλλαγή</th>
+                                        <th>Τρέχοντα Μόρια</th>
+                                        <th>Προηγούμενα Μόρια</th>
+                                        <th>Αλλαγή Μορίων</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableBody">
                                     <tr>
-                                        <td colspan="7" class="text-center">Loading...</td>
+                                        <td colspan="7" class="text-center">Φόρτωση...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -193,8 +193,8 @@ if (count($semesters) < 2) {
                         
                         <div class="d-flex justify-content-between align-items-center mt-3">
                             <div class="pagination-info">
-                                Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> 
-                                of <span id="totalItems">0</span> entries
+                                Εμφάνιση <span id="pageStart">0</span> έως <span id="pageEnd">0</span> 
+                                από <span id="totalItems">0</span> εγγραφές
                             </div>
                             <ul class="pagination mb-0">
                                 <li class="page-item disabled" id="prevPage">
@@ -265,7 +265,7 @@ if (count($semesters) < 2) {
                 console.error('Error:', error);
                 elements.table.innerHTML = `
                     <tr><td colspan="7" class="text-center text-danger">
-                        Error loading data. Please try again.
+                        Σφάλμα φόρτωσης δεδομένων. Παρακαλώ δοκιμάστε ξανά.
                     </td></tr>`;
             } finally {
                 elements.spinner.style.display = 'none';

@@ -125,7 +125,7 @@ foreach ($trends as $trend) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracking Report</title>
+    <title>Αναφορά Παρακολούθησης</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../../components/sidebar/sidebar.css">
@@ -170,14 +170,14 @@ foreach ($trends as $trend) {
         <!-- Add back button -->
         <div class="mb-3">
             <a href="select-report.php" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back
+                <i class="fas fa-arrow-left me-2"></i>Πίσω
             </a>
         </div>
 
         <!-- Existing page header -->
         <div class="page-header mb-4">
-            <h1 class="page-title">My Tracking Report</h1>
-            <p class="text-muted">Monitoring <?= $stats['total_tracked'] ?> candidates across <?= $stats['unique_fields'] ?> fields</p>
+            <h1 class="page-title">Η Αναφορά Παρακολούθησής μου</h1>
+            <p class="text-muted">Παρακολούθηση <?= $stats['total_tracked'] ?> υποψηφίων σε <?= $stats['unique_fields'] ?> πεδία</p>
         </div>
         <!-- Statistics Cards -->
         <div class="row g-3 mb-4">
@@ -185,7 +185,7 @@ foreach ($trends as $trend) {
                 <div class="card h-100">
                     <div class="card-body d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h6 class="text-muted mb-1">Total Tracked</h6>
+                            <h6 class="text-muted mb-1">Σύνολο Παρακολούθησης</h6>
                             <h3 class="mb-0"><?= $stats['total_tracked'] ?></h3>
                         </div>
                         <div class="text-primary">
@@ -198,7 +198,7 @@ foreach ($trends as $trend) {
                 <div class="card h-100">
                     <div class="card-body d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h6 class="text-muted mb-1">Own Candidates</h6>
+                            <h6 class="text-muted mb-1">Δικοί μου Υποψήφιοι</h6>
                             <h3 class="mb-0"><?= $stats['own_candidates'] ?></h3>
                         </div>
                         <div class="text-success">
@@ -211,7 +211,7 @@ foreach ($trends as $trend) {
                 <div class="card h-100">
                     <div class="card-body d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h6 class="text-muted mb-1">Fields Tracked</h6>
+                            <h6 class="text-muted mb-1">Πεδία Παρακολούθησης</h6>
                             <h3 class="mb-0"><?= $stats['unique_fields'] ?></h3>
                         </div>
                         <div class="text-info">
@@ -225,36 +225,36 @@ foreach ($trends as $trend) {
         <div class="row mb-4">
             <div class="col-md-6">
                 <div class="card">
-                    <div class="card-header"><h5 class="card-title mb-0">Points Trend</h5></div>
+                    <div class="card-header"><h5 class="card-title mb-0">Τάση Μορίων</h5></div>
                     <div class="card-body"><canvas id="pointsTrendChart" height="300"></canvas></div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="card">
-                    <div class="card-header"><h5 class="card-title mb-0">Ranking Changes</h5></div>
+                    <div class="card-header"><h5 class="card-title mb-0">Αλλαγές Κατάταξης</h5></div>
                     <div class="card-body"><canvas id="rankingChart" height="300"></canvas></div>
                 </div>
             </div>
         </div>
         <!-- Tracked Candidates Table -->
         <div class="card">
-            <div class="card-header"><h5 class="card-title mb-0">Tracked Candidates</h5></div>
+            <div class="card-header"><h5 class="card-title mb-0">Υποψήφιοι υπό Παρακολούθηση</h5></div>
             <div class="card-body">
                 <div class="search-box">
-                    <input type="text" id="searchTable" class="form-control" placeholder="Search candidates...">
+                    <input type="text" id="searchTable" class="form-control" placeholder="Αναζήτηση υποψηφίων...">
                 </div>
                 <div class="table-container">
                     <table class="table table-hover">
                         <thead class="sticky-header">
                             <tr>
-                                <th>Name</th>
-                                <th>Field</th>
-                                <th>Type</th>
-                                <th>Season/Year</th>
-                                <th>Ranking</th>
-                                <th>Points</th>
-                                <th>Experience</th>
-                                <th>Status</th>
+                                <th>Όνομα</th>
+                                <th>Πεδίο</th>
+                                <th>Τύπος</th>
+                                <th>Εξάμηνο/Έτος</th>
+                                <th>Κατάταξη</th>
+                                <th>Μόρια</th>
+                                <th>Εμπειρία</th>
+                                <th>Κατάσταση</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -311,16 +311,8 @@ foreach ($trends as $trend) {
                 </div>
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <div class="pagination-info">
-                        Showing <span id="pageStart">1</span> to <span id="pageEnd">10</span> of <span id="totalItems">0</span> entries
+                        Εμφάνιση <span id="pageStart">1</span> έως <span id="pageEnd">10</span> από <span id="totalItems">0</span> εγγραφές
                     </div>
-                    <ul class="pagination mb-0">
-                        <li class="page-item" id="previousPage">
-                            <button class="page-link" aria-label="Previous"><span aria-hidden="true">&laquo;</span></button>
-                        </li>
-                        <li class="page-item" id="nextPage">
-                            <button class="page-link" aria-label="Next"><span aria-hidden="true">&raquo;</span></button>
-                        </li>
-                    </ul>
                 </div>
             </div>
         </div>
@@ -383,8 +375,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     callbacks: {
                         label: function(context) {
                             const points = context.parsed.y;
-                            if (points === null) return `${context.dataset.label}: No data`;
-                            return `${context.dataset.label}: ${points.toFixed(1)} points`;
+                            if (points === null) return `${context.dataset.label}: Δεν υπάρχουν δεδομένα`;
+                            return `${context.dataset.label}: ${points.toFixed(1)} μόρια`;
                         }
                     }
                 }
@@ -405,7 +397,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     suggestedMax: 25,
                     title: { 
                         display: true,
-                        text: 'Points',
+                        text: 'Μόρια',
                         font: {
                             weight: 'bold'
                         }
@@ -457,7 +449,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     beginAtZero: true,
                     title: { 
                         display: true, 
-                        text: 'Ranking' 
+                        text: 'Κατάταξη' 
                     },
                     ticks: { 
                         stepSize: 1,

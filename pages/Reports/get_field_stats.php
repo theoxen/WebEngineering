@@ -29,15 +29,15 @@ $stmt->bind_param("sssi", ...$params);
 $stmt->execute();
 $stats = $stmt->get_result()->fetch_assoc();
 
-// Format response data
+// Format response data with Greek labels
 $response = [
     'stats' => [
-        'Total Candidates' => $stats['total_candidates'],
-        'Average Points' => $stats['avg_points'],
-        'Highest Points' => $stats['max_points'],
-        'Lowest Points' => $stats['min_points'],
-        'Average Experience' => $stats['avg_experience'] . ' years',
-        'Average Grade' => $stats['avg_grade']
+        'Σύνολο Υποψηφίων' => $stats['total_candidates'],
+        'Μέσος Όρος Μορίων' => $stats['avg_points'],
+        'Υψηλότερα Μόρια' => $stats['max_points'],
+        'Χαμηλότερα Μόρια' => $stats['min_points'],
+        'Μέση Εμπειρία' => $stats['avg_experience'] . ' έτη',
+        'Μέσος Όρος Βαθμού' => $stats['avg_grade']
     ]
 ];
 
@@ -48,7 +48,7 @@ $points_colors = [];
 for ($i = 0; $i < 10; $i++) {
     $min = $i;
     $max = $i + 1;
-    $label = "$min-$max";
+    $label = "Μόρια $min-$max";
     $stmt = $mysqli->prepare(
         "SELECT COUNT(*) as count 
          FROM rankinglist r 
@@ -83,7 +83,7 @@ $stmt->execute();
 $exp_dist = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 $response['experienceDistribution'] = [
-    'labels' => array_map(function($item) { return $item['years'] . ' years'; }, $exp_dist),
+    'labels' => array_map(function($item) { return $item['years'] . ' έτη'; }, $exp_dist),
     'data' => array_map('intval', array_column($exp_dist, 'count'))
 ];
 

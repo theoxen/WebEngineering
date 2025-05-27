@@ -74,7 +74,7 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Statistics Report</title>
+    <title>Στατιστικά Χρηστών</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -146,12 +146,18 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
     <div class="content-wrapper">
         <div class="container">
+            <!-- Add back button -->
+            <div class="mb-3">
+                <a href="select-report.php" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Πίσω
+                </a>
+            </div>
 
-            <!-- Page header with date range -->
+            <!-- Existing page header -->
             <div class="page-header mb-4">
-                <h1 class="page-title">Candidate Entry Report</h1>
-                <p class="text-muted">Entries from <?php echo date('M d, Y', strtotime($start_date)); ?> 
-                to <?php echo date('M d, Y', strtotime($end_date)); ?> (<?php echo $days; ?> days)</p>
+                <h1 class="page-title">Αναφορά Εγγραφών Υποψηφίων</h1>
+                <p class="text-muted">Εγγραφές από <?php echo date('d/m/Y', strtotime($start_date)); ?> 
+                έως <?php echo date('d/m/Y', strtotime($end_date)); ?> (<?php echo $days; ?> ημέρες)</p>
             </div>
 
             <!-- Statistics Cards -->
@@ -159,7 +165,7 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 <div class="col-md-3">
                     <div class="card bg-primary text-white">
                         <div class="card-body">
-                            <h6>Total Candidates</h6>
+                            <h6>Σύνολο Υποψηφίων</h6>
                             <h3><?php echo $stats['total_candidates']; ?></h3>
                         </div>
                     </div>
@@ -167,7 +173,7 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 <div class="col-md-3">
                     <div class="card bg-success text-white">
                         <div class="card-body">
-                            <h6>High Performers (90+ points)</h6>
+                            <h6>Υψηλές Επιδόσεις (90+ μόρια)</h6>
                             <h3><?php echo $stats['high_performers']; ?></h3>
                         </div>
                     </div>
@@ -175,7 +181,7 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 <div class="col-md-3">
                     <div class="card bg-info text-white">
                         <div class="card-body">
-                            <h6>Experienced (5+ years)</h6>
+                            <h6>Με Εμπειρία (5+ έτη)</h6>
                             <h3><?php echo $stats['experienced_candidates']; ?></h3>
                         </div>
                     </div>
@@ -183,7 +189,7 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 <div class="col-md-3">
                     <div class="card bg-warning text-white">
                         <div class="card-body">
-                            <h6>Average Points</h6>
+                            <h6>Μέσος Όρος Μορίων</h6>
                             <h3><?php echo number_format($stats['avg_points'], 1); ?></h3>
                         </div>
                     </div>
@@ -193,7 +199,7 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             <!-- Registration Trend Chart -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Daily Candidate Entries</h5>
+                    <h5 class="card-title mb-0">Ημερήσιες Εγγραφές Υποψηφίων</h5>
                 </div>
                 <div class="card-body">
                     <div style="height: 400px"> <!-- Added fixed height container -->
@@ -205,23 +211,23 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             <!-- New Candidate Entries Table with Search -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title">Candidate Entries</h5>
+                    <h5 class="card-title">Εγγραφές Υποψηφίων</h5>
                 </div>
                 <div class="card-body">
                     <div class="search-box">
-                        <input type="text" id="searchTable" class="form-control" placeholder="Search candidates...">
+                        <input type="text" id="searchTable" class="form-control" placeholder="Αναζήτηση υποψηφίων...">
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover" id="candidateTable">
                             <thead class="sticky-header">
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Field</th>
-                                    <th>Type</th>
-                                    <th>Entry Date</th>
-                                    <th>Points</th>
-                                    <th>Experience</th>
-                                    <th>Days Listed</th>
+                                    <th>Ονοματεπώνυμο</th>
+                                    <th>Πεδίο</th>
+                                    <th>Τύπος</th>
+                                    <th>Ημερομηνία Εγγραφής</th>
+                                    <th>Μόρια</th>
+                                    <th>Εμπειρία</th>
+                                    <th>Ημέρες στη Λίστα</th>
                                 
                                 </tr>
                             </thead>
@@ -239,8 +245,8 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                     <td><?php echo htmlspecialchars($candidate['type']); ?></td>
                                     <td><?php echo $entry_date->format('Y-m-d H:i'); ?></td>
                                     <td><?php echo number_format($candidate['points'], 1); ?></td>
-                                    <td><?php echo number_format($candidate['experience'], 1); ?> years</td>
-                                    <td><?php echo $days_listed; ?> days</td>
+                                    <td><?php echo number_format($candidate['experience'], 1); ?> έτη</td>
+                                    <td><?php echo $days_listed; ?> ημέρες</td>
  
                                 </tr>
                                 <?php endforeach; ?>
@@ -249,7 +255,7 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                         <!-- Pagination controls -->
                         <div class="d-flex justify-content-between align-items-center mt-3">
                             <div class="pagination-info">
-                                Showing <span id="pageStart">1</span> to <span id="pageEnd">10</span> of <span id="totalItems">0</span> entries
+                                Εμφάνιση <span id="pageStart">1</span> έως <span id="pageEnd">10</span> από <span id="totalItems">0</span> εγγραφές
                             </div>
                             <ul class="pagination mb-0">
                                 <li class="page-item" id="previousPage">
@@ -336,7 +342,7 @@ $candidate_activity = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                             return context[0].label;
                         },
                         label: function(context) {
-                            return `Candidates: ${context.raw}`;
+                            return `Υποψήφιοι: ${context.raw}`;
                         }
                     }
                 }

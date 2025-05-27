@@ -91,7 +91,7 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheExpiry) 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>General Statistics</title>
+    <title>Γενικά Στατιστικά</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../components/sidebar/sidebar.css">
@@ -128,33 +128,33 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheExpiry) 
         <!-- Add back button -->
         <div class="mb-3">
             <a href="select-report.php" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back
+                <i class="fas fa-arrow-left me-2"></i>Πίσω
             </a>
         </div>
 
         <div class="page-header mb-4">
-            <h1 class="page-title">General Statistics</h1>
-            <p class="text-muted">Overview and analysis of all ranking data</p>
+            <h1 class="page-title">Γενικά Στατιστικά</h1>
+            <p class="text-muted">Επισκόπηση και ανάλυση όλων των δεδομένων κατάταξης</p>
         </div>
         <!-- Stats Cards -->
         <div class="row mb-4">
-            <div class="col-md-3"><div class="card bg-primary text-white"><div class="card-body"><h6>Total Candidates</h6><h3><?= round($overall['total_candidates']) ?></h3></div></div></div>
-            <div class="col-md-3"><div class="card bg-success text-white"><div class="card-body"><h6>Average Grade</h6><h3><?= number_format($overall['avg_grade'], 2) ?></h3></div></div></div>
-            <div class="col-md-3"><div class="card bg-info text-white"><div class="card-body"><h6>Average Experience</h6><h3><?= number_format($overall['avg_experience'], 1) ?> years</h3></div></div></div>
-            <div class="col-md-3"><div class="card bg-warning text-white"><div class="card-body"><h6>Average Points</h6><h3><?= number_format($overall['avg_points'], 1) ?></h3></div></div></div>
+            <div class="col-md-3"><div class="card bg-primary text-white"><div class="card-body"><h6>Σύνολο Υποψηφίων</h6><h3><?= round($overall['total_candidates']) ?></h3></div></div></div>
+            <div class="col-md-3"><div class="card bg-success text-white"><div class="card-body"><h6>Μέσος Όρος Βαθμών</h6><h3><?= number_format($overall['avg_grade'], 2) ?></h3></div></div></div>
+            <div class="col-md-3"><div class="card bg-info text-white"><div class="card-body"><h6>Μέση Εμπειρία</h6><h3><?= number_format($overall['avg_experience'], 1) ?> έτη</h3></div></div></div>
+            <div class="col-md-3"><div class="card bg-warning text-white"><div class="card-body"><h6>Μέσος Όρος Μορίων</h6><h3><?= number_format($overall['avg_points'], 1) ?></h3></div></div></div>
         </div>
         <!-- Charts -->
         <div class="row">
             <div class="col-md-6 mb-4">
-                <div class="card"><div class="card-header"><h5 class="mb-0">Points Distribution</h5></div>
+                <div class="card"><div class="card-header"><h5 class="mb-0">Κατανομή Μορίων</h5></div>
                 <div class="card-body"><canvas id="pointsChart"></canvas></div></div>
             </div>
             <div class="col-md-6 mb-4">
-                <div class="card"><div class="card-header"><h5 class="mb-0">Experience Distribution</h5></div>
+                <div class="card"><div class="card-header"><h5 class="mb-0">Κατανομή Εμπειρίας</h5></div>
                 <div class="card-body"><canvas id="experienceChart"></canvas></div></div>
             </div>
             <div class="col-md-12 mb-4">
-                <div class="card"><div class="card-header"><h5 class="mb-0">Candidates by Field and Type</h5></div>
+                <div class="card"><div class="card-header"><h5 class="mb-0">Υποψήφιοι ανά Πεδίο και Τύπο</h5></div>
                 <div class="card-body">
                     <canvas id="fieldTypeChart" height="300"></canvas>
                 </div></div>
@@ -162,22 +162,22 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheExpiry) 
         </div>
         <!-- Category Table -->
         <div class="card mb-4">
-            <div class="card-header"><h5 class="mb-0">Category Statistics</h5></div>
+            <div class="card-header"><h5 class="mb-0">Στατιστικά Κατηγοριών</h5></div>
             <div class="card-body">
                 <div class="search-box">
-                    <input type="text" id="searchTable" class="form-control" placeholder="Search categories...">
+                    <input type="text" id="searchTable" class="form-control" placeholder="Αναζήτηση κατηγοριών...">
                 </div>
                 <div class="table-container">
                     <table class="table table-hover">
                         <thead class="sticky-header">
                             <tr>
-                                <th>Field</th>
-                                <th>Type</th>
-                                <th>Season/Year</th>
-                                <th>Candidates</th>
-                                <th>Avg Points</th>
-                                <th>Max Points</th>
-                                <th>Min Points</th>
+                                <th>Πεδίο</th>
+                                <th>Τύπος</th>
+                                <th>Εξάμηνο/Έτος</th>
+                                <th>Υποψήφιοι</th>
+                                <th>Μ.Ο. Μορίων</th>
+                                <th>Μέγιστα Μόρια</th>
+                                <th>Ελάχιστα Μόρια</th>
                             </tr>
                         </thead>
                         <tbody id="categoryStatsBody">
@@ -200,7 +200,7 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheExpiry) 
                     </table>
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <div class="pagination-info">
-                            Showing <span id="pageStart">1</span> to <span id="pageEnd">10</span> of <span id="totalItems">0</span> entries
+                            Εμφάνιση <span id="pageStart">1</span> έως <span id="pageEnd">10</span> από <span id="totalItems">0</span> εγγραφές
                         </div>
                         <ul class="pagination mb-0">
                             <li class="page-item" id="previousPage"><button class="page-link" aria-label="Previous"><span aria-hidden="true">&laquo;</span></button></li>
@@ -213,17 +213,17 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheExpiry) 
         <!-- Modal for Category Details -->
         <div class="modal fade" id="fieldDetailsModal" tabindex="-1">
             <div class="modal-dialog modal-lg"><div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title">Field Statistics</h5>
+                <div class="modal-header"><h5 class="modal-title">Στατιστικά Πεδίου</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row mb-4">
-                        <div class="col-md-6"><div class="card"><div class="card-body"><h6 class="card-subtitle mb-2 text-muted">Points Distribution</h6><canvas id="modalPointsChart"></canvas></div></div></div>
-                        <div class="col-md-6"><div class="card"><div class="card-body"><h6 class="card-subtitle mb-2 text-muted">Experience Distribution</h6><canvas id="modalExperienceChart"></canvas></div></div></div>
+                        <div class="col-md-6"><div class="card"><div class="card-body"><h6 class="card-subtitle mb-2 text-muted">Κατανομή Μορίων</h6><canvas id="modalPointsChart"></canvas></div></div></div>
+                        <div class="col-md-6"><div class="card"><div class="card-body"><h6 class="card-subtitle mb-2 text-muted">Κατανομή Εμπειρίας</h6><canvas id="modalExperienceChart"></canvas></div></div></div>
                     </div>
                     <div class="row"><div class="col-12">
                         <table class="table table-bordered">
-                            <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                            <thead><tr><th>Μέτρηση</th><th>Τιμή</th></tr></thead>
                             <tbody id="fieldStats"></tbody>
                         </table>
                     </div></div>
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     tooltip: {
                                         callbacks: {
                                             label: function(context) {
-                                                return `Candidates: ${context.raw}`;
+                                                return `Υποψήφιοι: ${context.raw}`;
                                             }
                                         }
                                     }
@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         beginAtZero: true,
                                         title: {
                                             display: true,
-                                            text: 'Number of Candidates'
+                                            text: 'Αριθμός Υποψηφίων'
                                         }
                                     },
                                     y: {
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     tooltip: {
                                         callbacks: {
                                             label: function(context) {
-                                                return `Candidates: ${context.raw}`;
+                                                return `Υποψήφιοι: ${context.raw}`;
                                             }
                                         }
                                     }
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         beginAtZero: true,
                                         title: {
                                             display: true,
-                                            text: 'Number of Candidates'
+                                            text: 'Αριθμός Υποψηφίων'
                                         }
                                     },
                                     y: {
@@ -422,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         data: {
                             labels: data.pointsDistribution.labels,
                             datasets: [{
-                                label: 'Number of Candidates',
+                                label: 'Αριθμός Υποψηφίων',
                                 data: data.pointsDistribution.data,
                                 backgroundColor: data.pointsDistribution.colors
                             }]
@@ -434,10 +434,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    title: { display: true, text: 'Number of Candidates' }
+                                    title: { display: true, text: 'Αριθμός Υποψηφίων' }
                                 },
                                 x: {
-                                    title: { display: true, text: 'Points Range' }
+                                    title: { display: true, text: 'Εύρος Μορίων' }
                                 }
                             }
                         }
@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         type: 'bar',
                         data: {
                             labels: data.experienceDistribution.labels,
-                            datasets: [{ label: 'Number of Candidates', data: data.experienceDistribution.data, backgroundColor: '#36b9cc' }]
+                            datasets: [{ label: 'Αριθμός Υποψηφίων', data: data.experienceDistribution.data, backgroundColor: '#36b9cc' }]
                         },
                         options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
                     });
