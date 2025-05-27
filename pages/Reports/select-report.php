@@ -241,7 +241,7 @@ $pageTitle = "Επιλογή Αναφοράς";
                     <div class="card report-card">
                         <div class="card-body text-center p-5">
                             <i class="fas fa-users-gear report-icon"></i>
-                            <h3 class="report-title">Αναφορά Αλλαγών Θέσης</h3>
+                            <h3 class="report-title">Αναφορά Εγγραφών Υποψηφίων</h3>
                             <p class="report-description">
                                 Επιλέξτε κριτήρια για προβολή αλλαγών θέσης.
                             </p>
